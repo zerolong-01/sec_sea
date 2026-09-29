@@ -28,6 +28,19 @@ data/cases.v0.1.jsonl
 data/corpus.v0.1.jsonl
 ~~~
 
+## 환경 변수
+
+| 변수 | 기본값 | 설명 |
+| --- | --- | --- |
+| `DATA_DIR` | 프로젝트 루트의 `data` | cases/corpus JSONL 경로 |
+| `RUNS_DIR` | 프로젝트 루트의 `runs` | 마스킹 trace와 로컬 원시 로그 저장 경로 |
+| `MODEL_PROVIDER` | `demo` | `demo` 또는 `openai_compatible` |
+| `MODEL_ID` | `demo-rag-v0.1` | manifest에 기록할 모델 식별자 |
+| `SYSTEM_PROMPT_VERSION` | `v0.1` | manifest에 기록할 시스템 프롬프트 버전 |
+| `RETRIEVAL_CONFIG_VERSION` | `lexical-v0.1` | manifest에 기록할 검색 설정 버전 |
+| `MODEL_BASE_URL` | 없음 | `openai_compatible` 사용 시 필수 |
+| `MODEL_API_KEY` | 없음 | `openai_compatible` 사용 시 선택적 인증 키 |
+
 ## API
 
 | 메서드 | 경로 | 설명 |
@@ -65,6 +78,16 @@ Content-Type: application/json
 ~~~
 
 각 응답의 `run_id`로 `GET /api/v1/runs/{run_id}`를 호출해 input, retrieval, prompt_assembly, output, manifest, metrics가 모두 존재하는지 확인한다. 같은 요청을 다시 실행하면 run ID는 달라도 request와 manifest의 비교 조건은 같아야 한다.
+
+세 대표 ID가 확정된 뒤에는 아래 검증 명령으로 세 케이스를 한 번에 재실행할 수 있다. 명령은 attack, benign, hard-negative가 각각 하나인지와 UI가 필요한 trace 필드를 검사한다.
+
+~~~text
+python -m scripts.verify_week1_integration \
+  --case-id <attack_case_id> \
+  --case-id <benign_case_id> \
+  --case-id <hard_negative_case_id> \
+  --corpus-version <corpus_source_version>
+~~~
 
 ## 모델 제공자
 
