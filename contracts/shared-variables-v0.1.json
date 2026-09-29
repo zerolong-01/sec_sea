@@ -1,0 +1,232 @@
+{
+  "contract_version": "0.1",
+  "schema_file": "contracts/mvp-integration-v0.1.schema.json",
+  "guide_file": "docs/mvp-integration-contract-v0.1.md",
+  "usage_rule": "코드·데이터·UI에서 아래 상수의 value를 사용한다. 화면에는 label_ko를 사용하며, 동일한 문자열을 각 역할에서 다시 정의하지 않는다.",
+  "keys": {
+    "SCHEMA_VERSION": "schema_version",
+    "ARTIFACT_TYPE": "artifact_type",
+    "CASE_ID": "case_id",
+    "DOCUMENT_ID": "document_id",
+    "RUN_ID": "run_id",
+    "SCENARIO": "scenario",
+    "LANGUAGE": "language",
+    "SPLIT": "split",
+    "LABEL": "label",
+    "DEFENSE_MODE": "defense_mode",
+    "STATUS": "status",
+    "MANIFEST": "manifest",
+    "RETRIEVAL": "retrieval",
+    "PROMPT_ASSEMBLY": "prompt_assembly",
+    "DEFENSE_EVENTS": "defense_events",
+    "EVALUATION": "evaluation",
+    "METRICS": "metrics"
+  },
+  "artifact_types": {
+    "CASE": {
+      "value": "case",
+      "label_ko": "실험 케이스"
+    },
+    "SOURCE_DOCUMENT": {
+      "value": "source_document",
+      "label_ko": "원본 문서"
+    },
+    "RUN_REQUEST": {
+      "value": "run_request",
+      "label_ko": "실행 요청"
+    },
+    "RUN_TRACE": {
+      "value": "run_trace",
+      "label_ko": "실행 추적 기록"
+    }
+  },
+  "scenarios": {
+    "RAG_CHAT": {
+      "value": "rag_chat",
+      "label_ko": "RAG 챗봇"
+    },
+    "EMAIL_SUMMARY": {
+      "value": "email_summary",
+      "label_ko": "이메일 요약기"
+    }
+  },
+  "languages": {
+    "KOREAN": {
+      "value": "ko",
+      "label_ko": "한국어"
+    },
+    "ENGLISH": {
+      "value": "en",
+      "label_ko": "영어"
+    },
+    "MIXED": {
+      "value": "mixed",
+      "label_ko": "혼합"
+    }
+  },
+  "splits": {
+    "DEV": {
+      "value": "dev",
+      "label_ko": "개발용"
+    },
+    "HOLDOUT": {
+      "value": "holdout",
+      "label_ko": "최종 평가용"
+    }
+  },
+  "case_labels": {
+    "ATTACK": {
+      "value": "attack",
+      "label_ko": "공격"
+    },
+    "BENIGN": {
+      "value": "benign",
+      "label_ko": "정상"
+    },
+    "HARD_NEGATIVE": {
+      "value": "hard_negative",
+      "label_ko": "하드 네거티브"
+    }
+  },
+  "defense_modes": {
+    "NONE": {
+      "value": "none",
+      "label_ko": "무방어",
+      "expected_event_count": 0
+    },
+    "D1": {
+      "value": "D1",
+      "label_ko": "D1"
+    },
+    "D2": {
+      "value": "D2",
+      "label_ko": "D2"
+    },
+    "D1_D2": {
+      "value": "D1+D2",
+      "label_ko": "D1 + D2"
+    }
+  },
+  "run_statuses": {
+    "QUEUED": {
+      "value": "queued",
+      "label_ko": "대기"
+    },
+    "RUNNING": {
+      "value": "running",
+      "label_ko": "실행 중"
+    },
+    "COMPLETED": {
+      "value": "completed",
+      "label_ko": "완료"
+    },
+    "BLOCKED": {
+      "value": "blocked",
+      "label_ko": "방어로 차단됨"
+    },
+    "FAILED": {
+      "value": "failed",
+      "label_ko": "실행 실패"
+    }
+  },
+  "trace_stages": [
+    {
+      "value": "input",
+      "label_ko": "입력",
+      "order": 1
+    },
+    {
+      "value": "retrieval",
+      "label_ko": "검색·수집",
+      "order": 2
+    },
+    {
+      "value": "prompt_assembly",
+      "label_ko": "프롬프트 조립",
+      "order": 3
+    },
+    {
+      "value": "defense_events",
+      "label_ko": "방어 판정",
+      "order": 4
+    },
+    {
+      "value": "output",
+      "label_ko": "출력",
+      "order": 5
+    },
+    {
+      "value": "evaluation",
+      "label_ko": "평가",
+      "order": 6
+    },
+    {
+      "value": "metrics",
+      "label_ko": "성능·비용",
+      "order": 7
+    }
+  ],
+  "defense_decisions": {
+    "ALLOW": {
+      "value": "allow",
+      "label_ko": "허용"
+    },
+    "BLOCK": {
+      "value": "block",
+      "label_ko": "차단"
+    },
+    "REDACT": {
+      "value": "redact",
+      "label_ko": "마스킹"
+    },
+    "QUARANTINE": {
+      "value": "quarantine",
+      "label_ko": "격리"
+    }
+  },
+  "evaluation_statuses": {
+    "SUCCESS": {
+      "value": "success",
+      "label_ko": "성공"
+    },
+    "FAILURE": {
+      "value": "failure",
+      "label_ko": "실패"
+    },
+    "NOT_APPLICABLE": {
+      "value": "not_applicable",
+      "label_ko": "해당 없음"
+    },
+    "NOT_EVALUATED": {
+      "value": "not_evaluated",
+      "label_ko": "미평가"
+    },
+    "REVIEW_NEEDED": {
+      "value": "review_needed",
+      "label_ko": "검토 필요"
+    }
+  },
+  "metric_keys": {
+    "LATENCY_MS": {
+      "value": "latency_ms",
+      "label_ko": "응답 지연 시간(ms)"
+    },
+    "INPUT_TOKENS": {
+      "value": "input_tokens",
+      "label_ko": "입력 토큰"
+    },
+    "OUTPUT_TOKENS": {
+      "value": "output_tokens",
+      "label_ko": "출력 토큰"
+    },
+    "ESTIMATED_COST_USD": {
+      "value": "estimated_cost_usd",
+      "label_ko": "추정 비용(USD)"
+    }
+  },
+  "canonical_paths": {
+    "CASES": "data/cases.v0.1.jsonl",
+    "CORPUS": "data/corpus.v0.1.jsonl",
+    "RUN_TRACE_PATTERN": "runs/<run_id>.trace.json"
+  }
+}

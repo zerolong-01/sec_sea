@@ -1,0 +1,497 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerolong-01/sec_sea/contracts/mvp-integration-v0.1.schema.json",
+  "title": "LLM Defense Trade-off Lab MVP 통합 계약 v0.1",
+  "description": "실험 케이스, 원본 문서, 실행 요청, 실행 추적 기록을 교환하기 위한 버전 고정 통합 계약입니다. JSON 키는 코드 통합을 위해 영어 식별자로 유지합니다.",
+  "oneOf": [
+    { "$ref": "#/$defs/case" },
+    { "$ref": "#/$defs/source_document" },
+    { "$ref": "#/$defs/run_request" },
+    { "$ref": "#/$defs/run_trace" }
+  ],
+  "$defs": {
+    "id": {
+      "title": "공통 식별자",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{2,63}$"
+    },
+    "version": {
+      "title": "계약 버전",
+      "type": "string",
+      "const": "0.1"
+    },
+    "language": {
+      "title": "언어",
+      "type": "string",
+      "enum": ["ko", "en", "mixed"]
+    },
+    "defense_mode": {
+      "title": "방어 모드",
+      "type": "string",
+      "enum": ["none", "D1", "D2", "D1+D2"]
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/version" },
+        "artifact_type": { "const": "case" },
+        "case_id": { "$ref": "#/$defs/id" },
+        "scenario": {
+          "type": "string",
+          "enum": ["rag_chat", "email_summary"]
+        },
+        "language": { "$ref": "#/$defs/language" },
+        "split": {
+          "type": "string",
+          "enum": ["dev", "holdout"]
+        },
+        "label": {
+          "type": "string",
+          "enum": ["attack", "benign", "hard_negative"]
+        },
+        "user_input": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_document_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "uniqueItems": true
+        },
+        "attack_type": {
+          "type": ["string", "null"],
+          "enum": [
+            "direct_instruction",
+            "indirect_document",
+            "role_override",
+            "data_exfiltration",
+            "encoding_obfuscation",
+            "other",
+            null
+          ]
+        },
+        "attack_goal": {
+          "type": ["string", "null"]
+        },
+        "expected_normal_task": {
+          "type": "string",
+          "minLength": 1
+        },
+        "success_criterion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "criterion_type": {
+              "type": "string",
+              "enum": [
+                "canary_leak",
+                "instruction_override",
+                "task_quality",
+                "human_rubric"
+              ]
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["criterion_type", "description"]
+        },
+        "source_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "artifact_type",
+        "case_id",
+        "scenario",
+        "language",
+        "split",
+        "label",
+        "user_input",
+        "source_document_ids",
+        "attack_type",
+        "attack_goal",
+        "expected_normal_task",
+        "success_criterion",
+        "source_version"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "label": { "const": "attack" }
+            }
+          },
+          "then": {
+            "properties": {
+              "attack_type": { "type": "string" },
+              "attack_goal": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "label": {
+                "enum": ["benign", "hard_negative"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "attack_type": { "type": "null" },
+              "attack_goal": { "type": "null" }
+            }
+          }
+        }
+      ]
+    },
+    "source_document": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/version" },
+        "artifact_type": { "const": "source_document" },
+        "document_id": { "$ref": "#/$defs/id" },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1
+        },
+        "language": { "$ref": "#/$defs/language" },
+        "source_type": {
+          "type": "string",
+          "enum": ["seed_corpus", "email_body", "uploaded_document", "web_snapshot"]
+        },
+        "source_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "is_untrusted_content": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema_version",
+        "artifact_type",
+        "document_id",
+        "title",
+        "content",
+        "language",
+        "source_type",
+        "source_version",
+        "is_untrusted_content"
+      ]
+    },
+    "run_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/version" },
+        "artifact_type": { "const": "run_request" },
+        "case_id": { "$ref": "#/$defs/id" },
+        "scenario": {
+          "type": "string",
+          "enum": ["rag_chat", "email_summary"]
+        },
+        "defense_mode": { "$ref": "#/$defs/defense_mode" },
+        "dataset_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "corpus_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requested_by": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "artifact_type",
+        "case_id",
+        "scenario",
+        "defense_mode",
+        "dataset_version",
+        "corpus_version",
+        "requested_by"
+      ]
+    },
+    "prompt_component": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "component_type": {
+          "type": "string",
+          "enum": ["system", "user", "retrieved_document", "defense_instruction"]
+        },
+        "source_ref": {
+          "type": ["string", "null"]
+        },
+        "display_text": {
+          "type": "string"
+        },
+        "is_masked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "order",
+        "component_type",
+        "source_ref",
+        "display_text",
+        "is_masked"
+      ]
+    },
+    "defense_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "defense_id": {
+          "type": "string",
+          "enum": ["D1", "D2"]
+        },
+        "defense_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage": {
+          "type": "string",
+          "enum": ["input", "retrieval", "prompt_assembly", "output"]
+        },
+        "decision": {
+          "type": "string",
+          "enum": ["allow", "block", "redact", "quarantine"]
+        },
+        "reason_code": {
+          "type": ["string", "null"]
+        },
+        "score": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "defense_id",
+        "defense_version",
+        "stage",
+        "decision",
+        "reason_code",
+        "score"
+      ]
+    },
+    "evaluation_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "attack_success": {
+          "type": "string",
+          "enum": ["success", "failure", "not_applicable", "not_evaluated", "review_needed"]
+        },
+        "normal_task_success": {
+          "type": "string",
+          "enum": ["success", "failure", "not_evaluated", "review_needed"]
+        },
+        "evaluator_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": ["string", "null"]
+        }
+      },
+      "required": [
+        "attack_success",
+        "normal_task_success",
+        "evaluator_version",
+        "reason"
+      ]
+    },
+    "run_trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "$ref": "#/$defs/version" },
+        "artifact_type": { "const": "run_trace" },
+        "run_id": { "$ref": "#/$defs/id" },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "running", "completed", "blocked", "failed"]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "request": { "$ref": "#/$defs/run_request" },
+        "manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "model_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "system_prompt_version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "generation_parameters": {
+              "type": "object",
+              "additionalProperties": {
+                "type": ["string", "number", "boolean", "null"]
+              }
+            },
+            "retrieval_config_version": {
+              "type": "string",
+              "minLength": 1
+            },
+            "defense_config_versions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "model_id",
+            "system_prompt_version",
+            "generation_parameters",
+            "retrieval_config_version",
+            "defense_config_versions"
+          ]
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "user_input": { "type": "string" },
+            "external_document_ids": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/id" },
+              "uniqueItems": true
+            }
+          },
+          "required": ["user_input", "external_document_ids"]
+        },
+        "retrieval": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "document_id": { "$ref": "#/$defs/id" },
+              "rank": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "score": {
+                "type": ["number", "null"]
+              },
+              "included_in_prompt": {
+                "type": "boolean"
+              }
+            },
+            "required": ["document_id", "rank", "score", "included_in_prompt"]
+          }
+        },
+        "prompt_assembly": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/prompt_component" }
+        },
+        "defense_events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/defense_event" }
+        },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "outcome": {
+              "type": "string",
+              "enum": ["generated", "blocked", "substituted", "error"]
+            },
+            "display_text": {
+              "type": ["string", "null"]
+            },
+            "is_masked": {
+              "type": "boolean"
+            }
+          },
+          "required": ["outcome", "display_text", "is_masked"]
+        },
+        "evaluation": { "$ref": "#/$defs/evaluation_result" },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "latency_ms": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
+            "input_tokens": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
+            "output_tokens": {
+              "type": ["integer", "null"],
+              "minimum": 0
+            },
+            "estimated_cost_usd": {
+              "type": ["number", "null"],
+              "minimum": 0
+            }
+          },
+          "required": [
+            "latency_ms",
+            "input_tokens",
+            "output_tokens",
+            "estimated_cost_usd"
+          ]
+        },
+        "error": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          },
+          "required": ["code", "message"]
+        }
+      },
+      "required": [
+        "schema_version",
+        "artifact_type",
+        "run_id",
+        "status",
+        "created_at",
+        "request",
+        "manifest",
+        "input",
+        "retrieval",
+        "prompt_assembly",
+        "defense_events",
+        "output",
+        "evaluation",
+        "metrics",
+        "error"
+      ]
+    }
+  }
+}
