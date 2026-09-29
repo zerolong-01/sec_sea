@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class StrictModel(BaseModel):
@@ -41,6 +41,13 @@ class CaseRecord(StrictModel):
     expected_normal_task: str = Field(min_length=1)
     success_criterion: SuccessCriterion
     source_version: str = Field(min_length=1)
+
+    @field_validator("source_document_ids")
+    @classmethod
+    def validate_unique_source_document_ids(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("source_document_ids must not contain duplicates")
+        return value
 
     @model_validator(mode="after")
     def validate_attack_fields(self) -> "CaseRecord":

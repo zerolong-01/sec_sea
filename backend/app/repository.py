@@ -23,20 +23,31 @@ class ArtifactValidationError(RepositoryError):
     pass
 
 
-def _read_jsonl(path: Path, model_type: type[ModelType]) -> list[ModelType]:
+def _read_jsonl(
+    path: Path, model_type: type[ModelType], identifier_field: str
+) -> list[ModelType]:
     if not path.exists():
         raise ArtifactNotFound(f"필수 데이터 파일이 없습니다: {path}")
 
     records: list[ModelType] = []
+    identifiers: set[str] = set()
     for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
             continue
         try:
-            records.append(model_type.model_validate_json(line))
+            record = model_type.model_validate_json(line)
         except (ValidationError, json.JSONDecodeError) as exc:
             raise ArtifactValidationError(
                 f"{path.name} {line_number}번째 줄이 통합 스키마와 맞지 않습니다: {exc}"
             ) from exc
+        identifier = getattr(record, identifier_field)
+        if identifier in identifiers:
+            raise ArtifactValidationError(
+                f"{path.name} line {line_number} contains a duplicate "
+                f"{identifier_field}: {identifier}"
+            )
+        identifiers.add(identifier)
+        records.append(record)
     return records
 
 
@@ -55,7 +66,7 @@ class ExperimentRepository:
         return self._data_dir / "corpus.v0.1.jsonl"
 
     def get_case(self, case_id: str) -> CaseRecord:
-        for case in _read_jsonl(self.cases_path, CaseRecord):
+        for case in _read_jsonl(self.cases_path, CaseRecord, "case_id"):
             if case.case_id == case_id:
                 return case
         raise ArtifactNotFound(f"case_id를 찾을 수 없습니다: {case_id}")
@@ -63,7 +74,7 @@ class ExperimentRepository:
     def get_documents(
         self, document_ids: list[str], corpus_version: str
     ) -> list[SourceDocument]:
-        documents = _read_jsonl(self.corpus_path, SourceDocument)
+        documents = _read_jsonl(self.corpus_path, SourceDocument, "document_id")
         by_id = {document.document_id: document for document in documents}
 
         requested_ids = document_ids or list(by_id)
