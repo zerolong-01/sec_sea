@@ -11,7 +11,12 @@ from .repository import (
     RepositoryError,
     RunTraceStore,
 )
-from .service import RunService, UnsupportedDefenseMode, build_provider
+from .service import (
+    RunService,
+    TraceableRunError,
+    UnsupportedDefenseMode,
+    build_provider,
+)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -46,6 +51,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail={"code": "DEFENSE_MODE_NOT_IMPLEMENTED", "message": str(exc)},
+            ) from exc
+        except TraceableRunError as exc:
+            raise HTTPException(
+                status_code=exc.http_status,
+                detail={
+                    "code": exc.error_code,
+                    "message": str(exc),
+                    "run_id": exc.trace.run_id,
+                },
             ) from exc
         except ArtifactNotFound as exc:
             raise HTTPException(

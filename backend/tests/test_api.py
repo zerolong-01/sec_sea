@@ -103,6 +103,25 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 422)
         self.assertEqual(response.json()["detail"]["code"], "DEFENSE_MODE_NOT_IMPLEMENTED")
 
+    def test_missing_document_persists_a_retrievable_failure_trace(self) -> None:
+        case_path = self.settings.data_dir / "cases.v0.1.jsonl"
+        case = json.loads(case_path.read_text(encoding="utf-8"))
+        case["source_document_ids"] = ["doc-missing-001"]
+        case_path.write_text(json.dumps(case, ensure_ascii=False) + "\n", encoding="utf-8")
+
+        response = self.client.post("/api/v1/runs", json=self.request_body())
+
+        self.assertEqual(response.status_code, 404)
+        detail = response.json()["detail"]
+        self.assertEqual(detail["code"], "ARTIFACT_NOT_FOUND")
+        self.assertIn("run_id", detail)
+
+        trace_response = self.client.get(f"/api/v1/runs/{detail['run_id']}")
+        self.assertEqual(trace_response.status_code, 200)
+        trace = trace_response.json()
+        self.assertEqual(trace["status"], "failed")
+        self.assertEqual(trace["error"]["code"], "ARTIFACT_NOT_FOUND")
+
 
 if __name__ == "__main__":
     unittest.main()
