@@ -93,17 +93,26 @@ class ExperimentRepository:
 
 
 class RunTraceStore:
-    """Persists one immutable, presentation-safe trace per run ID."""
+    """Persists presentation-safe traces and private raw execution logs separately."""
 
     def __init__(self, runs_dir: Path) -> None:
         self._runs_dir = runs_dir
 
     def save(self, trace: RunTrace) -> Path:
-        self._runs_dir.mkdir(parents=True, exist_ok=True)
         target = self._runs_dir / f"{trace.run_id}.trace.json"
+        return self._save_json(target, trace.model_dump(mode="json"))
+
+    def save_raw(self, run_id: str, raw_log: dict[str, object]) -> Path:
+        """Save a local-only raw log. This artifact is never returned by the API."""
+
+        target = self._runs_dir / f"{run_id}.raw.json"
+        return self._save_json(target, raw_log)
+
+    def _save_json(self, target: Path, payload: object) -> Path:
+        self._runs_dir.mkdir(parents=True, exist_ok=True)
         temporary = target.with_suffix(".tmp")
         temporary.write_text(
-            json.dumps(trace.model_dump(mode="json"), ensure_ascii=False, indent=2),
+            json.dumps(payload, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
         temporary.replace(target)

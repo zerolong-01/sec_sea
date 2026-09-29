@@ -38,6 +38,34 @@ data/corpus.v0.1.jsonl
 
 POST 요청은 공통 계약의 run_request 모양을 사용한다. 1주차에는 defense_mode에 "none"만 허용한다. D1/D2 요청은 422와 "DEFENSE_MODE_NOT_IMPLEMENTED" 코드를 반환한다.
 
+## trace와 원시 로그
+
+`runs/<run_id>.trace.json`과 API 응답은 화면에 바로 표시해도 되는 마스킹 trace다. canary 값은 사용자 입력, 검색 문서, 프롬프트 구성, 모델 출력, 제공자 오류에서 `[MASKED_CANARY]`로 치환된다.
+
+같은 run ID의 `runs/<run_id>.raw.json`에는 재현·수동 판정용 원시 입력, 최종 프롬프트 구성, 모델 출력 또는 제공자 오류가 저장된다. 이 파일은 API로 제공하지 않으며, 접근이 제한된 로컬 실행 환경에서만 사용한다. `runs/` 전체는 Git 추적 대상이 아니다.
+
+## 데이터 인계 후 3종 통합 확인
+
+실험·데이터 담당이 `data/cases.v0.1.jsonl`과 `data/corpus.v0.1.jsonl`을 제공하면 attack, benign, hard-negative 대표 case_id를 각각 한 번씩 아래 요청 형식으로 실행한다.
+
+~~~text
+POST /api/v1/runs
+Content-Type: application/json
+
+{
+  "schema_version": "0.1",
+  "artifact_type": "run_request",
+  "case_id": "<대표 case_id>",
+  "scenario": "rag_chat",
+  "defense_mode": "none",
+  "dataset_version": "<cases source_version>",
+  "corpus_version": "<corpus source_version>",
+  "requested_by": "week1-integration"
+}
+~~~
+
+각 응답의 `run_id`로 `GET /api/v1/runs/{run_id}`를 호출해 input, retrieval, prompt_assembly, output, manifest, metrics가 모두 존재하는지 확인한다. 같은 요청을 다시 실행하면 run ID는 달라도 request와 manifest의 비교 조건은 같아야 한다.
+
 ## 모델 제공자
 
 기본값은 "MODEL_PROVIDER=demo"다. 이 제공자는 오프라인에서 결정론적으로 동작하므로 통합 테스트와 trace 확인에 사용한다.

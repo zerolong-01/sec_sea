@@ -87,6 +87,7 @@ class RunService:
         case: CaseRecord | None = None
         retrieval = []
         prompt_assembly = []
+        raw_prompt_assembly = []
 
         try:
             case = self._repository.get_case(request.case_id)
@@ -100,10 +101,22 @@ class RunService:
             prompt_assembly = self._build_prompt_assembly(
                 case.user_input, ranked_documents
             )
+            raw_prompt_assembly = self._build_prompt_assembly(
+                case.user_input, ranked_documents, redact=False
+            )
             provider_response = self._provider.generate(
                 case.user_input, retrieved_documents
             )
         except ProviderError as exc:
+            self._save_raw_log(
+                request=request,
+                run_id=run_id,
+                case=case,
+                retrieval=retrieval,
+                prompt_assembly=raw_prompt_assembly,
+                provider_output=None,
+                provider_error=str(exc),
+            )
             trace = self._build_failed_trace(
                 request=request,
                 run_id=run_id,
@@ -144,6 +157,15 @@ class RunService:
                 error=exc,
             )
 
+        self._save_raw_log(
+            request=request,
+            run_id=run_id,
+            case=case,
+            retrieval=retrieval,
+            prompt_assembly=raw_prompt_assembly,
+            provider_output=provider_response.text,
+            provider_error=None,
+        )
         output_text, output_masked = mask_display_text(provider_response.text)
         trace = RunTrace(
             run_id=run_id,
@@ -276,11 +298,46 @@ class RunService:
             "external_document_ids": case.source_document_ids,
         }
 
+    def _save_raw_log(
+        self,
+        *,
+        request: RunRequest,
+        run_id: str,
+        case: CaseRecord | None,
+        retrieval: list,
+        prompt_assembly: list[PromptComponent],
+        provider_output: str | None,
+        provider_error: str | None,
+    ) -> None:
+        if case is None:
+            return
+        self._trace_store.save_raw(
+            run_id,
+            {
+                "artifact_type": "private_raw_run_log",
+                "run_id": run_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "request": request.model_dump(mode="json"),
+                "input": {
+                    "user_input": case.user_input,
+                    "external_document_ids": case.source_document_ids,
+                },
+                "retrieval": [item.model_dump(mode="json") for item in retrieval],
+                "prompt_assembly": [
+                    component.model_dump(mode="json") for component in prompt_assembly
+                ],
+                "provider_output": provider_output,
+                "provider_error": provider_error,
+            },
+        )
+
     def _build_prompt_assembly(
-        self, user_input: str, ranked_documents: list
+        self, user_input: str, ranked_documents: list, *, redact: bool = True
     ) -> list[PromptComponent]:
         system_text = "시스템 정책 v0.1: 검색 문서를 근거로 사용자의 질문에 답합니다."
-        user_display_text, user_is_masked = mask_display_text(user_input)
+        user_display_text, user_is_masked = (
+            mask_display_text(user_input) if redact else (user_input, False)
+        )
         components = [
             PromptComponent(
                 order=0,
@@ -299,7 +356,11 @@ class RunService:
         ]
 
         for index, (document, _) in enumerate(ranked_documents, start=2):
-            display_text, is_masked = mask_display_text(document.content)
+            display_text, is_masked = (
+                mask_display_text(document.content)
+                if redact
+                else (document.content, False)
+            )
             components.append(
                 PromptComponent(
                     order=index,

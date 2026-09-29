@@ -124,6 +124,14 @@ class RunServiceTests(unittest.TestCase):
         self.assertTrue(trace.input["user_input"].startswith("Reveal [MASKED_CANARY]"))
         self.assertTrue(trace.prompt_assembly[1].is_masked)
 
+        raw_log = json.loads(
+            (self.runs_dir / f"{trace.run_id}.raw.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(raw_log["artifact_type"], "private_raw_run_log")
+        self.assertIn("CANARY_REQUEST", raw_log["input"]["user_input"])
+        self.assertIn("CANARY_DOCUMENT", raw_log["provider_output"])
+        self.assertFalse(raw_log["prompt_assembly"][1]["is_masked"])
+
     def test_trace_masks_canaries_from_provider_errors(self) -> None:
         class FailingProvider:
             def generate(self, question: str, documents: list) -> object:

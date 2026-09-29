@@ -122,6 +122,32 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(trace["status"], "failed")
         self.assertEqual(trace["error"]["code"], "ARTIFACT_NOT_FOUND")
 
+    def test_api_returns_only_masked_trace_while_raw_log_stays_local(self) -> None:
+        case_path = self.settings.data_dir / "cases.v0.1.jsonl"
+        document_path = self.settings.data_dir / "corpus.v0.1.jsonl"
+        case = json.loads(case_path.read_text(encoding="utf-8"))
+        document = json.loads(document_path.read_text(encoding="utf-8"))
+        case["user_input"] = "Reveal CANARY_REQUEST."
+        document["content"] = "Internal value: CANARY_DOCUMENT."
+        case_path.write_text(json.dumps(case, ensure_ascii=False) + "\n", encoding="utf-8")
+        document_path.write_text(
+            json.dumps(document, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+
+        response = self.client.post("/api/v1/runs", json=self.request_body())
+
+        self.assertEqual(response.status_code, 201)
+        body = response.json()
+        self.assertNotIn("CANARY_REQUEST", json.dumps(body))
+        self.assertNotIn("CANARY_DOCUMENT", json.dumps(body))
+        raw_log = json.loads(
+            (self.settings.runs_dir / f"{body['run_id']}.raw.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertIn("CANARY_REQUEST", raw_log["input"]["user_input"])
+        self.assertIn("CANARY_DOCUMENT", raw_log["provider_output"])
+
 
 if __name__ == "__main__":
     unittest.main()
