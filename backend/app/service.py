@@ -97,7 +97,7 @@ class RunService:
                 request=request,
                 manifest=manifest,
                 input={
-                    "user_input": case.user_input,
+                    "user_input": mask_display_text(case.user_input)[0],
                     "external_document_ids": case.source_document_ids,
                 },
                 retrieval=retrieval,
@@ -130,7 +130,7 @@ class RunService:
                 request=request,
                 manifest=manifest,
                 input={
-                    "user_input": case.user_input,
+                    "user_input": mask_display_text(case.user_input)[0],
                     "external_document_ids": case.source_document_ids,
                 },
                 retrieval=retrieval,
@@ -149,7 +149,10 @@ class RunService:
                     output_tokens=None,
                     estimated_cost_usd=None,
                 ),
-                error={"code": "MODEL_PROVIDER_ERROR", "message": str(exc)},
+                error={
+                    "code": "MODEL_PROVIDER_ERROR",
+                    "message": mask_display_text(str(exc))[0],
+                },
             )
 
         self._trace_store.save(trace)
@@ -160,6 +163,7 @@ class RunService:
 
     def _build_prompt_assembly(self, user_input: str, ranked_documents: list) -> list[PromptComponent]:
         system_text = "시스템 정책 v0.1: 검색 문서를 근거로 사용자의 질문에 답합니다."
+        user_display_text, user_is_masked = mask_display_text(user_input)
         components = [
             PromptComponent(
                 order=0,
@@ -172,8 +176,8 @@ class RunService:
                 order=1,
                 component_type="user",
                 source_ref=None,
-                display_text=user_input,
-                is_masked=False,
+                display_text=user_display_text,
+                is_masked=user_is_masked,
             ),
         ]
 

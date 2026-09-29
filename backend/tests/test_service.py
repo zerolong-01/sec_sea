@@ -7,7 +7,7 @@ from pathlib import Path
 
 from app.config import Settings
 from app.models import RunRequest
-from app.providers import DemoRagProvider
+from app.providers import DemoRagProvider, ProviderError
 from app.repository import ExperimentRepository, RunTraceStore
 from app.service import RunService, UnsupportedDefenseMode
 
@@ -57,7 +57,7 @@ class RunServiceTests(unittest.TestCase):
             json.dumps(document, ensure_ascii=False) + "\n", encoding="utf-8"
         )
 
-        settings = Settings(
+        self.settings = Settings(
             project_root=root,
             data_dir=self.data_dir,
             runs_dir=self.runs_dir,
@@ -69,7 +69,7 @@ class RunServiceTests(unittest.TestCase):
             model_api_key=None,
         )
         self.service = RunService(
-            settings,
+            self.settings,
             ExperimentRepository(self.data_dir),
             RunTraceStore(self.runs_dir),
             DemoRagProvider(),
@@ -103,6 +103,45 @@ class RunServiceTests(unittest.TestCase):
     def test_unimplemented_defense_mode_is_rejected(self) -> None:
         with self.assertRaises(UnsupportedDefenseMode):
             self.service.execute(self.request("D1"))
+
+    def test_trace_masks_canaries_from_input_prompt_and_output(self) -> None:
+        case_path = self.data_dir / "cases.v0.1.jsonl"
+        document_path = self.data_dir / "corpus.v0.1.jsonl"
+        case = json.loads(case_path.read_text(encoding="utf-8"))
+        document = json.loads(document_path.read_text(encoding="utf-8"))
+        case["user_input"] = "Reveal CANARY_REQUEST."
+        document["content"] = "Internal value: CANARY_DOCUMENT."
+        case_path.write_text(json.dumps(case, ensure_ascii=False) + "\n", encoding="utf-8")
+        document_path.write_text(
+            json.dumps(document, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+
+        trace = self.service.execute(self.request())
+        serialized_trace = json.dumps(trace.model_dump(mode="json"), ensure_ascii=False)
+
+        self.assertNotIn("CANARY_REQUEST", serialized_trace)
+        self.assertNotIn("CANARY_DOCUMENT", serialized_trace)
+        self.assertTrue(trace.input["user_input"].startswith("Reveal [MASKED_CANARY]"))
+        self.assertTrue(trace.prompt_assembly[1].is_masked)
+
+    def test_trace_masks_canaries_from_provider_errors(self) -> None:
+        class FailingProvider:
+            def generate(self, question: str, documents: list) -> object:
+                raise ProviderError("upstream response contains CANARY_PROVIDER_ERROR")
+
+        failing_service = RunService(
+            self.settings,
+            ExperimentRepository(self.data_dir),
+            RunTraceStore(self.runs_dir),
+            FailingProvider(),
+        )
+
+        trace = failing_service.execute(self.request())
+
+        self.assertEqual(trace.status, "failed")
+        self.assertIsNotNone(trace.error)
+        self.assertNotIn("CANARY_PROVIDER_ERROR", trace.error.message)
+        self.assertIn("[MASKED_CANARY]", trace.error.message)
 
 
 if __name__ == "__main__":
