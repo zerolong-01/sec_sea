@@ -1,0 +1,2 @@
+# Local execution artifacts can contain unmasked synthetic test values.
+/runs/

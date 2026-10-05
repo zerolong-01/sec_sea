@@ -129,6 +129,42 @@
       "label_ko": "실행 실패"
     }
   },
+  "output_outcomes": {
+    "GENERATED": {
+      "value": "generated",
+      "label_ko": "생성됨"
+    },
+    "BLOCKED": {
+      "value": "blocked",
+      "label_ko": "차단됨"
+    },
+    "SUBSTITUTED": {
+      "value": "substituted",
+      "label_ko": "대체 응답"
+    },
+    "ERROR": {
+      "value": "error",
+      "label_ko": "오류"
+    }
+  },
+  "prompt_component_types": {
+    "SYSTEM": {
+      "value": "system",
+      "label_ko": "시스템 지시"
+    },
+    "USER": {
+      "value": "user",
+      "label_ko": "사용자 입력"
+    },
+    "RETRIEVED_DOCUMENT": {
+      "value": "retrieved_document",
+      "label_ko": "검색 문서"
+    },
+    "DEFENSE_INSTRUCTION": {
+      "value": "defense_instruction",
+      "label_ko": "방어 지시"
+    }
+  },
   "trace_stages": [
     {
       "value": "input",
