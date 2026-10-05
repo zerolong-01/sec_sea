@@ -42,7 +42,9 @@ JSONL 데이터 파일의 한 줄은 스키마 아티팩트 한 개다. 실행 t
 | --- | --- | --- |
 | 실험·데이터 | artifact_types, scenarios, languages, splits, case_labels | JSONL 생성 시 value를 저장한다. 예: case_labels.ATTACK.value는 "attack" |
 | 백엔드·방어 | keys, defense_modes, run_statuses, defense_decisions, evaluation_statuses, metric_keys | 요청 검증·trace 생성·API 응답에서 value를 사용한다. 1주차 무방어는 defense_modes.NONE.value와 빈 defense_events 배열을 사용한다. |
-| 프론트엔드·시각화 | trace_stages, run_statuses, defense_modes, metric_keys의 label_ko | UI 텍스트와 trace 표시 순서를 통합 변수 파일에서 읽는다. 문자열을 화면 컴포넌트에 직접 하드코딩하지 않는다. |
+| 프론트엔드·시각화 | trace_stages, run_statuses, defense_modes, output_outcomes, prompt_component_types, metric_keys의 label_ko | UI 텍스트와 trace 표시 순서를 통합 변수 파일에서 읽는다. 문자열을 화면 컴포넌트에 직접 하드코딩하지 않는다. |
+
+output.outcome의 표시명은 output_outcomes에서, prompt_assembly의 각 component_type 표시명은 prompt_component_types에서 value가 응답 값과 일치하는 항목의 label_ko를 읽는다. 예: "error"는 "오류", "retrieved_document"는 "검색 문서"로 표시한다. 표시명 추가는 기존 API enum이나 계약 버전을 변경하지 않는다.
 
 새 방어 모드, 실행 상태, 평가 상태가 필요하면 세 역할이 합의한 뒤 스키마와 통합 변수 파일을 같은 변경에서 갱신한다.
 

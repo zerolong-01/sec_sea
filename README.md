@@ -225,9 +225,11 @@ flowchart LR
 | Classifier | Llama Guard 계열 또는 전용 분류기 | 사용자 입력과 외부 콘텐츠 위험도 분류 |
 | Red Team | garak, 자체 공격 모듈 | 공격 실행 및 변형 자동화 |
 | Inference | vLLM | 로컬 모델 서빙과 추론 성능 최적화 |
-| Frontend | Next.js, Chart.js | 다중 지표 및 Pareto frontier 시각화 |
+| Frontend | Streamlit | MVP 대시보드, 다중 지표 및 Pareto frontier 시각화 |
 | Storage | SQLite, JSONL/CSV 또는 Parquet | 실험 설정, 원시 로그, 집계 결과 저장 |
 | Environment | Docker Compose | 재현 가능한 개발·실험 환경 구성 |
+
+MVP 프런트엔드는 Streamlit으로 진행합니다. 기존에 검토했던 Next.js·Chart.js 대신 Streamlit으로 백엔드 API를 연결하고 비교 화면과 실행 trace를 구현합니다. 화면 표시명은 [통합 변수 파일](contracts/shared-variables-v0.1.json)의 label_ko를 사용합니다.
 
 ## 예상 산출물
 
