@@ -1,6 +1,6 @@
 # UI/API 인계 샘플
 
-이 파일들은 로컬 HTTP fixture를 실행해 얻은 마스킹 결과다. 실제 모델의 ASR/FPR·비용 측정 자료가 아니다. RAG 샘플은 `python -m scripts.mvp verify-week2 --runs-dir runs/week2-handoff`로 생성했으며, 이메일 샘플은 별도의 합성 이메일 예시로 공통 엔진을 실행한 결과다. 실행 시각·run_id·임의 포트·지연은 이번 샘플의 값이다.
+이 파일들은 실행 계약 v0.2 당시의 로컬 HTTP fixture 마스킹 결과다. 호환성 예시로 보존하며 새 서버는 v0.3 trace를 반환한다. #26 보완 필드의 예시는 [v0.3 D2 샘플](../d2-security/README.md)을 참고한다. 실제 모델의 ASR/FPR·비용 측정 자료가 아니다. RAG 샘플은 `python -m scripts.mvp verify-week2 --runs-dir runs/week2-handoff`로 생성했으며, 이메일 샘플은 별도의 합성 이메일 예시로 공통 엔진을 실행한 결과다. 실행 시각·run_id·임의 포트·지연은 이번 샘플의 값이다.
 
 | 샘플 | 확인할 내용 |
 | --- | --- |

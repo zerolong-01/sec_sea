@@ -30,7 +30,7 @@ python -m uvicorn app.main:app --reload
 - 생성·탐지 호출 전체 사용량/추정 비용, 미확인 값 null·사유, 단계별 지연
 - 마스킹된 trace 저장·조회, 합성 이메일 요약 공통 경로
 
-데이터는 [v0.1](../contracts/mvp-integration-v0.1.schema.json), 새 실행은 [v0.2](../contracts/execution-v0.2.schema.json), 상수는 [공통 변수](../contracts/shared-variables-v0.1.json)를 사용한다.
+데이터는 [v0.1](../contracts/mvp-integration-v0.1.schema.json), 새 실행은 [v0.3](../contracts/execution-v0.3.schema.json), 상수는 [공통 변수](../contracts/shared-variables-v0.1.json)를 사용한다. v0.1/v0.2 실행 요청·저장 trace도 읽는다.
 
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
@@ -38,8 +38,12 @@ python -m uvicorn app.main:app --reload
 | POST | /api/v1/runs | 실행 결과와 trace |
 | GET | /api/v1/runs/{run_id} | 저장된 표시용 trace |
 | PUT | /api/v1/runs/{run_id}/evaluation | 검토자·버전·근거가 있는 수동 평가 |
+| PUT | /api/v1/runs/{run_id}/detector-gold | 실행 후 입력·문서별 독립 정답과 근거 등록 |
+| POST | /api/v1/detector-report | 조건별 대상 FNR/FPR·분모·오류/검토/미등록 수량 |
 
-`runs/{run_id}.trace.json`은 API/UI와 동일한 표시용 결과다. `.raw.json`과 `.evaluation.json`은 로컬 원시 근거·판정 이력이며 API로 제공하지 않는다. `runs/`는 Git에서 제외한다.
+`runs/{run_id}.trace.json`은 API/UI와 동일한 표시용 결과다. `.raw.json`, `.evaluation.json`, `.detector-gold.json`은 로컬 원시 근거·판정 이력이며 API로 제공하지 않는다. `runs/`는 Git에서 제외한다.
+
+#26 보완으로 score/reason 모순 검토·차단/격리 정책, 선택적인 제공자 JSON schema 형식, 생성 없이 검사하는 detector_only 실행을 지원한다. gold는 실행 후 등록하며 D2에 전달하지 않는다. 일관된 의미적 오판은 남는 위험이며 실제 모델 성능은 별도 검증이 필요하다. API 본문·산식과 인계는 [2주차 문서](../docs/week2-backend.md#26-탐지기-자체의-판정-우회-보완), [마스킹 샘플](../docs/examples/d2-security/README.md)을 참고한다.
 
 환경 변수, 모델 HTTP 인터페이스, 실행 예산, 가격/평가 예시, 호환성 변경 및 남은 인수 조건은 [2주차 실행·인계 문서](../docs/week2-backend.md)를 따른다. [이메일 예시](examples/email/)와 [UI 샘플](../docs/examples/week2/README.md)을 제공한다.
 
