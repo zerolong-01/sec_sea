@@ -17,7 +17,9 @@ class EnvironmentTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        # Windows CI may return an 8.3 alias (RUNNER~1) for the temp directory.
+        # Compare canonical paths while still passing the raw alias to callers.
+        self.root = Path(self.temp.name).resolve()
         self.env_file = self.root / ".env"
 
     def write_env(self, text):
@@ -36,7 +38,7 @@ class EnvironmentTests(unittest.TestCase):
         try:
             os.chdir(other)
             with patch.dict(os.environ, {}, clear=True):
-                settings = Settings.from_environment(self.root)
+                settings = Settings.from_environment(Path(self.temp.name))
         finally:
             os.chdir(original_cwd)
         self.assertEqual(settings.model_id, "fixture-model")
@@ -78,7 +80,7 @@ class EnvironmentTests(unittest.TestCase):
              self.root / "cli-data", self.root / "cli-manifest.json"),
         ):
             output = io.StringIO()
-            with patch.dict(os.environ, {}, clear=True), patch.object(mvp, "ROOT", self.root), \
+            with patch.dict(os.environ, {}, clear=True), patch.object(mvp, "ROOT", Path(self.temp.name)), \
                     patch.object(mvp, "VENV_PYTHON", self.root / "missing-python"), \
                     patch("scripts.data_contract.load_bundle", return_value=bundle) as load, redirect_stdout(output):
                 self.assertEqual(mvp.main(arguments), 0)
