@@ -4,6 +4,7 @@ import base64
 import json
 import re
 import time
+import threading
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -13,15 +14,18 @@ from typing import Any
 from .accounting import Accounting
 from .config import Settings
 from .defenses import Classifier, LLMInjectionClassifier
+from .detector_evaluation import analysis_status, initial_evaluations, report
 from .evaluation import EvaluationContext, Evaluator, ManualEvaluator, RuleEvaluator
-from .models import (CaseRecord, DefenseEvent, EvaluationUpdate, Manifest, ModelCall,
+from .models import (CaseRecord, DefenseEvent, DetectorEvaluation, DetectorGoldUpdate, EvaluationResult,
+                     EvaluationUpdate, Manifest, ModelCall,
                      OutputRecord, PromptComponent, RunRequest, RunTrace, StageMetric)
 from .prompts import D1_VERSION, prepare_prompt
 from .providers import DemoRagProvider, OpenAICompatibleProvider, ProviderError
 from .repository import ArtifactNotFound, ArtifactValidationError, ExperimentRepository, RunTraceStore
 from .retrieval import lexical_retrieve
-from .shared_variables import (DefenseDecision, DefenseMode, DefensePosition, DetectorErrorPolicy,
-                               ExecutionScope, KEYS, OutputOutcome, RunStatus, Scenario, TraceStage)
+from .shared_variables import (DefenseDecision, DefenseMode, DefensePosition, DetectorConsistencyPolicy,
+                               DetectorErrorPolicy, EvaluationStatus, ExecutionKind, ExecutionScope,
+                               KEYS, OutputOutcome, RunStatus, Scenario, SchemaVersion, TraceStage)
 
 CANARY_PATTERN = re.compile(r"CANARY_[A-Z0-9_]+")
 
@@ -66,6 +70,8 @@ class RunService:
         self._evaluator = evaluator or (RuleEvaluator(settings.evaluation_rules_path)
                                        if settings.evaluation_rules_path else ManualEvaluator())
         self._accounting = Accounting(settings.pricing_path)
+        # The local single-worker API may receive concurrent review updates.
+        self._review_lock = threading.RLock()
 
     @contextmanager
     def _stage(self, execution: Execution, stage: TraceStage):
@@ -94,13 +100,18 @@ class RunService:
             detection, response = self._classifier.classify(text, stage, target_ref)
             self._record(execution, response.call)
             suspicious = detection.score >= threshold
-            decision = (DefenseDecision.BLOCK if stage == TraceStage.INPUT or self._settings.d2_document_action == DefenseDecision.BLOCK
+            threshold_decision = (DefenseDecision.BLOCK if stage == TraceStage.INPUT or self._settings.d2_document_action == DefenseDecision.BLOCK
                         else DefenseDecision.QUARANTINE) if suspicious else DefenseDecision.ALLOW
+            issue = detection.consistency_issue(threshold)
+            decision = threshold_decision
+            if issue and self._settings.d2_consistency_policy == DetectorConsistencyPolicy.REVIEW_ON_CONTRADICTION:
+                decision = (DefenseDecision.BLOCK if stage == TraceStage.INPUT else self._settings.d2_document_action)
             execution.events.append(DefenseEvent(
                 defense_id=DefenseMode.D2, defense_version=self._settings.d2_version, stage=stage,
                 decision=decision, score=detection.score, threshold=threshold,
                 target_ref=target_ref, policy_version=self._settings.d2_policy_version,
-                reason_code=detection.reason_code, reason=detection.reason, score_kind="llm_self_reported"))
+                reason_code=detection.reason_code, reason=detection.reason, score_kind="llm_self_reported",
+                threshold_decision=threshold_decision, consistency_issue=issue, review_needed=issue is not None))
             return decision
         except ProviderError as exc:
             self._record(execution, exc.call)
@@ -123,16 +134,28 @@ class RunService:
         execution = Execution(request, self._build_manifest(request))
         d1 = request.defense_mode in (DefenseMode.D1, DefenseMode.D1_D2)
         d2 = request.defense_mode in (DefenseMode.D2, DefenseMode.D1_D2)
+        diagnostic = request.execution_kind == ExecutionKind.DETECTOR_ONLY
+        detector_errors = []
+
+        def inspect(text, stage, target_ref):
+            try:
+                return self._inspect(execution, text, stage, target_ref)
+            except ProviderError as exc:
+                if not diagnostic:
+                    raise
+                detector_errors.append(exc)
+                return DefenseDecision.BLOCK
+
         try:
             with self._stage(execution, TraceStage.INPUT):
                 execution.case = self._repository.get_case(request.case_id)
                 case = execution.case
                 self._validate_request_against_case(request, case)
                 if d2 and request.defense_position in (DefensePosition.INPUT, DefensePosition.BOTH):
-                    decision = self._inspect(execution, case.user_input, TraceStage.INPUT, None)
+                    decision = inspect(case.user_input, TraceStage.INPUT, None)
                 else:
                     decision = DefenseDecision.ALLOW
-            if decision == DefenseDecision.BLOCK:
+            if decision == DefenseDecision.BLOCK and not diagnostic:
                 execution.skipped = "input_blocked"
                 return self._finish(execution, RunStatus.BLOCKED, OutputOutcome.BLOCKED)
             with self._stage(execution, TraceStage.RETRIEVAL):
@@ -149,8 +172,12 @@ class RunService:
                 decision = DefenseDecision.ALLOW
                 if d2 and request.defense_position in (DefensePosition.DOCUMENTS, DefensePosition.BOTH):
                     with self._stage(execution, TraceStage.RETRIEVAL):
-                        decision = self._inspect(execution, document.title+"\n"+document.content,
-                                                 TraceStage.RETRIEVAL, document.document_id)
+                        decision = inspect(document.title+"\n"+document.content, TraceStage.RETRIEVAL, document.document_id)
+                if diagnostic:
+                    item.included_in_prompt = False
+                    if detector_errors and detector_errors[-1].code == "MODEL_CALL_BUDGET_EXCEEDED":
+                        break
+                    continue
                 item.included_in_prompt = decision == DefenseDecision.ALLOW
                 if decision == DefenseDecision.BLOCK:
                     # No generation occurs, so no retrieved item reaches a prompt.
@@ -160,6 +187,14 @@ class RunService:
                     return self._finish(execution, RunStatus.BLOCKED, OutputOutcome.BLOCKED)
                 if item.included_in_prompt:
                     included.append(document)
+            if diagnostic:
+                execution.skipped = execution.skipped or "detector_only"
+                # Fail-open errors also remain failed diagnostics, never successful detections.
+                errors = [event for event in execution.events if event.error is not None]
+                code = detector_errors[0].code if detector_errors else errors[0].reason_code if errors else None
+                return self._finish(execution, RunStatus.FAILED if errors else RunStatus.COMPLETED,
+                                    OutputOutcome.NOT_GENERATED, code,
+                                    errors[0].error if errors else None)
             if ranked and not included:
                 execution.skipped = "all_documents_quarantined"
                 return self._finish(execution, RunStatus.BLOCKED, OutputOutcome.BLOCKED)
@@ -219,10 +254,12 @@ class RunService:
                 item.included_in_prompt = False
         with self._stage(execution, TraceStage.EVALUATION):
             try:
-                evaluation = self._evaluator.evaluate(EvaluationContext(execution.case, status, execution.raw_output))
+                evaluation = (EvaluationResult(attack_success=EvaluationStatus.NOT_EVALUATED,
+                    normal_task_success=EvaluationStatus.NOT_EVALUATED,
+                    evaluator_version="detector-only-v0.1", reason="detector_only:no_generation_or_final_outcome")
+                    if execution.request.execution_kind == ExecutionKind.DETECTOR_ONLY else
+                    self._evaluator.evaluate(EvaluationContext(execution.case, status, execution.raw_output)))
             except Exception as exc:
-                from .models import EvaluationResult
-                from .shared_variables import EvaluationStatus
                 evaluation = EvaluationResult(attack_success=EvaluationStatus.NOT_EVALUATED,
                     normal_task_success=EvaluationStatus.NOT_EVALUATED,
                     evaluator_version=self._evaluator.version,
@@ -237,6 +274,7 @@ class RunService:
             "model_calls": [call.model_dump(mode="json") for call in execution.calls],
             "provider_output": execution.raw_output, "provider_error": error_message,
             "evaluation": evaluation.model_dump(mode="json"),
+            "defense_events": [event.model_dump(mode="json") for event in execution.events],
         }
         self._trace_store.save_raw(execution.run_id, raw)
         canaries = set(CANARY_PATTERN.findall(json.dumps(raw)))
@@ -249,14 +287,16 @@ class RunService:
         output = self._safe(execution.raw_output, canaries) if execution.raw_output is not None else None
         trace = RunTrace(
             run_id=execution.run_id, status=status, created_at=raw["created_at"], request=execution.request,
-            manifest=execution.manifest, input=self._safe(raw_input, canaries), retrieval=execution.retrieval,
+            manifest=Manifest.model_validate(self._safe(execution.manifest.model_dump(mode="json"), canaries)),
+            input=self._safe(raw_input, canaries), retrieval=execution.retrieval,
             prompt_assembly=components, defense_events=[DefenseEvent.model_validate(self._safe(event.model_dump(mode="json"), canaries))
                                                        for event in execution.events],
             output=OutputRecord(outcome=outcome, display_text=output,
                                 is_masked=output != execution.raw_output),
             evaluation=type(evaluation).model_validate(self._safe(evaluation.model_dump(mode="json"), canaries)), metrics=metrics,
             error={"code": error_code, "message": self._safe(error_message, canaries)} if error_code else None,
-            model_calls=[ModelCall.model_validate(self._safe(call.model_dump(mode="json"), canaries)) for call in execution.calls])
+            model_calls=[ModelCall.model_validate(self._safe(call.model_dump(mode="json"), canaries)) for call in execution.calls],
+            detector_evaluation=initial_evaluations(execution.events))
         self._trace_store.save(trace)
         return trace
 
@@ -271,13 +311,15 @@ class RunService:
         scope = (ExecutionScope.DEMO if self._settings.model_provider == "demo" else ExecutionScope.FIXTURE
                  if self._settings.model_provider == "fixture_http" else ExecutionScope.REAL)
         return Manifest(
+            execution_kind=request.execution_kind,
             model_id=self._settings.model_id, provider=self._settings.model_provider, execution_scope=scope,
             base_system_prompt_version=self._settings.system_prompt_version,
             system_prompt_version=(self._settings.system_prompt_version+"+"+D1_VERSION if d1
                                    else self._settings.system_prompt_version),
             generation_parameters={"temperature": self._settings.temperature, "max_tokens": self._settings.max_tokens},
             retrieval_config_version=self._settings.retrieval_config_version, defense_config_versions=versions,
-            defense_position=request.defense_position, evaluator_version=self._evaluator.version,
+            defense_position=request.defense_position, evaluator_version=("detector-only-v0.1"
+                if request.execution_kind == ExecutionKind.DETECTOR_ONLY else self._evaluator.version),
             pricing_version=self._accounting.book.version if self._accounting.book else None,
             pricing_snapshot=self._accounting.book.model_dump(mode="json") if self._accounting.book else {},
             max_model_calls=self._settings.max_model_calls,
@@ -285,6 +327,10 @@ class RunService:
                               "detector_version": self._settings.d2_version, "policy_version": self._settings.d2_policy_version,
                               "threshold": request.d2_threshold if request.d2_threshold is not None else self._settings.d2_threshold,
                               "error_policy": self._settings.d2_error_policy,
+                              "consistency_policy": self._settings.d2_consistency_policy,
+                              "response_format": self._settings.d2_response_format,
+                              "temperature": 0, "max_tokens": 256,
+                              "base_url": self._settings.d2_base_url or self._settings.model_base_url,
                               "input_action": DefenseDecision.BLOCK, "document_action": self._settings.d2_document_action}
             if d2 else {})
 
@@ -299,19 +345,49 @@ class RunService:
         return self._trace_store.get(run_id)
 
     def update_evaluation(self, run_id: str, update: EvaluationUpdate) -> RunTrace:
+        with self._review_lock:
+            return self._update_evaluation(run_id, update)
+
+    def _update_evaluation(self, run_id: str, update: EvaluationUpdate) -> RunTrace:
         trace = self.get_trace(run_id)
-        from .shared_variables import EvaluationStatus
-        if trace.status == RunStatus.FAILED and any(value in (EvaluationStatus.SUCCESS, EvaluationStatus.FAILURE)
+        if (trace.status == RunStatus.FAILED or trace.manifest.execution_kind == ExecutionKind.DETECTOR_ONLY) and any(value in (EvaluationStatus.SUCCESS, EvaluationStatus.FAILURE)
             for value in (update.attack_success, update.normal_task_success)):
-            raise ValueError("실행 실패는 성공·실패 평가의 집계 대상에 포함할 수 없습니다.")
+            raise ValueError("실행 실패 또는 탐지 전용 실행은 최종 성공·실패 평가의 집계 대상이 아닙니다.")
         evaluation = update.model_dump(mode="json")
         evaluation["evaluated_at"] = datetime.now(timezone.utc).isoformat()
         self._trace_store.save_evaluation(run_id, evaluation)
-        from .models import EvaluationResult
         trace.evaluation = EvaluationResult.model_validate(self._safe(evaluation))
         trace.manifest.evaluator_version = trace.evaluation.evaluator_version
         self._trace_store.save(trace)
         return trace
+
+    def update_detector_gold(self, run_id: str, update: DetectorGoldUpdate) -> RunTrace:
+        with self._review_lock:
+            return self._update_detector_gold(run_id, update)
+
+    def _update_detector_gold(self, run_id: str, update: DetectorGoldUpdate) -> RunTrace:
+        trace = self.get_trace(run_id)
+        event = next((event for event in trace.defense_events if event.defense_id == DefenseMode.D2
+                      and (event.stage, event.target_ref) == (update.stage, update.target_ref)), None)
+        if event is None:
+            raise ValueError("정답은 실제 D2 검사 대상에만 등록할 수 있습니다.")
+        payload = {**update.model_dump(mode="json"), "evaluated_at": datetime.now(timezone.utc).isoformat(),
+                   "analysis_status": analysis_status(event, update.gold_label)}
+        self._trace_store.save_detector_gold(run_id, payload)
+        raw = self._trace_store.get_raw(run_id)
+        canaries = set(CANARY_PATTERN.findall(json.dumps(raw)))
+        evaluation = DetectorEvaluation.model_validate(self._safe(payload, canaries))
+        # Older traces may have no evaluation rows; preserve every inspected target.
+        existing = {(item.stage, item.target_ref): item for item in trace.detector_evaluation}
+        existing[(evaluation.stage, evaluation.target_ref)] = evaluation
+        trace.detector_evaluation = [existing.get((item.stage, item.target_ref), item)
+                                     for item in initial_evaluations(trace.defense_events)]
+        trace.schema_version = SchemaVersion.EXECUTION
+        self._trace_store.save(trace)
+        return trace
+
+    def detector_report(self, run_ids: list[str]):
+        return report([self.get_trace(run_id) for run_id in run_ids])
 
 
 def build_provider(settings: Settings):
@@ -331,4 +407,4 @@ def build_classifier(settings: Settings):
         return None
     return LLMInjectionClassifier(OpenAICompatibleProvider(
         base_url, settings.d2_api_key or settings.model_api_key, settings.d2_model_id or settings.model_id,
-        settings.model_timeout_seconds))
+        settings.model_timeout_seconds), settings.d2_response_format)

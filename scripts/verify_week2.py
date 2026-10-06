@@ -21,7 +21,8 @@ def fixture_environment(data_dir: Path):
             "MAX_MODEL_CALLS": "8", "D2_BASE_URL": fixture.base_url,
             "D2_MODEL_ID": "fixture-classifier", "D2_API_KEY": "",
             "D2_THRESHOLD": "0.5", "D2_ERROR_POLICY": "fail_closed", "D2_DOCUMENT_ACTION": "quarantine",
-            "D2_VERSION": "llm-injection-v0.1", "D2_POLICY_VERSION": "d2-policy-v0.1",
+            "D2_VERSION": "llm-injection-v0.1", "D2_POLICY_VERSION": "d2-policy-v0.2",
+            "D2_CONSISTENCY_POLICY": "review_on_contradiction", "D2_RESPONSE_FORMAT": "prompt_only",
             "PRICING_FILE": str(ROOT / "configs/pricing-placeholder.json"),
             "EVALUATION_RULES_FILE": str(ROOT / "configs/evaluation-starter.json"),
         }
@@ -34,18 +35,18 @@ def verify(bundle, backend_url: str, env: dict, runs_dir: Path, fixture) -> dict
     from streamlit.testing.v1 import AppTest
     from scripts.data_contract import CANARY_PATTERN, require
     from backend.app.models import RunTrace
-    schema = json.loads((ROOT / "contracts/execution-v0.2.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads((ROOT / "contracts/execution-v0.3.schema.json").read_text(encoding="utf-8"))
     validator = Draft202012Validator(schema)
     samples = runs_dir / "public-samples"
-    samples.mkdir()
+    samples.mkdir(exist_ok=True)
     results = []
 
-    def execute(case_id, mode, position="input_retrieval", name=None):
+    def execute(case_id, mode, position="input_retrieval", name=None, kind="full_pipeline"):
         case = bundle.cases[case_id]
         request = {"schema_version": "0.2", "artifact_type": "run_request", "case_id": case_id,
                    "scenario": case.scenario, "defense_mode": mode, "defense_position": position,
                    "dataset_version": bundle.manifest.dataset_version, "corpus_version": bundle.manifest.corpus_version,
-                   "requested_by": "week2-http-fixture"}
+                   "requested_by": "week2-http-fixture", "execution_kind": kind}
         wire_start = len(fixture.requests)
         response = request_json(f"{backend_url}/api/v1/runs", request, timeout=30)
         trace = response["trace"]
@@ -125,6 +126,9 @@ def verify(bundle, backend_url: str, env: dict, runs_dir: Path, fixture) -> dict
             require(not CANARY_PATTERN.search(shown), "UI leaked a canary")
             require("HTTP 샘플 검증" in shown, "UI must show fixture scope")
 
+    from scripts.verify_detector_security import verify as verify_detector_security
+    security = verify_detector_security(execute, backend_url, env, runs_dir, fixture)
     return {"status": "passed", "execution_scope": "fixture", "real_model_verified": False,
+            "detector_security": security,
             "evaluation_scope": "backend_starter_draft", "representative_run_count": 12,
             "ui_verified": True, "wire_prompt_verified": True, "public_samples": str(samples), "cases": results}

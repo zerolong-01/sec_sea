@@ -115,6 +115,16 @@ class RunTraceStore:
         history.append(evaluation)
         return self._save_json(target, history)
 
+    def save_detector_gold(self, run_id: str, evaluation: dict) -> Path:
+        target = self._runs_dir / f"{run_id}.detector-gold.json"
+        history = json.loads(target.read_text(encoding="utf-8")) if target.exists() else []
+        history.append(evaluation)
+        return self._save_json(target, history)
+
+    def get_raw(self, run_id: str) -> dict:
+        path = self._runs_dir / f"{run_id}.raw.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
     def _save_json(self, target: Path, payload: object) -> Path:
         self._runs_dir.mkdir(parents=True, exist_ok=True)
         temporary = target.with_suffix(".tmp")

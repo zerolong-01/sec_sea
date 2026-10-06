@@ -142,7 +142,7 @@ def validate_api_trace(bundle, item, trace: dict, request: dict) -> None:
     from backend.app.models import RunTrace
     from scripts.data_contract import CANARY_PATTERN, require
 
-    schema = json.loads((ROOT / "contracts/execution-v0.2.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads((ROOT / "contracts/execution-v0.3.schema.json").read_text(encoding="utf-8"))
     Draft202012Validator(schema).validate(trace)
     record = RunTrace.model_validate(trace)
     require(record.status == "completed" and record.error is None, f"{item.case_id}: execution failed")

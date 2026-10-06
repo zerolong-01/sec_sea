@@ -5,7 +5,8 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
-from .shared_variables import DefenseDecision, DetectorErrorPolicy
+from .shared_variables import (DefenseDecision, DetectorConsistencyPolicy, DetectorErrorPolicy,
+                               DetectorResponseFormat)
 
 
 @dataclass(frozen=True)
@@ -36,7 +37,9 @@ class Settings:
     d2_error_policy: DetectorErrorPolicy = DetectorErrorPolicy.FAIL_CLOSED
     d2_document_action: DefenseDecision = DefenseDecision.QUARANTINE
     d2_version: str = "llm-injection-v0.1"
-    d2_policy_version: str = "d2-policy-v0.1"
+    d2_policy_version: str = "d2-policy-v0.2"
+    d2_consistency_policy: DetectorConsistencyPolicy = DetectorConsistencyPolicy.REVIEW_ON_CONTRADICTION
+    d2_response_format: DetectorResponseFormat = DetectorResponseFormat.PROMPT_ONLY
     pricing_path: Path | None = None
     evaluation_rules_path: Path | None = None
 
@@ -49,6 +52,8 @@ class Settings:
             raise ValueError("Token/call limits and timeout must be positive")
         if self.d2_document_action not in (DefenseDecision.QUARANTINE, DefenseDecision.BLOCK):
             raise ValueError("D2_DOCUMENT_ACTION must be quarantine or block")
+        DetectorConsistencyPolicy(self.d2_consistency_policy)
+        DetectorResponseFormat(self.d2_response_format)
 
     @classmethod
     def from_environment(cls) -> "Settings":
@@ -81,7 +86,9 @@ class Settings:
             d2_error_policy=DetectorErrorPolicy(os.getenv("D2_ERROR_POLICY", DetectorErrorPolicy.FAIL_CLOSED)),
             d2_document_action=DefenseDecision(os.getenv("D2_DOCUMENT_ACTION", DefenseDecision.QUARANTINE)),
             d2_version=os.getenv("D2_VERSION", "llm-injection-v0.1"),
-            d2_policy_version=os.getenv("D2_POLICY_VERSION", "d2-policy-v0.1"),
+            d2_policy_version=os.getenv("D2_POLICY_VERSION", "d2-policy-v0.2"),
+            d2_consistency_policy=DetectorConsistencyPolicy(os.getenv("D2_CONSISTENCY_POLICY", DetectorConsistencyPolicy.REVIEW_ON_CONTRADICTION)),
+            d2_response_format=DetectorResponseFormat(os.getenv("D2_RESPONSE_FORMAT", DetectorResponseFormat.PROMPT_ONLY)),
             pricing_path=Path(os.environ["PRICING_FILE"]).resolve() if os.getenv("PRICING_FILE") else None,
             evaluation_rules_path=Path(os.environ["EVALUATION_RULES_FILE"]).resolve() if os.getenv("EVALUATION_RULES_FILE") else None,
         )

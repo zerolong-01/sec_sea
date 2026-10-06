@@ -22,6 +22,7 @@ class FixtureModelServer:
             self.scores[doc["title"]+"\n"+doc["content"]] = 0.95
         self.requests = []
         self.fail_detection = None
+        self.detection_overrides = {}
         self.missing_usage = False
         self.generation_text = None
         self.server = None
@@ -46,9 +47,9 @@ class FixtureModelServer:
                 if detection:
                     text = json.loads(payload["messages"][1]["content"])["text"]
                     score = fixture.scores.get(text, 0.05)
-                    content = ("invalid classifier JSON" if fixture.fail_detection == "malformed" else json.dumps({
+                    content = ("invalid classifier JSON" if fixture.fail_detection == "malformed" else json.dumps(fixture.detection_overrides.get(text, {
                         "score": score, "reason_code": "malicious_instruction" if score >= 0.5 else "normal_request",
-                        "reason": "predetermined HTTP fixture classification; not a model measurement"}))
+                        "reason": "predetermined HTTP fixture classification; not a model measurement"})))
                 else:
                     context = payload["messages"][1]["content"]
                     if context.startswith("{"):

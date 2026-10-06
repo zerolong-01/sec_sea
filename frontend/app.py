@@ -137,6 +137,8 @@ def render_header(trace):
     cols[3].text(str(label_of("defense_modes", request.get("defense_mode")) or NO_VALUE))
     scope = (trace.get("manifest") or {}).get("execution_scope")
     st.caption(f"실행 범위: {label_of('execution_scopes', scope) or NO_VALUE}")
+    kind = (trace.get("manifest") or {}).get("execution_kind", SHARED["execution_kinds"]["FULL_PIPELINE"]["value"])
+    st.caption(f"실행 종류: {label_of('execution_kinds', kind)}")
 
 
 def render_timeline(trace):
@@ -218,6 +220,9 @@ def render_timeline(trace):
                     "대상": event.get("target_ref") or "사용자 입력/프롬프트",
                     "근거": event.get("reason") or NO_VALUE,
                     "오류": event.get("error") or NO_VALUE,
+                    "임계값 기준 판정": label_of("defense_decisions", event.get("threshold_decision")) or NO_VALUE,
+                    "모순": event.get("consistency_issue") or "없음",
+                    "검토 필요": "예" if event.get("review_needed") else "아니오",
                 }
                 for event in events
             ]
@@ -298,6 +303,20 @@ def render_meta(trace):
             for message in call["messages"]:
                 st.caption(message["role"])
                 show_text(message["content"])
+
+    with st.container(border=True):
+        st.subheader("탐지 대상별 독립 평가")
+        rows = trace.get("detector_evaluation") or []
+        if not rows:
+            st.caption("탐지 대상별 평가 기록 없음")
+        else:
+            st.dataframe([{"단계": label_of("trace_stages", item["stage"]),
+                           "대상": item.get("target_ref") or "사용자 입력",
+                           "정답": label_of("detector_gold_labels", item.get("gold_label")) or NO_VALUE,
+                           "분석": label_of("detector_analysis_statuses", item.get("analysis_status")) or NO_VALUE,
+                           "정답 버전": item.get("gold_version") or NO_VALUE,
+                           "검토자": item.get("reviewer") or NO_VALUE,
+                           "근거": item.get("reason") or NO_VALUE} for item in rows], hide_index=True)
 
 
 st.title("LLM Defense Trade-off Lab")

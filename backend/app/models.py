@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -13,6 +14,9 @@ from .shared_variables import (
     DefenseDecision,
     DefenseMode,
     DefensePosition,
+    DetectorAnalysisStatus,
+    DetectorGoldLabel,
+    ExecutionKind,
     ExecutionScope,
     EvaluationStatus,
     Language,
@@ -102,7 +106,7 @@ class SourceDocument(StrictModel):
 
 
 class RunRequest(StrictModel):
-    schema_version: Literal[SchemaVersion.CURRENT, SchemaVersion.EXECUTION]
+    schema_version: Literal[SchemaVersion.CURRENT, SchemaVersion.PREVIOUS_EXECUTION, SchemaVersion.EXECUTION]
     artifact_type: Literal[ArtifactType.RUN_REQUEST]
     case_id: str = Field(pattern=r"^[a-z][a-z0-9_-]{2,63}$")
     scenario: Scenario
@@ -112,6 +116,13 @@ class RunRequest(StrictModel):
     requested_by: str = Field(min_length=1)
     defense_position: DefensePosition = DefensePosition.BOTH
     d2_threshold: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
+    execution_kind: ExecutionKind = ExecutionKind.FULL_PIPELINE
+
+    @model_validator(mode="after")
+    def validate_detector_only(self):
+        if self.execution_kind == ExecutionKind.DETECTOR_ONLY and self.defense_mode != DefenseMode.D2:
+            raise ValueError("detector_only requires defense_mode D2; D1/generation are not executed")
+        return self
 
 
 class RetrievalItem(StrictModel):
@@ -145,6 +156,75 @@ class DefenseEvent(StrictModel):
     reason: str | None = None
     error: str | None = None
     score_kind: str | None = None
+    threshold_decision: DefenseDecision | None = None
+    consistency_issue: str | None = None
+    review_needed: bool = False
+
+
+class DetectorTarget(StrictModel):
+    stage: Literal[TraceStage.INPUT, TraceStage.RETRIEVAL]
+    target_ref: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{2,63}$")
+
+    @model_validator(mode="after")
+    def validate_target(self):
+        if (self.stage == TraceStage.INPUT and self.target_ref is not None or
+                self.stage == TraceStage.RETRIEVAL and self.target_ref is None):
+            raise ValueError("input target_ref must be null; retrieval requires document_id")
+        return self
+
+
+class DetectorGoldUpdate(DetectorTarget):
+    gold_label: DetectorGoldLabel
+    gold_version: str = Field(min_length=1, max_length=200)
+    reviewer: str = Field(min_length=1, max_length=200)
+    reason: str = Field(min_length=1, max_length=2000)
+
+
+class DetectorEvaluation(DetectorTarget):
+    gold_label: DetectorGoldLabel | None = None
+    gold_version: str | None = None
+    reviewer: str | None = None
+    reason: str | None = None
+    evaluated_at: str | None = None
+    analysis_status: DetectorAnalysisStatus = DetectorAnalysisStatus.NOT_EVALUATED
+
+
+class DetectorReportRequest(StrictModel):
+    run_ids: list[str] = Field(min_length=1, max_length=500)
+
+    @field_validator("run_ids")
+    @classmethod
+    def validate_ids(cls, value):
+        if len(set(value)) != len(value) or any(not re.fullmatch(r"run-[a-z0-9_-]{1,60}", item) for item in value):
+            raise ValueError("run_ids must be unique valid run IDs")
+        return value
+
+
+class DetectorRate(StrictModel):
+    numerator: int = Field(ge=0)
+    denominator: int = Field(ge=0)
+    value: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
+
+
+class DetectorReportGroup(StrictModel):
+    conditions: dict[str, Any]
+    run_ids: list[str]
+    inspected_target_count: int
+    eligible_target_count: int
+    detector_error_count: int
+    review_needed_count: int
+    not_evaluated_count: int
+    fnr: DetectorRate
+    fpr: DetectorRate
+    benign_fpr: DetectorRate
+    hard_negative_fpr: DetectorRate
+
+
+class DetectorReport(StrictModel):
+    schema_version: Literal[SchemaVersion.EXECUTION] = SchemaVersion.EXECUTION
+    report_version: str = "detector-target-rates-v0.1"
+    denominator_rule: str
+    groups: list[DetectorReportGroup]
 
 
 class EvaluationResult(StrictModel):
@@ -239,10 +319,11 @@ class Manifest(StrictModel):
     pricing_version: str | None = None
     max_model_calls: int = Field(default=8, ge=1)
     pricing_snapshot: dict[str, Any] = Field(default_factory=dict)
+    execution_kind: ExecutionKind = ExecutionKind.FULL_PIPELINE
 
 
 class RunTrace(StrictModel):
-    schema_version: Literal[SchemaVersion.CURRENT, SchemaVersion.EXECUTION] = SchemaVersion.EXECUTION
+    schema_version: Literal[SchemaVersion.CURRENT, SchemaVersion.PREVIOUS_EXECUTION, SchemaVersion.EXECUTION] = SchemaVersion.EXECUTION
     artifact_type: Literal[ArtifactType.RUN_TRACE] = ArtifactType.RUN_TRACE
     run_id: str = Field(pattern=r"^[a-z][a-z0-9_-]{2,63}$")
     status: RunStatus
@@ -258,6 +339,7 @@ class RunTrace(StrictModel):
     metrics: Metrics
     error: ErrorRecord | None
     model_calls: list[ModelCall] = Field(default_factory=list)
+    detector_evaluation: list[DetectorEvaluation] = Field(default_factory=list)
 
 
 class RunResponse(StrictModel):

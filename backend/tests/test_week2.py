@@ -53,7 +53,7 @@ class WeekTwoTests(unittest.TestCase):
 
     def test_twelve_runs_persist_and_match_wire_payloads(self):
         client = TestClient(create_app(self.settings))
-        schema = json.loads((ROOT / "contracts/execution-v0.2.schema.json").read_text(encoding="utf-8"))
+        schema = json.loads((ROOT / "contracts/execution-v0.3.schema.json").read_text(encoding="utf-8"))
         validator = Draft202012Validator(schema)
         run_ids = set()
         for case in ("a006", "b006", "h007"):
@@ -191,7 +191,7 @@ class WeekTwoTests(unittest.TestCase):
         self.assertEqual(blocked.metrics.generation_skipped_reason, "document_blocked")
         self.assertEqual(blocked.defense_events[0].decision, "block")
         request = self.request().model_copy(update={"d2_threshold": 0.99})
-        allowed = self.service().execute(request)
+        allowed = self.service(d2_consistency_policy="threshold_only").execute(request)
         self.assertEqual(allowed.status, "completed")
         self.assertEqual(allowed.defense_events[-1].threshold, 0.99)
         self.fixture.fail_detection = "http_error"

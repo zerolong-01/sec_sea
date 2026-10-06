@@ -31,7 +31,38 @@ _stages = {item["value"].upper(): item["value"] for item in _shared["trace_stage
 
 class SchemaVersion(StrEnum):
     CURRENT = _shared["contract_version"]
+    PREVIOUS_EXECUTION = _shared["previous_execution_contract_version"]
     EXECUTION = _shared["execution_contract_version"]
+
+
+class ExecutionKind(StrEnum):
+    FULL_PIPELINE = _value("execution_kinds", "FULL_PIPELINE")
+    DETECTOR_ONLY = _value("execution_kinds", "DETECTOR_ONLY")
+
+
+class DetectorConsistencyPolicy(StrEnum):
+    THRESHOLD_ONLY = _value("detector_consistency_policies", "THRESHOLD_ONLY")
+    REVIEW_ON_CONTRADICTION = _value("detector_consistency_policies", "REVIEW_ON_CONTRADICTION")
+
+
+class DetectorResponseFormat(StrEnum):
+    PROMPT_ONLY = _value("detector_response_formats", "PROMPT_ONLY")
+    JSON_SCHEMA = _value("detector_response_formats", "JSON_SCHEMA")
+
+
+class DetectorGoldLabel(StrEnum):
+    MALICIOUS = _value("detector_gold_labels", "MALICIOUS")
+    BENIGN = _value("detector_gold_labels", "BENIGN")
+    HARD_NEGATIVE = _value("detector_gold_labels", "HARD_NEGATIVE")
+    REVIEW_NEEDED = _value("detector_gold_labels", "REVIEW_NEEDED")
+
+
+class DetectorAnalysisStatus(StrEnum):
+    CORRECT = _value("detector_analysis_statuses", "CORRECT")
+    MISCLASSIFICATION = _value("detector_analysis_statuses", "MISCLASSIFICATION")
+    ERROR = _value("detector_analysis_statuses", "ERROR")
+    REVIEW_NEEDED = _value("detector_analysis_statuses", "REVIEW_NEEDED")
+    NOT_EVALUATED = _value("detector_analysis_statuses", "NOT_EVALUATED")
 
 
 class DefensePosition(StrEnum):
@@ -112,6 +143,7 @@ class OutputOutcome(StrEnum):
     BLOCKED = _value("output_outcomes", "BLOCKED")
     SUBSTITUTED = _value("output_outcomes", "SUBSTITUTED")
     ERROR = _value("output_outcomes", "ERROR")
+    NOT_GENERATED = _value("output_outcomes", "NOT_GENERATED")
 
 
 class PromptComponentType(StrEnum):
