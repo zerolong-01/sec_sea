@@ -25,6 +25,15 @@ from .repository import (
     RunTraceStore,
 )
 from .retrieval import lexical_retrieve, token_count
+from .shared_variables import (
+    KEYS,
+    METRIC_KEYS,
+    DefenseMode,
+    EvaluationStatus,
+    OutputOutcome,
+    PromptComponentType,
+    RunStatus,
+)
 
 CANARY_PATTERN = re.compile(r"CANARY_[A-Z0-9_]+")
 
@@ -75,9 +84,9 @@ class RunService:
         self._provider = provider
 
     def execute(self, request: RunRequest) -> RunTrace:
-        if request.defense_mode != "none":
+        if request.defense_mode != DefenseMode.NONE:
             raise UnsupportedDefenseMode(
-                "1주차 MVP에서는 defense_mode=none만 지원합니다. "
+                f"1주차 MVP에서는 defense_mode={DefenseMode.NONE}만 지원합니다. "
                 "D1/D2는 trace 형식을 유지한 채 다음 주에 추가합니다."
             )
 
@@ -169,7 +178,7 @@ class RunService:
         output_text, output_masked = mask_display_text(provider_response.text)
         trace = RunTrace(
             run_id=run_id,
-            status="completed",
+            status=RunStatus.COMPLETED,
             created_at=datetime.now(timezone.utc).isoformat(),
             request=request,
             manifest=manifest,
@@ -178,17 +187,17 @@ class RunService:
             prompt_assembly=prompt_assembly,
             defense_events=[],
             output=OutputRecord(
-                outcome="generated",
+                outcome=OutputOutcome.GENERATED,
                 display_text=output_text,
                 is_masked=output_masked,
             ),
             evaluation=self._not_evaluated(),
-            metrics=Metrics(
-                latency_ms=round((time.perf_counter() - started) * 1000),
-                input_tokens=provider_response.input_tokens,
-                output_tokens=provider_response.output_tokens,
-                estimated_cost_usd=provider_response.estimated_cost_usd,
-            ),
+            metrics=Metrics(**{
+                METRIC_KEYS["LATENCY_MS"]: round((time.perf_counter() - started) * 1000),
+                METRIC_KEYS["INPUT_TOKENS"]: provider_response.input_tokens,
+                METRIC_KEYS["OUTPUT_TOKENS"]: provider_response.output_tokens,
+                METRIC_KEYS["ESTIMATED_COST_USD"]: provider_response.estimated_cost_usd,
+            }),
             error=None,
         )
         self._trace_store.save(trace)
@@ -261,7 +270,7 @@ class RunService:
     ) -> RunTrace:
         return RunTrace(
             run_id=run_id,
-            status="failed",
+            status=RunStatus.FAILED,
             created_at=datetime.now(timezone.utc).isoformat(),
             request=request,
             manifest=manifest,
@@ -269,22 +278,22 @@ class RunService:
             retrieval=retrieval,
             prompt_assembly=prompt_assembly,
             defense_events=[],
-            output=OutputRecord(outcome="error", display_text=None, is_masked=False),
+            output=OutputRecord(outcome=OutputOutcome.ERROR, display_text=None, is_masked=False),
             evaluation=self._not_evaluated(),
-            metrics=Metrics(
-                latency_ms=round((time.perf_counter() - started) * 1000),
-                input_tokens=None,
-                output_tokens=None,
-                estimated_cost_usd=None,
-            ),
+            metrics=Metrics(**{
+                METRIC_KEYS["LATENCY_MS"]: round((time.perf_counter() - started) * 1000),
+                METRIC_KEYS["INPUT_TOKENS"]: None,
+                METRIC_KEYS["OUTPUT_TOKENS"]: None,
+                METRIC_KEYS["ESTIMATED_COST_USD"]: None,
+            }),
             error={"code": error_code, "message": mask_display_text(str(error))[0]},
         )
 
     @staticmethod
     def _not_evaluated() -> EvaluationResult:
         return EvaluationResult(
-            attack_success="not_evaluated",
-            normal_task_success="not_evaluated",
+            attack_success=EvaluationStatus.NOT_EVALUATED,
+            normal_task_success=EvaluationStatus.NOT_EVALUATED,
             evaluator_version="manual-v0.1",
             reason=None,
         )
@@ -314,16 +323,16 @@ class RunService:
         self._trace_store.save_raw(
             run_id,
             {
-                "artifact_type": "private_raw_run_log",
-                "run_id": run_id,
+                KEYS["ARTIFACT_TYPE"]: "private_raw_run_log",
+                KEYS["RUN_ID"]: run_id,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "request": request.model_dump(mode="json"),
                 "input": {
                     "user_input": case.user_input,
                     "external_document_ids": case.source_document_ids,
                 },
-                "retrieval": [item.model_dump(mode="json") for item in retrieval],
-                "prompt_assembly": [
+                KEYS["RETRIEVAL"]: [item.model_dump(mode="json") for item in retrieval],
+                KEYS["PROMPT_ASSEMBLY"]: [
                     component.model_dump(mode="json") for component in prompt_assembly
                 ],
                 "provider_output": provider_output,
@@ -341,14 +350,14 @@ class RunService:
         components = [
             PromptComponent(
                 order=0,
-                component_type="system",
+                component_type=PromptComponentType.SYSTEM,
                 source_ref="system_prompt:v0.1",
                 display_text=system_text,
                 is_masked=False,
             ),
             PromptComponent(
                 order=1,
-                component_type="user",
+                component_type=PromptComponentType.USER,
                 source_ref=None,
                 display_text=user_display_text,
                 is_masked=user_is_masked,
@@ -364,7 +373,7 @@ class RunService:
             components.append(
                 PromptComponent(
                     order=index,
-                    component_type="retrieved_document",
+                    component_type=PromptComponentType.RETRIEVED_DOCUMENT,
                     source_ref=document.document_id,
                     display_text=display_text,
                     is_masked=is_masked,

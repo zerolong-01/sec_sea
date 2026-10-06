@@ -48,6 +48,10 @@ output.outcome의 표시명은 output_outcomes에서, prompt_assembly의 각 com
 
 새 방어 모드, 실행 상태, 평가 상태가 필요하면 세 역할이 합의한 뒤 스키마와 통합 변수 파일을 같은 변경에서 갱신한다.
 
+백엔드는 `backend/app/shared_variables.py`에서 이 JSON 파일을 읽어 문자열 enum, `KEYS`, `METRIC_KEYS`, `CANONICAL_PATHS`를 제공한다. 요청 검증 모델, 실행·실패 trace 생성, API 응답, 저장소와 1주차 검증 스크립트는 이 모듈을 사용한다. JSON 응답과 저장 로그에는 enum 이름 대신 기존 계약의 문자열 value를 기록한다.
+
+방어 이벤트의 defense_id는 D1/D2만, normal_task_success는 not_applicable을 제외한 평가 상태만 허용하는 기존 제한을 유지한다. 공통 파일은 저장소 루트를 기준으로 프로세스 시작 시 읽으므로 실행 디렉터리에 영향을 받지 않는다. 파일 변경 시 API를 재시작하고, 필수 파일·항목이 없거나 JSON이 잘못되면 중복 상수로 대체하지 않고 시작을 실패시킨다.
+
 ## 공통 식별자와 공정 비교 단위
 
 - case_id, document_id, run_id는 소문자 영문·숫자·밑줄·하이픈으로 된 안정적인 식별자다. run trace가 만들어진 뒤에는 이름을 바꾸지 않는다.

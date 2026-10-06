@@ -17,6 +17,7 @@ from .service import (
     UnsupportedDefenseMode,
     build_provider,
 )
+from .shared_variables import KEYS, SchemaVersion
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -34,8 +35,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/health")
     def health() -> dict[str, str]:
         return {
-            "status": "ok",
-            "schema_version": "0.1",
+            KEYS["STATUS"]: "ok",
+            KEYS["SCHEMA_VERSION"]: SchemaVersion.CURRENT,
             "model_provider": settings.model_provider,
         }
 
@@ -58,7 +59,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 detail={
                     "code": exc.error_code,
                     "message": str(exc),
-                    "run_id": exc.trace.run_id,
+                    KEYS["RUN_ID"]: exc.trace.run_id,
                 },
             ) from exc
         except ArtifactNotFound as exc:
