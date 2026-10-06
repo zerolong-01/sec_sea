@@ -4,6 +4,46 @@
 
 2026년도 2학기 캡스톤디자인(산학형) 프로젝트입니다.
 
+## MVP 바로 실행하기
+
+Python 3.11 이상에서 저장소 루트의 명령으로 환경을 준비하고 API·Streamlit을 함께 실행합니다.
+
+```text
+python -m scripts.mvp setup
+python -m scripts.mvp serve
+```
+
+setup은 이 저장소의 .venv에 의존성을 설치합니다. 이후 명령은 해당 환경을 자동 사용합니다.
+API는 http://127.0.0.1:8000/docs, 화면은 http://127.0.0.1:8501 입니다.
+화면에서 대표 케이스를 선택하고 실행하면 입력·검색·프롬프트·출력·성능 trace를 확인할 수 있습니다.
+Ctrl+C로 종료하면 두 서버를 함께 정리합니다. 서버가 비정상 종료돼도 나머지 서버를 정리합니다.
+포트를 사용 중이면 `serve --api-port 8001 --ui-port 8502`처럼 변경하세요.
+
+```text
+python -m scripts.mvp check
+python -m scripts.mvp verify
+```
+
+check는 전체 JSONL의 계약·참조·버전과 대표 검색 기대값을 확인합니다.
+verify는 빈 로컬 포트에서 두 서버를 실행하고 대표 3건의 HTTP 실행·trace 재조회·canary 마스킹·재실행 조건 및 UI 버튼 실행을 검증한 뒤 종료합니다.
+결과는 runs/verification-*/verification-report.json에 저장됩니다.
+이 검증은 항상 오프라인 demo 제공자를 사용하며 ASR/FPR·모델 품질을 평가하지 않습니다.
+실행 trace의 평가는 not_evaluated를 유지합니다. 실제 모델의 수동 판정은 [데이터 rubric](data/rubric_v0.1.md)을 따릅니다.
+
+데이터·코퍼스 버전 synthetic_v0.1.1과 대표 케이스 a006, b006, h007은
+[MVP manifest](data/mvp-manifest.v0.1.json)에 고정되어 UI에서 버전을 수동 입력할 필요가 없습니다.
+다른 데이터는 `--data-dir`, 다른 manifest는 `--manifest`, 실행 기록 위치는 `--runs-dir`로 지정합니다.
+DATA_DIR, MVP_MANIFEST, RUNS_DIR 환경 변수로도 설정할 수 있습니다.
+파이프라인은 설치·실행을 저장소 루트에서 수행합니다.
+
+serve의 기본 제공자는 demo입니다. 실제 모델 서버를 사용할 때는 MODEL_PROVIDER=openai_compatible,
+MODEL_BASE_URL, MODEL_ID, 필요한 경우 MODEL_API_KEY를 환경 변수로 지정합니다.
+API 키를 저장소에 기록하지 않습니다. 자세한 모델 설정은 [백엔드 가이드](backend/README.md)를 참고하세요.
+공개 API·UI trace는 canary를 마스킹하고 원시 판정용 로그는 runs에 로컬 파일로만 보관합니다.
+
+통합 계획과 완료 기준은 [이슈 #17](https://github.com/zerolong-01/sec_sea/issues/17) 및
+[실행 계획](docs/mvp-integration-plan.md)에서 확인할 수 있습니다.
+
 ## 프로젝트 한 줄 요약
 
 방어 적용 후 **공격 성공률(ASR)은 얼마나 줄었는가?**만 묻지 않습니다. 그 과정에서 **정상 입력을 얼마나 잘못 차단했는지(FPR), 원래 작업을 계속 수행할 수 있는지, 응답은 얼마나 느려졌는지, 토큰과 비용은 얼마나 증가했는지**를 같은 조건에서 함께 측정합니다.
