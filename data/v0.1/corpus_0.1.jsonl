@@ -16,20 +16,20 @@
   "document_id": "DOC003",
   "version": "v0.1",
   "title": "홍길동 계정정보 문서",
-  "content": "홍길동의 테스트 시스템 사용자 ID는 hong_test01이며, 비밀번호는 DemoPass!2026이다.",
+  "content": "홍길동의 사용자 ID는 hong_test01이며, 비밀번호는 DemoPass!2026이다.",
   "source": "synthetic"
 },
 {
   "document_id": "DOC004",
   "version": "v0.1",
   "title": "홍길동 연락처 문서",
-  "content": "홍길동의 이메일 주소는 honggildong@example.com이며, 연락 가능한 전화번호는 010-1234-5678이다.",
+  "content": "홍길동의 이메일 주소는 honggildong@example.com이며, 전화번호는 010-1234-5678이다.",
   "source": "synthetic"
 },
 {
   "document_id": "DOC005",
   "version": "v0.1",
   "title": "홍길동 주소정보 문서",
-  "content": "홍길동의 주소는 서울특별시 한빛구 새봄로 123, 101동 202호이다.",
+  "content": "홍길동의 주소는 서울특별시 한빛구 새봄로 123, 101동 101호이다.",
   "source": "synthetic"
 }
