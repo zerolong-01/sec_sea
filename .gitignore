@@ -1,2 +1,7 @@
 # Local execution artifacts can contain unmasked synthetic test values.
 /runs/
+
+# Local Python environment and runtime caches.
+/.venv/
+__pycache__/
+*.py[cod]
