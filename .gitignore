@@ -5,3 +5,10 @@
 /.venv/
 __pycache__/
 *.py[cod]
+
+# Local model credentials and endpoint overrides.
+.env
+.env.local
+
+# Local agent instructions.
+AGENTS.md

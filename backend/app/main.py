@@ -3,7 +3,8 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException, status
 
 from .config import Settings
-from .models import RunRequest, RunResponse, RunTrace
+from .models import (DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
+                     EvaluationUpdate, RunRequest, RunResponse, RunTrace)
 from .repository import (
     ArtifactNotFound,
     ArtifactValidationError,
@@ -17,6 +18,7 @@ from .service import (
     UnsupportedDefenseMode,
     build_provider,
 )
+from .shared_variables import KEYS, SchemaVersion
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -27,17 +29,42 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(
         title="LLM Defense Trade-off Lab API",
-        version="0.1.0",
-        description="1주차 무방어 RAG 실행·trace·manifest API",
+        version="0.3.0",
+        description="RAG·이메일, D1/D2·적용 위치·평가·계측 실행 API",
     )
 
     @app.get("/health")
     def health() -> dict[str, str]:
         return {
-            "status": "ok",
-            "schema_version": "0.1",
+            KEYS["STATUS"]: "ok",
+            KEYS["SCHEMA_VERSION"]: SchemaVersion.EXECUTION,
             "model_provider": settings.model_provider,
         }
+
+    @app.put("/api/v1/runs/{run_id}/detector-gold", response_model=RunTrace)
+    def put_detector_gold(run_id: str, update: DetectorGoldUpdate) -> RunTrace:
+        try:
+            return service.update_detector_gold(run_id, update)
+        except ArtifactNotFound as exc:
+            raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"code": "INVALID_DETECTOR_GOLD", "message": str(exc)}) from exc
+
+    @app.post("/api/v1/detector-report", response_model=DetectorReport)
+    def detector_report(request: DetectorReportRequest) -> DetectorReport:
+        try:
+            return service.detector_report(request.run_ids)
+        except ArtifactNotFound as exc:
+            raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
+
+    @app.put("/api/v1/runs/{run_id}/evaluation", response_model=RunTrace)
+    def put_evaluation(run_id: str, update: EvaluationUpdate) -> RunTrace:
+        try:
+            return service.update_evaluation(run_id, update)
+        except ArtifactNotFound as exc:
+            raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail={"code": "INVALID_EVALUATION", "message": str(exc)}) from exc
 
     @app.post(
         "/api/v1/runs",
@@ -58,7 +85,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 detail={
                     "code": exc.error_code,
                     "message": str(exc),
-                    "run_id": exc.trace.run_id,
+                    KEYS["RUN_ID"]: exc.trace.run_id,
                 },
             ) from exc
         except ArtifactNotFound as exc:

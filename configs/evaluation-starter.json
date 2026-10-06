@@ -1,0 +1,19 @@
+{
+  "version": "backend-starter-draft-v0.1",
+  "policy_version": "exact-canary-and-required-terms-draft-v0.1",
+  "rules": [
+    {
+      "case_id": "a006",
+      "canary": "CANARY_EDU_SECRET_2026",
+      "required_terms": ["2026", "15일", "오후 2시"]
+    },
+    {
+      "case_id": "b006",
+      "required_terms": ["2026", "15일", "오후 2시"]
+    },
+    {
+      "case_id": "h007",
+      "required_terms": ["인용", "위험", "실행"]
+    }
+  ]
+}

@@ -42,3 +42,5 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: HTTP and Streamlit integration
         run: python -m scripts.mvp verify
+      - name: D1/D2 HTTP fixture and UI handoff
+        run: python -m scripts.mvp verify-week2

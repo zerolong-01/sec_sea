@@ -145,6 +145,10 @@
     "ERROR": {
       "value": "error",
       "label_ko": "오류"
+    },
+    "NOT_GENERATED": {
+      "value": "not_generated",
+      "label_ko": "탐지 전용·생성 없음"
     }
   },
   "prompt_component_types": {
@@ -264,5 +268,100 @@
     "CASES": "data/cases.v0.1.jsonl",
     "CORPUS": "data/corpus.v0.1.jsonl",
     "RUN_TRACE_PATTERN": "runs/<run_id>.trace.json"
+  },
+  "previous_execution_contract_version": "0.2",
+  "execution_contract_version": "0.3",
+  "execution_schema_file": "contracts/execution-v0.3.schema.json",
+  "execution_guide_file": "docs/week2-backend.md",
+  "defense_positions": {
+    "INPUT": {
+      "value": "input",
+      "label_ko": "사용자 입력"
+    },
+    "DOCUMENTS": {
+      "value": "retrieval",
+      "label_ko": "검색 문서"
+    },
+    "BOTH": {
+      "value": "input_retrieval",
+      "label_ko": "입력 + 검색 문서"
+    }
+  },
+  "detector_error_policies": {
+    "FAIL_CLOSED": {
+      "value": "fail_closed",
+      "label_ko": "탐지 오류 시 차단"
+    },
+    "FAIL_OPEN": {
+      "value": "fail_open",
+      "label_ko": "탐지 오류 시 계속 실행"
+    }
+  },
+  "usage_sources": {
+    "OBSERVED": {
+      "value": "observed",
+      "label_ko": "제공자 사용량"
+    },
+    "ESTIMATED": {
+      "value": "estimated",
+      "label_ko": "로컬 추정"
+    },
+    "UNKNOWN": {
+      "value": "unknown",
+      "label_ko": "미확인"
+    },
+    "NOT_CALLED": {
+      "value": "not_called",
+      "label_ko": "호출 생략"
+    }
+  },
+  "execution_scopes": {
+    "DEMO": {
+      "value": "demo",
+      "label_ko": "오프라인 데모"
+    },
+    "FIXTURE": {
+      "value": "fixture",
+      "label_ko": "HTTP 샘플 검증"
+    },
+    "REAL": {
+      "value": "real",
+      "label_ko": "실제 모델"
+    }
+  },
+  "execution_kinds": {
+    "FULL_PIPELINE": {"value": "full_pipeline", "label_ko": "전체 파이프라인"},
+    "DETECTOR_ONLY": {"value": "detector_only", "label_ko": "탐지 전용"}
+  },
+  "detector_consistency_policies": {
+    "THRESHOLD_ONLY": {"value": "threshold_only", "label_ko": "임계값 기준"},
+    "REVIEW_ON_CONTRADICTION": {"value": "review_on_contradiction", "label_ko": "점수·사유 모순 시 검토·차단/격리"}
+  },
+  "detector_response_formats": {
+    "PROMPT_ONLY": {"value": "prompt_only", "label_ko": "프롬프트 JSON 요청"},
+    "JSON_SCHEMA": {"value": "json_schema", "label_ko": "제공자 JSON schema 제약"}
+  },
+  "detector_gold_labels": {
+    "MALICIOUS": {"value": "malicious", "label_ko": "악성"},
+    "BENIGN": {"value": "benign", "label_ko": "정상"},
+    "HARD_NEGATIVE": {"value": "hard_negative", "label_ko": "정상·보안 인용"},
+    "REVIEW_NEEDED": {"value": "review_needed", "label_ko": "정답 검토 필요"}
+  },
+  "detector_analysis_statuses": {
+    "CORRECT": {"value": "correct", "label_ko": "정답과 일치"},
+    "MISCLASSIFICATION": {"value": "valid_json_misclassification", "label_ko": "유효 JSON 오판"},
+    "ERROR": {"value": "detector_error", "label_ko": "탐지 오류"},
+    "REVIEW_NEEDED": {"value": "review_needed", "label_ko": "검토 필요"},
+    "NOT_EVALUATED": {"value": "not_evaluated", "label_ko": "정답 미등록"}
+  },
+  "call_purposes": {
+    "GENERATION": {
+      "value": "generation",
+      "label_ko": "응답 생성"
+    },
+    "DETECTION": {
+      "value": "detection",
+      "label_ko": "인젝션 탐지"
+    }
   }
 }

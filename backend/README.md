@@ -1,127 +1,68 @@
-# 백엔드·방어 MVP (1주차)
+# 백엔드·방어 MVP
 
-이 디렉터리는 #8 이슈의 무방어 RAG 실행·trace·manifest MVP다. 데이터 원본을 바꾸지 않고, 통합 계약 v0.1에 맞는 실행 기록을 남긴다.
-
-## 제공 기능
-
-- JSONL의 case와 source_document를 읽는 고정 코퍼스 RAG
-- 1주차 무방어 모드 "none" 실행
-- 입력 → 검색 → 프롬프트 조립 → 방어 이벤트 → 출력의 구조화 trace
-- 모델·프롬프트·검색 설정·토큰·지연·비용을 담은 manifest와 metrics
-- run ID별 JSON trace 저장 및 조회
-- 외부 모델 키 없이 재현 가능한 demo 제공자
-- 설정 시 OpenAI 호환 "/chat/completions" 엔드포인트 사용
+고정 코퍼스 RAG와 합성 이메일을 공통 실행 엔진으로 실행한다. 2주차 #22의 D1/D2, 적용 위치, 평가 저장, 계측을 지원한다. 실제 모델 설정은 로컬 `.env`/환경 변수에서 읽으며 HTTP fixture 검증과 실제 모델 성능 검증을 구분한다.
 
 ## 실행
 
-API와 Streamlit을 함께 실행하려면 저장소 루트에서 `python -m scripts.mvp setup`,
-`python -m scripts.mvp serve`를 사용한다. 전체 데이터와 UI까지의 인계 검증은
-`python -m scripts.mvp verify`로 수행한다. 아래 명령은 백엔드만 따로 실행할 때 사용한다.
+저장소 루트에서 실행한다.
 
-backend 디렉터리에서 의존성을 설치한 뒤 서버를 실행한다.
+```text
+python -m scripts.mvp setup
+python -m scripts.mvp serve --fixture-model
+python -m scripts.mvp verify-week2
+```
 
-~~~text
+API: http://127.0.0.1:8000/docs · UI: http://127.0.0.1:8501. `serve`는 저장소 루트 `.env`/프로세스 환경 변수를 읽으며 설정이 없으면 오프라인 demo를 사용한다. 외부 설정이 없는 D2는 실패 trace를 반환한다. `--fixture-model`은 로컬 실제 모델 설정 대신 고정 HTTP 응답으로 네 모드를 시연한다.
+
+백엔드만 실행하려면 backend 디렉터리에서 의존성을 설치하고 서버를 시작한다.
+
+```text
 python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
-~~~
+```
 
-기본 데이터 경로는 프로젝트 루트의 "data"이고, trace는 "runs"에 저장된다. 실험·데이터 담당이 아래 파일을 제공하면 된다.
+백엔드 단독 실행도 저장소 루트 `.env`를 읽는다. [설정 예시](../configs/week2.env.example)를 `.env`로 복사해 MODEL_API_KEY를 로컬에 입력한다. 기존 환경 변수가 파일보다 우선하며 상대 파일 경로는 저장소 루트 기준이다. `.env`와 실제 API 키는 커밋하지 않는다.
 
-~~~text
-data/cases.v0.1.jsonl
-data/corpus.v0.1.jsonl
-~~~
+## 기능과 계약
 
-## 환경 변수
+- none / D1 / D2 / D1+D2와 D2 입력 / 검색 문서 / 양쪽 위치
+- D1 명령·데이터 경계와 정확한 전송 메시지 기록
+- LLM 기반 D2, 점수·임계값·근거·정책 버전, 문서 격리/차단과 오류 정책
+- 실행 상태와 독립된 평가, 수동 판정 갱신 및 원시 근거 보관
+- 생성·탐지 호출 전체 사용량/추정 비용, 미확인 값 null·사유, 단계별 지연
+- 마스킹된 trace 저장·조회, 합성 이메일 요약 공통 경로
 
-| 변수 | 기본값 | 설명 |
-| --- | --- | --- |
-| `DATA_DIR` | 프로젝트 루트의 `data` | cases/corpus JSONL 경로 |
-| `RUNS_DIR` | 프로젝트 루트의 `runs` | 마스킹 trace와 로컬 원시 로그 저장 경로 |
-| `MODEL_PROVIDER` | `demo` | `demo` 또는 `openai_compatible` |
-| `MODEL_ID` | `demo-rag-v0.1` | manifest에 기록할 모델 식별자 |
-| `SYSTEM_PROMPT_VERSION` | `v0.1` | manifest에 기록할 시스템 프롬프트 버전 |
-| `RETRIEVAL_CONFIG_VERSION` | `lexical-v0.1` | manifest에 기록할 검색 설정 버전 |
-| `MODEL_BASE_URL` | 없음 | `openai_compatible` 사용 시 필수 |
-| `MODEL_API_KEY` | 없음 | `openai_compatible` 사용 시 선택적 인증 키 |
-
-## API
+데이터는 [v0.1](../contracts/mvp-integration-v0.1.schema.json), 새 실행은 [v0.3](../contracts/execution-v0.3.schema.json), 상수는 [공통 변수](../contracts/shared-variables-v0.1.json)를 사용한다. v0.1/v0.2 실행 요청·저장 trace도 읽는다.
 
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
-| GET | /health | 서버·스키마·모델 제공자 상태 |
-| POST | /api/v1/runs | run_request를 받아 실행 후 trace 반환 |
-| GET | /api/v1/runs/{run_id} | 저장된 trace 조회 |
+| GET | /health | 실행 버전·제공자 |
+| POST | /api/v1/runs | 실행 결과와 trace |
+| GET | /api/v1/runs/{run_id} | 저장된 표시용 trace |
+| PUT | /api/v1/runs/{run_id}/evaluation | 검토자·버전·근거가 있는 수동 평가 |
+| PUT | /api/v1/runs/{run_id}/detector-gold | 실행 후 입력·문서별 독립 정답과 근거 등록 |
+| POST | /api/v1/detector-report | 조건별 대상 FNR/FPR·분모·오류/검토/미등록 수량 |
 
-POST 요청은 공통 계약의 run_request 모양을 사용한다. 1주차에는 defense_mode에 "none"만 허용한다. D1/D2 요청은 422와 "DEFENSE_MODE_NOT_IMPLEMENTED" 코드를 반환한다.
+`runs/{run_id}.trace.json`은 API/UI와 동일한 표시용 결과다. `.raw.json`, `.evaluation.json`, `.detector-gold.json`은 로컬 원시 근거·판정 이력이며 API로 제공하지 않는다. `runs/`는 Git에서 제외한다.
 
-## trace와 원시 로그
+#26 보완으로 score/reason 모순 검토·차단/격리 정책, 선택적인 제공자 JSON schema 형식, 생성 없이 검사하는 detector_only 실행을 지원한다. gold는 실행 후 등록하며 D2에 전달하지 않는다. 일관된 의미적 오판은 남는 위험이며 실제 모델 성능은 별도 검증이 필요하다. API 본문·산식과 인계는 [2주차 문서](../docs/week2-backend.md#26-탐지기-자체의-판정-우회-보완), [마스킹 샘플](../docs/examples/d2-security/README.md)을 참고한다.
 
-`runs/<run_id>.trace.json`과 API 응답은 화면에 바로 표시해도 되는 마스킹 trace다. canary 값은 사용자 입력, 검색 문서, 프롬프트 구성, 모델 출력, 제공자 오류에서 `[MASKED_CANARY]`로 치환된다.
-
-같은 run ID의 `runs/<run_id>.raw.json`에는 재현·수동 판정용 원시 입력, 최종 프롬프트 구성, 모델 출력 또는 제공자 오류가 저장된다. 이 파일은 API로 제공하지 않으며, 접근이 제한된 로컬 실행 환경에서만 사용한다. `runs/` 전체는 Git 추적 대상이 아니다.
-
-## 데이터 인계 후 3종 통합 확인
-
-실험·데이터 담당이 `data/cases.v0.1.jsonl`과 `data/corpus.v0.1.jsonl`을 제공하면 attack, benign, hard-negative 대표 case_id를 각각 한 번씩 아래 요청 형식으로 실행한다.
-
-~~~text
-POST /api/v1/runs
-Content-Type: application/json
-
-{
-  "schema_version": "0.1",
-  "artifact_type": "run_request",
-  "case_id": "<대표 case_id>",
-  "scenario": "rag_chat",
-  "defense_mode": "none",
-  "dataset_version": "<cases source_version>",
-  "corpus_version": "<corpus source_version>",
-  "requested_by": "week1-integration"
-}
-~~~
-
-각 응답의 `run_id`로 `GET /api/v1/runs/{run_id}`를 호출해 input, retrieval, prompt_assembly, output, manifest, metrics가 모두 존재하는지 확인한다. 같은 요청을 다시 실행하면 run ID는 달라도 request와 manifest의 비교 조건은 같아야 한다.
-
-세 대표 ID가 확정된 뒤에는 아래 검증 명령으로 세 케이스를 한 번에 재실행할 수 있다. 명령은 attack, benign, hard-negative가 각각 하나인지와 UI가 필요한 trace 필드를 검사한다.
-
-~~~text
-python -m scripts.verify_week1_integration \
-  --case-id <attack_case_id> \
-  --case-id <benign_case_id> \
-  --case-id <hard_negative_case_id> \
-  --corpus-version <corpus_source_version>
-~~~
-
-## 모델 제공자
-
-기본값은 "MODEL_PROVIDER=demo"다. 이 제공자는 오프라인에서 결정론적으로 동작하므로 통합 테스트와 trace 확인에 사용한다.
-
-OpenAI 호환 서버를 사용하려면 다음 환경 변수를 지정한다.
-
-~~~text
-MODEL_PROVIDER=openai_compatible
-MODEL_BASE_URL=https://your-host/v1
-MODEL_API_KEY=...
-MODEL_ID=...
-~~~
-
-API 키는 저장된 trace에 기록하지 않는다.
+환경 변수, 모델 HTTP 인터페이스, 실행 예산, 가격/평가 예시, 호환성 변경 및 남은 인수 조건은 [2주차 실행·인계 문서](../docs/week2-backend.md)를 따른다. [이메일 예시](examples/email/)와 [UI 샘플](../docs/examples/week2/README.md)을 제공한다.
 
 ## 검증
 
-backend 디렉터리에서 실행한다.
+backend 디렉터리:
 
-~~~text
+```text
 python -m unittest discover -s tests -v
-~~~
+```
 
-테스트는 임시 JSONL 데이터로 무방어 실행, trace 저장·조회, D1 미구현 응답을 확인한다.
+저장소 루트:
 
-## 통합 계약
+```text
+python -m unittest discover -s tests -v
+python -m scripts.mvp verify
+python -m scripts.mvp verify-week2
+```
 
-- 구조: "../contracts/mvp-integration-v0.1.schema.json"
-- 공통 변수: "../contracts/shared-variables-v0.1.json"
-- 역할별 가이드: "../docs/mvp-integration-contract-v0.1.md"
-
-API·trace의 키와 enum은 위 계약을 기준으로 하며, 화면용 한글 표시명은 공통 변수 파일의 "label_ko"를 사용한다.
+실제 모델 대표 12건과 dev 임계값/오탐/미탐, #21의 최종 평가 rubric은 설정·인계 후 재검증한다. 두 앱 전체 배치·반복·통계는 3주차 범위다.

@@ -97,11 +97,13 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.json()["run_id"], body["run_id"])
 
-    def test_unimplemented_defense_mode_returns_contract_error(self) -> None:
+    def test_d1_mode_runs_and_records_the_applied_boundary(self) -> None:
         response = self.client.post("/api/v1/runs", json=self.request_body("D1"))
 
-        self.assertEqual(response.status_code, 422)
-        self.assertEqual(response.json()["detail"]["code"], "DEFENSE_MODE_NOT_IMPLEMENTED")
+        self.assertEqual(response.status_code, 201)
+        trace = response.json()["trace"]
+        self.assertEqual(trace["defense_events"][0]["defense_id"], "D1")
+        self.assertIn("신뢰 경계", trace["model_calls"][0]["messages"][0]["content"])
 
     def test_missing_document_persists_a_retrievable_failure_trace(self) -> None:
         case_path = self.settings.data_dir / "cases.v0.1.jsonl"
