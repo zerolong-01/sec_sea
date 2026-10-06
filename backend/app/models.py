@@ -8,9 +8,12 @@ from .shared_variables import (
     METRIC_KEYS,
     ArtifactType,
     CaseLabel,
+    CallPurpose,
     DataSplit,
     DefenseDecision,
     DefenseMode,
+    DefensePosition,
+    ExecutionScope,
     EvaluationStatus,
     Language,
     OutputOutcome,
@@ -19,6 +22,7 @@ from .shared_variables import (
     Scenario,
     SchemaVersion,
     TraceStage,
+    UsageSource,
 )
 
 
@@ -98,7 +102,7 @@ class SourceDocument(StrictModel):
 
 
 class RunRequest(StrictModel):
-    schema_version: Literal[SchemaVersion.CURRENT]
+    schema_version: Literal[SchemaVersion.CURRENT, SchemaVersion.EXECUTION]
     artifact_type: Literal[ArtifactType.RUN_REQUEST]
     case_id: str = Field(pattern=r"^[a-z][a-z0-9_-]{2,63}$")
     scenario: Scenario
@@ -106,6 +110,8 @@ class RunRequest(StrictModel):
     dataset_version: str = Field(min_length=1)
     corpus_version: str = Field(min_length=1)
     requested_by: str = Field(min_length=1)
+    defense_position: DefensePosition = DefensePosition.BOTH
+    d2_threshold: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
 
 
 class RetrievalItem(StrictModel):
@@ -133,6 +139,12 @@ class DefenseEvent(StrictModel):
     decision: DefenseDecision
     reason_code: str | None
     score: float | None = Field(default=None, ge=0, le=1)
+    target_ref: str | None = None
+    threshold: float | None = Field(default=None, ge=0, le=1)
+    policy_version: str | None = None
+    reason: str | None = None
+    error: str | None = None
+    score_kind: str | None = None
 
 
 class EvaluationResult(StrictModel):
@@ -143,6 +155,44 @@ class EvaluationResult(StrictModel):
     ]
     evaluator_version: str = Field(min_length=1)
     reason: str | None
+    reviewer: str | None = None
+    evaluated_at: str | None = None
+    policy_version: str | None = None
+
+
+class EvaluationUpdate(EvaluationResult):
+    reviewer: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
+class ChatMessage(StrictModel):
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+
+class ModelCall(StrictModel):
+    purpose: CallPurpose
+    target_ref: str | None = None
+    model_id: str
+    endpoint: str | None = None
+    http_status: int | None = Field(default=None, ge=100, le=599)
+    messages: list[ChatMessage]
+    parameters: dict[str, Any]
+    latency_ms: int = Field(ge=0)
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+    usage_source: UsageSource = UsageSource.UNKNOWN
+    estimated_cost_usd: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    cost_reason: str | None = None
+    error_code: str | None = None
+    response_text: str | None = None
+    pricing_snapshot: dict[str, Any] = Field(default_factory=dict)
+
+
+class StageMetric(StrictModel):
+    stage: TraceStage
+    latency_ms: int = Field(ge=0)
+
 
 
 class OutputRecord(StrictModel):
@@ -158,6 +208,15 @@ class Metrics(StrictModel):
     estimated_cost_usd: float | None = Field(
         default=None, ge=0, alias=METRIC_KEYS["ESTIMATED_COST_USD"]
     )
+    stages: list[StageMetric] = Field(default_factory=list)
+    model_call_count: int = Field(default=0, ge=0)
+    generation_call_count: int = Field(default=0, ge=0)
+    detection_call_count: int = Field(default=0, ge=0)
+    unpriced_call_count: int = Field(default=0, ge=0)
+    known_cost_usd: float = Field(default=0, ge=0)
+    cost_complete: bool = False
+    usage_source: UsageSource = UsageSource.UNKNOWN
+    generation_skipped_reason: str | None = None
 
 
 class ErrorRecord(StrictModel):
@@ -171,10 +230,19 @@ class Manifest(StrictModel):
     generation_parameters: dict[str, str | float | int | bool | None]
     retrieval_config_version: str = Field(min_length=1)
     defense_config_versions: dict[str, str]
+    provider: str = "demo"
+    execution_scope: ExecutionScope = ExecutionScope.DEMO
+    base_system_prompt_version: str | None = None
+    defense_position: DefensePosition = DefensePosition.BOTH
+    d2_configuration: dict[str, Any] = Field(default_factory=dict)
+    evaluator_version: str = "manual-v0.1"
+    pricing_version: str | None = None
+    max_model_calls: int = Field(default=8, ge=1)
+    pricing_snapshot: dict[str, Any] = Field(default_factory=dict)
 
 
 class RunTrace(StrictModel):
-    schema_version: Literal[SchemaVersion.CURRENT] = SchemaVersion.CURRENT
+    schema_version: Literal[SchemaVersion.CURRENT, SchemaVersion.EXECUTION] = SchemaVersion.EXECUTION
     artifact_type: Literal[ArtifactType.RUN_TRACE] = ArtifactType.RUN_TRACE
     run_id: str = Field(pattern=r"^[a-z][a-z0-9_-]{2,63}$")
     status: RunStatus
@@ -189,6 +257,7 @@ class RunTrace(StrictModel):
     evaluation: EvaluationResult
     metrics: Metrics
     error: ErrorRecord | None
+    model_calls: list[ModelCall] = Field(default_factory=list)
 
 
 class RunResponse(StrictModel):

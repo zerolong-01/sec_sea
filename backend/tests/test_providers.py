@@ -12,6 +12,7 @@ from app.providers import OpenAICompatibleProvider, ProviderError
 class FakeHttpResponse:
     def __init__(self, payload: dict) -> None:
         self._payload = payload
+        self.status = 200
 
     def __enter__(self) -> "FakeHttpResponse":
         return self

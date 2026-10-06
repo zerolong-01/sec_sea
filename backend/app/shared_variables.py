@@ -31,6 +31,36 @@ _stages = {item["value"].upper(): item["value"] for item in _shared["trace_stage
 
 class SchemaVersion(StrEnum):
     CURRENT = _shared["contract_version"]
+    EXECUTION = _shared["execution_contract_version"]
+
+
+class DefensePosition(StrEnum):
+    INPUT = _value("defense_positions", "INPUT")
+    DOCUMENTS = _value("defense_positions", "DOCUMENTS")
+    BOTH = _value("defense_positions", "BOTH")
+
+
+class DetectorErrorPolicy(StrEnum):
+    FAIL_CLOSED = _value("detector_error_policies", "FAIL_CLOSED")
+    FAIL_OPEN = _value("detector_error_policies", "FAIL_OPEN")
+
+
+class UsageSource(StrEnum):
+    OBSERVED = _value("usage_sources", "OBSERVED")
+    ESTIMATED = _value("usage_sources", "ESTIMATED")
+    UNKNOWN = _value("usage_sources", "UNKNOWN")
+    NOT_CALLED = _value("usage_sources", "NOT_CALLED")
+
+
+class ExecutionScope(StrEnum):
+    DEMO = _value("execution_scopes", "DEMO")
+    FIXTURE = _value("execution_scopes", "FIXTURE")
+    REAL = _value("execution_scopes", "REAL")
+
+
+class CallPurpose(StrEnum):
+    GENERATION = _value("call_purposes", "GENERATION")
+    DETECTION = _value("call_purposes", "DETECTION")
 
 
 class ArtifactType(StrEnum):

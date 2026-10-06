@@ -1,0 +1,1197 @@
+{
+  "$defs": {
+    "CallPurpose": {
+      "enum": [
+        "generation",
+        "detection"
+      ],
+      "title": "CallPurpose",
+      "type": "string"
+    },
+    "ChatMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "enum": [
+            "system",
+            "user",
+            "assistant"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "ChatMessage",
+      "type": "object"
+    },
+    "DefenseDecision": {
+      "enum": [
+        "allow",
+        "block",
+        "redact",
+        "quarantine"
+      ],
+      "title": "DefenseDecision",
+      "type": "string"
+    },
+    "DefenseEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "defense_id": {
+          "enum": [
+            "D1",
+            "D2"
+          ],
+          "title": "Defense Id",
+          "type": "string"
+        },
+        "defense_version": {
+          "minLength": 1,
+          "title": "Defense Version",
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "input",
+            "retrieval",
+            "prompt_assembly",
+            "output"
+          ],
+          "title": "Stage",
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "#/$defs/DefenseDecision"
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason Code"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score"
+        },
+        "target_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Ref"
+        },
+        "threshold": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Threshold"
+        },
+        "policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Policy Version"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "score_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score Kind"
+        }
+      },
+      "required": [
+        "defense_id",
+        "defense_version",
+        "stage",
+        "decision",
+        "reason_code"
+      ],
+      "title": "DefenseEvent",
+      "type": "object"
+    },
+    "DefenseMode": {
+      "enum": [
+        "none",
+        "D1",
+        "D2",
+        "D1+D2"
+      ],
+      "title": "DefenseMode",
+      "type": "string"
+    },
+    "DefensePosition": {
+      "enum": [
+        "input",
+        "retrieval",
+        "input_retrieval"
+      ],
+      "title": "DefensePosition",
+      "type": "string"
+    },
+    "ErrorRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ErrorRecord",
+      "type": "object"
+    },
+    "EvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "attack_success": {
+          "$ref": "#/$defs/EvaluationStatus"
+        },
+        "normal_task_success": {
+          "enum": [
+            "success",
+            "failure",
+            "not_evaluated",
+            "review_needed"
+          ],
+          "title": "Normal Task Success",
+          "type": "string"
+        },
+        "evaluator_version": {
+          "minLength": 1,
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        },
+        "evaluated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluated At"
+        },
+        "policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Policy Version"
+        }
+      },
+      "required": [
+        "attack_success",
+        "normal_task_success",
+        "evaluator_version",
+        "reason"
+      ],
+      "title": "EvaluationResult",
+      "type": "object"
+    },
+    "EvaluationStatus": {
+      "enum": [
+        "success",
+        "failure",
+        "not_applicable",
+        "not_evaluated",
+        "review_needed"
+      ],
+      "title": "EvaluationStatus",
+      "type": "string"
+    },
+    "EvaluationUpdate": {
+      "additionalProperties": false,
+      "properties": {
+        "attack_success": {
+          "$ref": "#/$defs/EvaluationStatus"
+        },
+        "normal_task_success": {
+          "enum": [
+            "success",
+            "failure",
+            "not_evaluated",
+            "review_needed"
+          ],
+          "title": "Normal Task Success",
+          "type": "string"
+        },
+        "evaluator_version": {
+          "minLength": 1,
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "reviewer": {
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "evaluated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluated At"
+        },
+        "policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Policy Version"
+        }
+      },
+      "required": [
+        "attack_success",
+        "normal_task_success",
+        "evaluator_version",
+        "reason",
+        "reviewer"
+      ],
+      "title": "EvaluationUpdate",
+      "type": "object"
+    },
+    "ExecutionScope": {
+      "enum": [
+        "demo",
+        "fixture",
+        "real"
+      ],
+      "title": "ExecutionScope",
+      "type": "string"
+    },
+    "Manifest": {
+      "additionalProperties": false,
+      "properties": {
+        "model_id": {
+          "minLength": 1,
+          "title": "Model Id",
+          "type": "string"
+        },
+        "system_prompt_version": {
+          "minLength": 1,
+          "title": "System Prompt Version",
+          "type": "string"
+        },
+        "generation_parameters": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "Generation Parameters",
+          "type": "object"
+        },
+        "retrieval_config_version": {
+          "minLength": 1,
+          "title": "Retrieval Config Version",
+          "type": "string"
+        },
+        "defense_config_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Defense Config Versions",
+          "type": "object"
+        },
+        "provider": {
+          "default": "demo",
+          "title": "Provider",
+          "type": "string"
+        },
+        "execution_scope": {
+          "$ref": "#/$defs/ExecutionScope",
+          "default": "demo"
+        },
+        "base_system_prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Base System Prompt Version"
+        },
+        "defense_position": {
+          "$ref": "#/$defs/DefensePosition",
+          "default": "input_retrieval"
+        },
+        "d2_configuration": {
+          "additionalProperties": true,
+          "title": "D2 Configuration",
+          "type": "object"
+        },
+        "evaluator_version": {
+          "default": "manual-v0.1",
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "pricing_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pricing Version"
+        },
+        "max_model_calls": {
+          "default": 8,
+          "minimum": 1,
+          "title": "Max Model Calls",
+          "type": "integer"
+        },
+        "pricing_snapshot": {
+          "additionalProperties": true,
+          "title": "Pricing Snapshot",
+          "type": "object"
+        }
+      },
+      "required": [
+        "model_id",
+        "system_prompt_version",
+        "generation_parameters",
+        "retrieval_config_version",
+        "defense_config_versions"
+      ],
+      "title": "Manifest",
+      "type": "object"
+    },
+    "Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "latency_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latency Ms"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Tokens"
+        },
+        "estimated_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Estimated Cost Usd"
+        },
+        "stages": {
+          "items": {
+            "$ref": "#/$defs/StageMetric"
+          },
+          "title": "Stages",
+          "type": "array"
+        },
+        "model_call_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Model Call Count",
+          "type": "integer"
+        },
+        "generation_call_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Generation Call Count",
+          "type": "integer"
+        },
+        "detection_call_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Detection Call Count",
+          "type": "integer"
+        },
+        "unpriced_call_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Unpriced Call Count",
+          "type": "integer"
+        },
+        "known_cost_usd": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Known Cost Usd",
+          "type": "number"
+        },
+        "cost_complete": {
+          "default": false,
+          "title": "Cost Complete",
+          "type": "boolean"
+        },
+        "usage_source": {
+          "$ref": "#/$defs/UsageSource",
+          "default": "unknown"
+        },
+        "generation_skipped_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Generation Skipped Reason"
+        }
+      },
+      "title": "Metrics",
+      "type": "object"
+    },
+    "ModelCall": {
+      "additionalProperties": false,
+      "properties": {
+        "purpose": {
+          "$ref": "#/$defs/CallPurpose"
+        },
+        "target_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Ref"
+        },
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "endpoint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Endpoint"
+        },
+        "http_status": {
+          "anyOf": [
+            {
+              "maximum": 599,
+              "minimum": 100,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Http Status"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/ChatMessage"
+          },
+          "title": "Messages",
+          "type": "array"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "title": "Parameters",
+          "type": "object"
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "title": "Latency Ms",
+          "type": "integer"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Tokens"
+        },
+        "usage_source": {
+          "$ref": "#/$defs/UsageSource",
+          "default": "unknown"
+        },
+        "estimated_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Estimated Cost Usd"
+        },
+        "cost_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Reason"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "response_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Text"
+        },
+        "pricing_snapshot": {
+          "additionalProperties": true,
+          "title": "Pricing Snapshot",
+          "type": "object"
+        }
+      },
+      "required": [
+        "purpose",
+        "model_id",
+        "messages",
+        "parameters",
+        "latency_ms"
+      ],
+      "title": "ModelCall",
+      "type": "object"
+    },
+    "OutputOutcome": {
+      "enum": [
+        "generated",
+        "blocked",
+        "substituted",
+        "error"
+      ],
+      "title": "OutputOutcome",
+      "type": "string"
+    },
+    "OutputRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "outcome": {
+          "$ref": "#/$defs/OutputOutcome"
+        },
+        "display_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Display Text"
+        },
+        "is_masked": {
+          "title": "Is Masked",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "outcome",
+        "display_text",
+        "is_masked"
+      ],
+      "title": "OutputRecord",
+      "type": "object"
+    },
+    "PromptComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "order": {
+          "minimum": 0,
+          "title": "Order",
+          "type": "integer"
+        },
+        "component_type": {
+          "$ref": "#/$defs/PromptComponentType"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Ref"
+        },
+        "display_text": {
+          "title": "Display Text",
+          "type": "string"
+        },
+        "is_masked": {
+          "title": "Is Masked",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "order",
+        "component_type",
+        "source_ref",
+        "display_text",
+        "is_masked"
+      ],
+      "title": "PromptComponent",
+      "type": "object"
+    },
+    "PromptComponentType": {
+      "enum": [
+        "system",
+        "user",
+        "retrieved_document",
+        "defense_instruction"
+      ],
+      "title": "PromptComponentType",
+      "type": "string"
+    },
+    "RetrievalItem": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "title": "Document Id",
+          "type": "string"
+        },
+        "rank": {
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score"
+        },
+        "included_in_prompt": {
+          "title": "Included In Prompt",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "document_id",
+        "rank",
+        "score",
+        "included_in_prompt"
+      ],
+      "title": "RetrievalItem",
+      "type": "object"
+    },
+    "RunRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "enum": [
+            "0.1",
+            "0.2"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "run_request",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "case_id": {
+          "pattern": "^[a-z][a-z0-9_-]{2,63}$",
+          "title": "Case Id",
+          "type": "string"
+        },
+        "scenario": {
+          "$ref": "#/$defs/Scenario"
+        },
+        "defense_mode": {
+          "$ref": "#/$defs/DefenseMode"
+        },
+        "dataset_version": {
+          "minLength": 1,
+          "title": "Dataset Version",
+          "type": "string"
+        },
+        "corpus_version": {
+          "minLength": 1,
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "requested_by": {
+          "minLength": 1,
+          "title": "Requested By",
+          "type": "string"
+        },
+        "defense_position": {
+          "$ref": "#/$defs/DefensePosition",
+          "default": "input_retrieval"
+        },
+        "d2_threshold": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "D2 Threshold"
+        }
+      },
+      "required": [
+        "schema_version",
+        "artifact_type",
+        "case_id",
+        "scenario",
+        "defense_mode",
+        "dataset_version",
+        "corpus_version",
+        "requested_by"
+      ],
+      "title": "RunRequest",
+      "type": "object"
+    },
+    "RunResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "blocked",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "trace": {
+          "$ref": "#/$defs/RunTrace"
+        }
+      },
+      "required": [
+        "run_id",
+        "status",
+        "trace"
+      ],
+      "title": "RunResponse",
+      "type": "object"
+    },
+    "RunStatus": {
+      "enum": [
+        "queued",
+        "running",
+        "completed",
+        "blocked",
+        "failed"
+      ],
+      "title": "RunStatus",
+      "type": "string"
+    },
+    "RunTrace": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "0.2",
+          "enum": [
+            "0.1",
+            "0.2"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "run_trace",
+          "default": "run_trace",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "run_id": {
+          "pattern": "^[a-z][a-z0-9_-]{2,63}$",
+          "title": "Run Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/RunStatus"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "request": {
+          "$ref": "#/$defs/RunRequest"
+        },
+        "manifest": {
+          "$ref": "#/$defs/Manifest"
+        },
+        "input": {
+          "additionalProperties": true,
+          "title": "Input",
+          "type": "object"
+        },
+        "retrieval": {
+          "items": {
+            "$ref": "#/$defs/RetrievalItem"
+          },
+          "title": "Retrieval",
+          "type": "array"
+        },
+        "prompt_assembly": {
+          "items": {
+            "$ref": "#/$defs/PromptComponent"
+          },
+          "title": "Prompt Assembly",
+          "type": "array"
+        },
+        "defense_events": {
+          "items": {
+            "$ref": "#/$defs/DefenseEvent"
+          },
+          "title": "Defense Events",
+          "type": "array"
+        },
+        "output": {
+          "$ref": "#/$defs/OutputRecord"
+        },
+        "evaluation": {
+          "$ref": "#/$defs/EvaluationResult"
+        },
+        "metrics": {
+          "$ref": "#/$defs/Metrics"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorRecord"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model_calls": {
+          "items": {
+            "$ref": "#/$defs/ModelCall"
+          },
+          "title": "Model Calls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "run_id",
+        "status",
+        "created_at",
+        "request",
+        "manifest",
+        "input",
+        "retrieval",
+        "prompt_assembly",
+        "defense_events",
+        "output",
+        "evaluation",
+        "metrics",
+        "error"
+      ],
+      "title": "RunTrace",
+      "type": "object"
+    },
+    "Scenario": {
+      "enum": [
+        "rag_chat",
+        "email_summary"
+      ],
+      "title": "Scenario",
+      "type": "string"
+    },
+    "StageMetric": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/TraceStage"
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "title": "Latency Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "stage",
+        "latency_ms"
+      ],
+      "title": "StageMetric",
+      "type": "object"
+    },
+    "TraceStage": {
+      "enum": [
+        "input",
+        "retrieval",
+        "prompt_assembly",
+        "defense_events",
+        "output",
+        "evaluation",
+        "metrics"
+      ],
+      "title": "TraceStage",
+      "type": "string"
+    },
+    "UsageSource": {
+      "enum": [
+        "observed",
+        "estimated",
+        "unknown",
+        "not_called"
+      ],
+      "title": "UsageSource",
+      "type": "string"
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/RunRequest"
+    },
+    {
+      "$ref": "#/$defs/RunResponse"
+    },
+    {
+      "$ref": "#/$defs/RunTrace"
+    },
+    {
+      "$ref": "#/$defs/EvaluationUpdate"
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerolong-01/sec_sea/contracts/execution-v0.2.schema.json",
+  "title": "실행 요청·응답·trace·수동 평가 v0.2 계약"
+}
+

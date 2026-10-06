@@ -100,9 +100,11 @@ class RunServiceTests(unittest.TestCase):
         self.assertTrue((self.runs_dir / f"{trace.run_id}.trace.json").exists())
         self.assertEqual(self.service.get_trace(trace.run_id), trace)
 
-    def test_unimplemented_defense_mode_is_rejected(self) -> None:
-        with self.assertRaises(UnsupportedDefenseMode):
-            self.service.execute(self.request("D1"))
+    def test_d1_mode_changes_the_transmitted_prompt(self) -> None:
+        trace = self.service.execute(self.request("D1"))
+        self.assertEqual(trace.status, "completed")
+        self.assertIn("untrusted_documents", trace.model_calls[0].messages[1].content)
+        self.assertNotEqual(trace.manifest.system_prompt_version, trace.manifest.base_system_prompt_version)
 
     def test_trace_masks_canaries_from_input_prompt_and_output(self) -> None:
         case_path = self.data_dir / "cases.v0.1.jsonl"

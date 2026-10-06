@@ -109,6 +109,12 @@ class RunTraceStore:
         target = self._runs_dir / f"{run_id}.raw.json"
         return self._save_json(target, raw_log)
 
+    def save_evaluation(self, run_id: str, evaluation: dict) -> Path:
+        target = self._runs_dir / f"{run_id}.evaluation.json"
+        history = json.loads(target.read_text(encoding="utf-8")) if target.exists() else []
+        history.append(evaluation)
+        return self._save_json(target, history)
+
     def _save_json(self, target: Path, payload: object) -> Path:
         self._runs_dir.mkdir(parents=True, exist_ok=True)
         temporary = target.with_suffix(".tmp")
