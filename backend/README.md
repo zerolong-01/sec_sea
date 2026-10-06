@@ -14,6 +14,10 @@
 
 ## 실행
 
+API와 Streamlit을 함께 실행하려면 저장소 루트에서 `python -m scripts.mvp setup`,
+`python -m scripts.mvp serve`를 사용한다. 전체 데이터와 UI까지의 인계 검증은
+`python -m scripts.mvp verify`로 수행한다. 아래 명령은 백엔드만 따로 실행할 때 사용한다.
+
 backend 디렉터리에서 의존성을 설치한 뒤 서버를 실행한다.
 
 ~~~text

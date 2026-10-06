@@ -11,7 +11,10 @@ ROOT = Path(__file__).resolve().parent.parent
 SHARED = json.loads(
     (ROOT / "contracts" / "shared-variables-v0.1.json").read_text(encoding="utf-8")
 )
-CASES_PATH = ROOT / "data" / "cases.v0.1.jsonl"
+DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT / "data")).resolve()
+CASES_PATH = DATA_DIR / "cases.v0.1.jsonl"
+MANIFEST_PATH = Path(os.environ.get("MVP_MANIFEST", DATA_DIR / "mvp-manifest.v0.1.json"))
+MANIFEST = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 KST = timezone(timedelta(hours=9))
 NO_VALUE = "기록 없음"
@@ -280,9 +283,14 @@ cases = load_cases()
 with st.sidebar:
     st.header("대표 케이스")
     if cases:
+        show_all = st.checkbox("모든 케이스 보기", value=False)
+        case_by_id = {case["case_id"]: case for case in cases}
+        choices = cases if show_all else [
+            case_by_id[item["case_id"]] for item in MANIFEST["representative_cases"]
+        ]
         case = st.radio(
             "대표 케이스",
-            cases,
+            choices,
             format_func=lambda c: " · ".join(
                 [
                     c["case_id"],
@@ -292,6 +300,7 @@ with st.sidebar:
                 ]
             ),
             label_visibility="collapsed",
+            key="case_selector",
         )
         case_id = case["case_id"]
         scenario = case["scenario"]
@@ -301,7 +310,9 @@ with st.sidebar:
         case_id = st.text_input("테스트용 case_id", "test_case_001")
         scenario = "rag_chat"
         dataset_version = st.text_input("dataset_version", "v0.1")
-    corpus_version = st.text_input("corpus_version", "v0.1")
+    corpus_version = MANIFEST["corpus_version"]
+    st.caption(f"데이터 버전: {dataset_version}")
+    st.caption(f"코퍼스 버전: {corpus_version}")
 
     st.header("방어 모드")
     modes = [m["value"] for m in SHARED["defense_modes"].values()]
@@ -315,7 +326,7 @@ with st.sidebar:
         st.info("후속 기능입니다. 1주차에는 무방어만 실행할 수 있습니다.")
 
     button_text = "재실행" if "result" in st.session_state else "실행"
-    run_clicked = st.button(button_text, type="primary", disabled=(mode != "none"))
+    run_clicked = st.button(button_text, type="primary", disabled=(mode != "none"), key="run_case")
 
 # 버튼을 누르면 백엔드에 요청을 보낸다
 if run_clicked:
