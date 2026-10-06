@@ -18,6 +18,7 @@ MANIFEST = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 KST = timezone(timedelta(hours=9))
 NO_VALUE = "기록 없음"
+D2_MODES = tuple(SHARED["defense_modes"][name]["value"] for name in ("D2", "D1_D2"))
 
 st.set_page_config(page_title="LLM Defense Trade-off Lab", layout="wide")
 
@@ -66,14 +67,16 @@ def load_cases():
     return cases
 
 
-def run_case(case_id, scenario, dataset_version, corpus_version, mode):
+def run_case(case_id, scenario, dataset_version, corpus_version, mode,
+             defense_position=SHARED["defense_positions"]["BOTH"]["value"]):
     """백엔드에 실행을 요청하고 (trace, 오류)를 돌려준다."""
     body = {
-        "schema_version": SHARED["contract_version"],
+        "schema_version": SHARED["execution_contract_version"],
         "artifact_type": SHARED["artifact_types"]["RUN_REQUEST"]["value"],
         "case_id": case_id,
         "scenario": scenario,
         "defense_mode": mode,
+        "defense_position": defense_position,
         "dataset_version": dataset_version,
         "corpus_version": corpus_version,
         "requested_by": "frontend-ui",
@@ -132,6 +135,8 @@ def render_header(trace):
     cols[2].text(format_time(trace.get("created_at")))
     cols[3].caption("방어 모드")
     cols[3].text(str(label_of("defense_modes", request.get("defense_mode")) or NO_VALUE))
+    scope = (trace.get("manifest") or {}).get("execution_scope")
+    st.caption(f"실행 범위: {label_of('execution_scopes', scope) or NO_VALUE}")
 
 
 def render_timeline(trace):
@@ -209,6 +214,10 @@ def render_timeline(trace):
                     "판정": label_of("defense_decisions", event.get("decision")),
                     "근거 코드": event.get("reason_code") or NO_VALUE,
                     "점수": NO_VALUE if event.get("score") is None else str(event.get("score")),
+                    "임계값": NO_VALUE if event.get("threshold") is None else str(event.get("threshold")),
+                    "대상": event.get("target_ref") or "사용자 입력/프롬프트",
+                    "근거": event.get("reason") or NO_VALUE,
+                    "오류": event.get("error") or NO_VALUE,
                 }
                 for event in events
             ]
@@ -239,6 +248,15 @@ def render_meta(trace):
             value = metrics.get(item["value"])
             st.caption(item["label_ko"])
             st.text(NO_VALUE if value is None else str(value))
+        st.caption(f"사용량 출처: {label_of('usage_sources', metrics.get('usage_source')) or NO_VALUE}")
+        st.text(f"생성 호출 {metrics.get('generation_call_count', 0)} · 탐지 호출 {metrics.get('detection_call_count', 0)}")
+        if not metrics.get("cost_complete"):
+            st.caption(f"비용 미확인 호출: {metrics.get('unpriced_call_count', 0)} · 확인된 소계(USD): {metrics.get('known_cost_usd', 0)}")
+        if metrics.get("generation_skipped_reason"):
+            st.caption(f"생성 생략 사유: {metrics['generation_skipped_reason']}")
+        if metrics.get("stages"):
+            st.dataframe([{"단계": label_of("trace_stages", item["stage"]), "지연(ms)": item["latency_ms"]}
+                          for item in metrics["stages"]], hide_index=True)
 
     with st.container(border=True):
         st.subheader("실행 설정")
@@ -273,9 +291,17 @@ def render_meta(trace):
             st.caption("판정 근거")
             st.text(str(evaluation["reason"]))
 
+    with st.expander("모델 호출 기록 (마스킹됨)"):
+        for call in trace.get("model_calls") or []:
+            st.caption(f"{label_of('call_purposes', call['purpose'])} · {call['model_id']} · {call['latency_ms']}ms")
+            st.caption(call.get("cost_reason") or NO_VALUE)
+            for message in call["messages"]:
+                st.caption(message["role"])
+                show_text(message["content"])
+
 
 st.title("LLM Defense Trade-off Lab")
-st.write("무방어 실행 · trace 확인")
+st.write("방어 모드 실행 · trace 확인")
 
 cases = load_cases()
 
@@ -321,17 +347,20 @@ with st.sidebar:
         modes,
         format_func=lambda v: label_of("defense_modes", v),
         label_visibility="collapsed",
+        key="defense_mode",
     )
-    if mode != "none":
-        st.info("후속 기능입니다. 1주차에는 무방어만 실행할 수 있습니다.")
+    positions = [item["value"] for item in SHARED["defense_positions"].values()]
+    position = st.selectbox("D2 적용 위치", positions, index=positions.index(SHARED["defense_positions"]["BOTH"]["value"]),
+                            format_func=lambda value: label_of("defense_positions", value),
+                            disabled=mode not in D2_MODES, key="defense_position")
 
     button_text = "재실행" if "result" in st.session_state else "실행"
-    run_clicked = st.button(button_text, type="primary", disabled=(mode != "none"), key="run_case")
+    run_clicked = st.button(button_text, type="primary", key="run_case")
 
 # 버튼을 누르면 백엔드에 요청을 보낸다
 if run_clicked:
     with st.spinner(label_of("run_statuses", "running")):
-        trace, error = run_case(case_id, scenario, dataset_version, corpus_version, mode)
+        trace, error = run_case(case_id, scenario, dataset_version, corpus_version, mode, position)
     st.session_state["result"] = {"trace": trace, "error": error}
 
 # 결과 영역

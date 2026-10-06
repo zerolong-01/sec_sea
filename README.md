@@ -309,7 +309,7 @@ MVP 프런트엔드는 Streamlit으로 진행합니다. 기존에 검토했던 N
 
 ## 개발 현황 및 관련 이슈
 
-현재 프로젝트는 요구사항 구체화와 기술 검증 단계입니다.
+1주차 RAG·API·trace·통합 실행을 구현했고, 2주차 D1/D2·적용 위치·평가·계측 경로를 확장했습니다. 실제 모델과 최종 평가 기준은 설정·인계 후 검증합니다.
 
 - [전체 개발 로드맵](https://github.com/zerolong-01/sec_sea/issues/1)
 - [유사 플랫폼 비교 및 차별화 전략](https://github.com/zerolong-01/sec_sea/issues/2)
@@ -326,3 +326,15 @@ MVP 프런트엔드는 Streamlit으로 진행합니다. 기존에 검토했던 N
 ## Repository
 
 <https://github.com/zerolong-01/sec_sea>
+
+## 현재 MVP 실행
+
+```text
+python -m scripts.mvp setup
+python -m scripts.mvp serve --fixture-model
+python -m scripts.mvp verify-week2
+```
+
+로컬 HTTP fixture로 네 방어 모드와 D2 세 위치를 시연·검증합니다. fixture 결과는 실제 모델 성능 측정이 아닙니다.
+기본 오프라인 무방어 검증은 `python -m scripts.mvp verify`입니다.
+실제 모델 환경 변수, 임시 설정, 계약 v0.2, UI 샘플과 이메일 경로는 [2주차 백엔드 안내](docs/week2-backend.md)에 정리했습니다.
