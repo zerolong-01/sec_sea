@@ -36,8 +36,9 @@ verify는 빈 로컬 포트에서 두 서버를 실행하고 대표 3건의 HTTP
 DATA_DIR, MVP_MANIFEST, RUNS_DIR 환경 변수로도 설정할 수 있습니다.
 파이프라인은 설치·실행을 저장소 루트에서 수행합니다.
 
-serve의 기본 제공자는 demo입니다. 실제 모델 서버를 사용할 때는 MODEL_PROVIDER=openai_compatible,
-MODEL_BASE_URL, MODEL_ID, 필요한 경우 MODEL_API_KEY를 환경 변수로 지정합니다.
+serve는 저장소 루트 `.env`와 환경 변수를 읽으며 설정이 없으면 demo를 사용합니다.
+실제 모델 설정은 `configs/week2.env.example`을 `.env`로 복사하고 MODEL_API_KEY를 로컬에 입력합니다.
+기존 환경 변수가 파일보다 우선합니다. `.env`는 Git에서 제외하며 실제 키를 커밋하지 않습니다.
 API 키를 저장소에 기록하지 않습니다. 자세한 모델 설정은 [백엔드 가이드](backend/README.md)를 참고하세요.
 공개 API·UI trace는 canary를 마스킹하고 원시 판정용 로그는 runs에 로컬 파일로만 보관합니다.
 
@@ -337,4 +338,4 @@ python -m scripts.mvp verify-week2
 
 로컬 HTTP fixture로 네 방어 모드와 D2 세 위치를 시연·검증합니다. fixture 결과는 실제 모델 성능 측정이 아닙니다.
 기본 오프라인 무방어 검증은 `python -m scripts.mvp verify`입니다.
-실제 모델 환경 변수, 임시 설정, 계약 v0.2, UI 샘플과 이메일 경로는 [2주차 백엔드 안내](docs/week2-backend.md)에 정리했습니다.
+실제 모델 `.env` 설정, 계약 v0.3, UI 샘플과 이메일 경로는 [2주차 백엔드 안내](docs/week2-backend.md)에 정리했습니다.

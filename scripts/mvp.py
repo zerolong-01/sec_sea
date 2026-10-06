@@ -32,7 +32,7 @@ def setup() -> int:
 
 
 def require_dependencies() -> None:
-    missing = [name for name in ("pydantic", "fastapi", "uvicorn", "jsonschema", "streamlit", "requests") if importlib.util.find_spec(name) is None]
+    missing = [name for name in ("pydantic", "fastapi", "uvicorn", "jsonschema", "streamlit", "requests", "dotenv") if importlib.util.find_spec(name) is None]
     if missing:
         raise RuntimeError(f"Missing dependencies: {', '.join(missing)}. Run: python -m scripts.mvp setup")
 
@@ -112,6 +112,7 @@ def services(bundle, runs_dir: Path, api_port: int, ui_port: int, demo: bool):
     backend_url = f"http://127.0.0.1:{api_port}"
     frontend_url = f"http://127.0.0.1:{ui_port}"
     env = dict(os.environ, DATA_DIR=str(bundle.data_dir), MVP_MANIFEST=str(bundle.manifest_path), RUNS_DIR=str(runs_dir), BACKEND_URL=backend_url, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
+    env["MVP_LOAD_DOTENV"] = "0"
     if demo:
         env.update(MODEL_PROVIDER="demo", MODEL_ID="demo-rag-v0.1")
         env.pop("MODEL_BASE_URL", None)
@@ -224,8 +225,8 @@ def parse_args(argv: list[str] | None = None):
     commands.add_parser("setup", help="Create .venv and install all dependencies.")
     for name in ("check", "serve", "verify", "verify-week2"):
         command = commands.add_parser(name)
-        command.add_argument("--data-dir", type=Path, default=Path(os.environ.get("DATA_DIR", ROOT / "data")))
-        command.add_argument("--manifest", type=Path, default=Path(os.environ["MVP_MANIFEST"]) if os.environ.get("MVP_MANIFEST") else None)
+        command.add_argument("--data-dir", type=Path, default=None)
+        command.add_argument("--manifest", type=Path, default=None)
         if name != "check":
             command.add_argument("--runs-dir", type=Path, default=None)
             command.add_argument("--api-port", type=int, default=8000 if name == "serve" else 0)
@@ -252,13 +253,19 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "setup":
             return setup()
         require_dependencies()
+        from backend.app.environment import load_project_environment, resolve_project_path
+        load_project_environment(ROOT)
         from scripts.data_contract import load_bundle
-        bundle = load_bundle(args.data_dir, args.manifest)
+        data_dir = args.data_dir or resolve_project_path(os.getenv("DATA_DIR") or "data", ROOT)
+        manifest = args.manifest or (resolve_project_path(os.environ["MVP_MANIFEST"], ROOT)
+                                    if os.getenv("MVP_MANIFEST") else None)
+        bundle = load_bundle(data_dir, manifest)
         print(f"Data validated: {len(bundle.cases)} cases, {len(bundle.documents)} documents; {bundle.manifest.dataset_version}", flush=True)
         if args.command == "check":
             return 0
         default_runs = ROOT / "runs" if args.command == "serve" else ROOT / "runs" / f"verification-{uuid.uuid4().hex[:8]}"
-        runs_dir = (args.runs_dir or Path(os.environ.get("RUNS_DIR", default_runs))).resolve()
+        runs_dir = (args.runs_dir or (resolve_project_path(os.environ["RUNS_DIR"], ROOT)
+                                     if os.getenv("RUNS_DIR") else default_runs)).resolve()
         report = None
         from scripts.verify_week2 import fixture_environment, verify as verify_week2
         fixture_context = (fixture_environment(bundle.data_dir)

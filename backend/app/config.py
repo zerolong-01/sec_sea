@@ -5,6 +5,7 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
+from .environment import load_project_environment, resolve_project_path
 from .shared_variables import (DefenseDecision, DetectorConsistencyPolicy, DetectorErrorPolicy,
                                DetectorResponseFormat)
 
@@ -56,12 +57,13 @@ class Settings:
         DetectorResponseFormat(self.d2_response_format)
 
     @classmethod
-    def from_environment(cls) -> "Settings":
-        project_root = Path(__file__).resolve().parents[2]
+    def from_environment(cls, project_root: Path | None = None) -> "Settings":
+        project_root = (project_root or Path(__file__).resolve().parents[2]).resolve()
+        load_project_environment(project_root)
 
         def resolve_path(name: str, default: Path) -> Path:
             value = os.getenv(name)
-            return Path(value).resolve() if value else default
+            return resolve_project_path(value, project_root) if value else default
 
         return cls(
             project_root=project_root,
@@ -89,6 +91,6 @@ class Settings:
             d2_policy_version=os.getenv("D2_POLICY_VERSION", "d2-policy-v0.2"),
             d2_consistency_policy=DetectorConsistencyPolicy(os.getenv("D2_CONSISTENCY_POLICY", DetectorConsistencyPolicy.REVIEW_ON_CONTRADICTION)),
             d2_response_format=DetectorResponseFormat(os.getenv("D2_RESPONSE_FORMAT", DetectorResponseFormat.PROMPT_ONLY)),
-            pricing_path=Path(os.environ["PRICING_FILE"]).resolve() if os.getenv("PRICING_FILE") else None,
-            evaluation_rules_path=Path(os.environ["EVALUATION_RULES_FILE"]).resolve() if os.getenv("EVALUATION_RULES_FILE") else None,
+            pricing_path=resolve_project_path(os.environ["PRICING_FILE"], project_root) if os.getenv("PRICING_FILE") else None,
+            evaluation_rules_path=resolve_project_path(os.environ["EVALUATION_RULES_FILE"], project_root) if os.getenv("EVALUATION_RULES_FILE") else None,
         )

@@ -1,6 +1,6 @@
 # 2주차 백엔드·방어 실행 및 인계
 
-[이슈 #22](https://github.com/zerolong-01/sec_sea/issues/22)의 D1/D2, 적용 위치, 평가 저장, 계측, 이메일 공통 경로를 구현한다. 모델·엔드포인트는 사용자 요청에 따라 임시값으로 준비했다. 실제 모델·가격·예산 합의 및 실제 모델의 대표 12건 검증은 이후 수행한다. HTTP fixture 결과로 ASR/FPR이나 방어 효율성을 주장하지 않는다.
+[이슈 #22](https://github.com/zerolong-01/sec_sea/issues/22)의 D1/D2, 적용 위치, 평가 저장, 계측, 이메일 공통 경로를 구현한다. 모델·엔드포인트는 로컬 `.env` 또는 프로세스 환경 변수로 설정한다. 실제 모델·가격·전체 예산 확정 및 실제 모델의 대표 12건 검증은 이후 수행한다. HTTP fixture 결과로 ASR/FPR이나 방어 효율성을 주장하지 않는다.
 
 ## 실행
 
@@ -12,32 +12,26 @@ python -m scripts.mvp serve --fixture-model
 python -m scripts.mvp verify-week2
 ```
 
-`serve --fixture-model`은 로컬 HTTP 샘플 서버, FastAPI, Streamlit을 함께 시작한다. API는 http://127.0.0.1:8000/docs, UI는 http://127.0.0.1:8501 이다. Ctrl+C로 이번 명령이 시작한 서버를 종료한다. 포트 충돌 시 `--api-port`, `--ui-port`를 지정한다. fixture는 고정 응답을 반환하는 테스트 장치이며 D2 구현은 실제 HTTP 모델을 호출하는 분류기다. 기본 `serve`는 기존 오프라인 demo를 사용한다. demo에서 D2 엔드포인트를 설정하지 않으면 `D2_NOT_CONFIGURED` 실패 trace가 남는다.
+`serve --fixture-model`은 로컬 HTTP 샘플 서버, FastAPI, Streamlit을 함께 시작한다. API는 http://127.0.0.1:8000/docs, UI는 http://127.0.0.1:8501 이다. Ctrl+C로 이번 명령이 시작한 서버를 종료한다. 포트 충돌 시 `--api-port`, `--ui-port`를 지정한다. fixture는 고정 응답을 반환하는 테스트 장치이며 D2 구현은 실제 HTTP 모델을 호출하는 분류기다. `serve`는 `.env`/환경 변수 설정을 사용하며 설정이 없으면 기존 오프라인 demo를 사용한다. demo에서 D2 엔드포인트를 설정하지 않으면 `D2_NOT_CONFIGURED` 실패 trace가 남는다.
 
 `verify-week2`는 대표 a006/b006/h007 × 네 모드의 12건, 세 위치, 탐지 실패, 사용량 미확인, review_needed, 수동 평가 저장, 네 모드 UI 요청을 검증한다. #26 보완 검증으로 유효 JSON 오판·점수/사유 모순·탐지 전용 차단 후 계속 검사·오류·정답 미등록의 5건을 추가하고, 대상별 gold 갱신·집계·저장·UI를 대조한다. 임의 포트를 사용하며 결과는 `runs/verification-<id>/verification-report.json`과 `public-samples/`에 저장한다. `--runs-dir`로 별도 경로를 지정할 수 있다. 기존 무방어 HTTP/UI 검증은 `python -m scripts.mvp verify`다.
 
 ## 실제 모델 설정
 
-[week2.env.example](../configs/week2.env.example)은 자동으로 로드되지 않는 설정 예시다. 실행 프로세스의 환경 변수에 값을 넣는다. API 키는 로컬 환경 변수로 설정하며 Git에 올리지 않는다.
+[week2.env.example](../configs/week2.env.example)을 저장소 루트의 `.env`로 복사하고 `MODEL_API_KEY`를 로컬에서 입력한다. 이미 `.env`가 있으면 파일을 직접 수정한다. 예시는 생성/D2 모두 `gpt-4.1-mini-2025-04-14`, `https://api.openai.com/v1`을 사용한다. API 키는 예시·소스·Git에 넣지 않으며 `.env`는 Git에서 제외한다.
 
 ```powershell
-$env:MODEL_PROVIDER = "openai_compatible"
-$env:MODEL_BASE_URL = "http://127.0.0.1:9000/v1"
-$env:MODEL_ID = "temporary-generation-model"
-$env:D2_MODEL_ID = "temporary-classifier-model"
-$env:MODEL_TEMPERATURE = "0"
-$env:MODEL_MAX_TOKENS = "512"
-$env:MODEL_TIMEOUT_SECONDS = "30"
-$env:MAX_MODEL_CALLS = "8"
-$env:D2_THRESHOLD = "0.5"
-$env:D2_ERROR_POLICY = "fail_closed"
-$env:D2_DOCUMENT_ACTION = "quarantine"
-$env:PRICING_FILE = "configs/pricing-placeholder.json"
-$env:EVALUATION_RULES_FILE = "configs/evaluation-starter.json"
+# .env가 없는 최초 설정 때 실행한다.
+Copy-Item configs/week2.env.example .env
+# 편집기에서 .env의 MODEL_API_KEY 값을 입력한 뒤 실행한다.
 python -m scripts.mvp serve
 ```
 
-주소와 모델 ID를 실제 서버 설정으로 교체해야 한다. 서버는 `/chat/completions`에 `model`, `messages`, `temperature`, `max_tokens`를 받으며 `choices[0].message.content`와 선택적인 `usage.prompt_tokens/completion_tokens`를 반환해야 한다. `MODEL_BASE_URL`은 `/v1`까지 지정한다. 인증정보가 URL에 들어간 설정은 거부한다.
+통합 실행과 백엔드 단독 실행은 작업 디렉터리와 관계없이 저장소 루트 `.env`만 자동으로 읽는다. 기존 프로세스 환경 변수가 파일보다 우선하며 CLI 경로 인자가 가장 우선한다. 설정 파일의 상대 경로는 저장소 루트 기준이다. UTF-8/BOM 파일을 지원하고 `${...}` 보간은 하지 않는다. 실행 중 파일을 바꾸면 서버를 재시작한다. `setup`/도움말은 `.env`나 추가 의존성 없이 사용할 수 있다.
+
+`verify`는 demo, `verify-week2`와 `serve --fixture-model`은 HTTP fixture 모델 설정으로 실행한다. 자식 서버에는 합쳐진 환경 변수와 `MVP_LOAD_DOTENV=0`을 전달해 로컬 실제 모델 설정을 다시 읽지 않도록 한다. 이 값은 파일 로딩을 끄는 내부 실행 옵션이며 사용자가 프로세스 환경 변수로 지정해도 적용된다.
+
+다른 제공자를 사용하면 주소와 모델 ID를 해당 서버 설정으로 바꾼다. 서버는 `/chat/completions`에 `model`, `messages`, `temperature`, `max_tokens`를 받으며 `choices[0].message.content`와 선택적인 `usage.prompt_tokens/completion_tokens`를 반환해야 한다. `MODEL_BASE_URL`은 `/v1`까지 지정한다. 인증정보가 URL에 들어간 설정은 거부한다. `PRICING_FILE`과 `EVALUATION_RULES_FILE`은 선택 사항이며 예시의 개발용 가격/평가 초안은 주석을 해제할 때 사용한다.
 
 | 설정 | 기본값/동작 |
 | --- | --- |

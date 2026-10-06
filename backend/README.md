@@ -1,6 +1,6 @@
 # 백엔드·방어 MVP
 
-고정 코퍼스 RAG와 합성 이메일을 공통 실행 엔진으로 실행한다. 2주차 #22의 D1/D2, 적용 위치, 평가 저장, 계측을 지원한다. 실제 모델 설정은 임시값이며 HTTP fixture 검증과 실제 모델 성능 검증을 구분한다.
+고정 코퍼스 RAG와 합성 이메일을 공통 실행 엔진으로 실행한다. 2주차 #22의 D1/D2, 적용 위치, 평가 저장, 계측을 지원한다. 실제 모델 설정은 로컬 `.env`/환경 변수에서 읽으며 HTTP fixture 검증과 실제 모델 성능 검증을 구분한다.
 
 ## 실행
 
@@ -12,7 +12,7 @@ python -m scripts.mvp serve --fixture-model
 python -m scripts.mvp verify-week2
 ```
 
-API: http://127.0.0.1:8000/docs · UI: http://127.0.0.1:8501. 기본 `serve`는 오프라인 demo이며 외부 설정이 없는 D2는 실패 trace를 반환한다. `--fixture-model`은 테스트용 고정 HTTP 응답으로 네 모드를 시연한다.
+API: http://127.0.0.1:8000/docs · UI: http://127.0.0.1:8501. `serve`는 저장소 루트 `.env`/프로세스 환경 변수를 읽으며 설정이 없으면 오프라인 demo를 사용한다. 외부 설정이 없는 D2는 실패 trace를 반환한다. `--fixture-model`은 로컬 실제 모델 설정 대신 고정 HTTP 응답으로 네 모드를 시연한다.
 
 백엔드만 실행하려면 backend 디렉터리에서 의존성을 설치하고 서버를 시작한다.
 
@@ -20,6 +20,8 @@ API: http://127.0.0.1:8000/docs · UI: http://127.0.0.1:8501. 기본 `serve`는 
 python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
 ```
+
+백엔드 단독 실행도 저장소 루트 `.env`를 읽는다. [설정 예시](../configs/week2.env.example)를 `.env`로 복사해 MODEL_API_KEY를 로컬에 입력한다. 기존 환경 변수가 파일보다 우선하며 상대 파일 경로는 저장소 루트 기준이다. `.env`와 실제 API 키는 커밋하지 않는다.
 
 ## 기능과 계약
 
