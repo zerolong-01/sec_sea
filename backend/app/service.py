@@ -104,15 +104,17 @@ class RunService:
             return decision
         except ProviderError as exc:
             self._record(execution, exc.call)
-            closed = self._settings.d2_error_policy == DetectorErrorPolicy.FAIL_CLOSED
+            budget_exceeded = exc.code == "MODEL_CALL_BUDGET_EXCEEDED"
+            closed = budget_exceeded or self._settings.d2_error_policy == DetectorErrorPolicy.FAIL_CLOSED
             execution.events.append(DefenseEvent(
                 defense_id=DefenseMode.D2, defense_version=self._settings.d2_version, stage=stage,
                 decision=DefenseDecision.BLOCK if closed else DefenseDecision.ALLOW,
                 score=None, threshold=threshold, target_ref=target_ref,
                 policy_version=self._settings.d2_policy_version, reason_code=exc.code,
-                reason="detector_error_fail_closed" if closed else "detector_error_fail_open", error=str(exc)))
-            if closed or exc.code == "MODEL_CALL_BUDGET_EXCEEDED":
-                if exc.code != "MODEL_CALL_BUDGET_EXCEEDED":
+                reason="model_call_budget_exceeded" if budget_exceeded else
+                       "detector_error_fail_closed" if closed else "detector_error_fail_open", error=str(exc)))
+            if closed:
+                if not budget_exceeded:
                     execution.skipped = "detector_error"
                 raise ProviderError(str(exc), exc.code) from exc
             return DefenseDecision.ALLOW

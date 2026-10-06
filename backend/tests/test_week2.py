@@ -134,11 +134,14 @@ class WeekTwoTests(unittest.TestCase):
 
     def test_budget_stops_additional_calls_and_records_a_failure(self):
         before = len(self.fixture.requests)
-        trace = self.service(max_model_calls=1).execute(self.request("b006"))
+        trace = self.service(max_model_calls=1, d2_error_policy=DetectorErrorPolicy.FAIL_OPEN).execute(self.request("b006"))
         self.assertEqual(len(self.fixture.requests)-before, 1)
         self.assertEqual(trace.error.code, "MODEL_CALL_BUDGET_EXCEEDED")
         self.assertEqual(trace.metrics.generation_call_count, 0)
         self.assertFalse(any(item.included_in_prompt for item in trace.retrieval))
+        self.assertEqual(trace.metrics.generation_skipped_reason, "model_call_budget_exceeded")
+        self.assertEqual(trace.defense_events[-1].decision, "block")
+        self.assertEqual(trace.defense_events[-1].reason, "model_call_budget_exceeded")
 
     def test_total_cost_includes_detection_and_generation(self):
         price = self.folder / "prices.json"
