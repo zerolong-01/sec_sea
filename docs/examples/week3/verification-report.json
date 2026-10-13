@@ -2,7 +2,7 @@
   "status": "passed",
   "execution_scope": "fixture",
   "real_model_verified": false,
-  "batch_id": "batch-9943fe2d9cfb",
+  "batch_id": "batch-54dcbf331b15",
   "planned_runs": 108,
   "wire_calls": 207,
   "resume_duplicate_calls": 0,
@@ -15,6 +15,6 @@
   "repeats": 3,
   "unique_conditions": 6,
   "public_canary_leak": false,
-  "code_commit": "ed1efb9a3ceb874bb5789afd71f19103d584717f",
-  "implementation_sha256": "42a472e438edbf5ca3b1da9f9390fa820f495c641d7c7fed6664902253728e39"
+  "code_commit": "e23a6cfbf7bba04a2ab21278155ee5d81bdfd729",
+  "implementation_sha256": "187338e568642b884f99f4166648d95f7533eab21846373cda9a5cd3ca567e91"
 }

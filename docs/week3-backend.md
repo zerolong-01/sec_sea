@@ -58,6 +58,7 @@ python -m scripts.week3_batch --runs-dir runs/week3 report batch-012345abcdef
 - 고정 파일/선택/설정이나 구현 코드가 바뀌면 실행을 거부하고 새 배치를 요구한다. 저장 결과 조회는 코드 커밋 변경만으로 금지하지 않지만 고정 artifact 해시는 확인한다.
 - 각 계획 항목은 entry_id·source/case·condition·repeat·family/variant와 attempt/run_id를 연결한다. 같은 항목의 명시적 재시도는 새 attempt와 새 run_id다.
 - 호출 직전에 reservation을 fsync·원자적 교체로 저장한다. 응답을 받으면 사용량/비용을 정산한다. 실행 중 OS 파일 잠금으로 두 writer를 막고 프로세스 종료 시 잠금은 해제된다.
+- Windows의 짧은 조회 파일 잠금은 교체를 최대 1초 재시도한다. 저장 대기 후에도 실제 남은 시간을 다시 확인해 시간 예산을 소진한 요청은 전송하지 않는다. 계획의 케이스/family 등 정적 metadata도 해시로 동결한다.
 - 완료/정상 차단 항목은 재실행하지 않는다. 실패는 `--retry-failed`를 지정해야 다시 실행한다.
 - 중단 직전 호출 기록이 있지만 trace가 없으면 `uncertain`으로 남긴다. 기본 재개는 해당 항목을 재호출하지 않는다. `--retry-uncertain`은 이미 과금된 호출을 중복할 수 있는 명시적 재시도이며 이전 예약 비용은 유지한다.
 - 저장 trace가 먼저 완성된 경우 재개 시 이를 회수한다. 호출 전 중단으로 예약도 없으면 미실행 상태로 복구한다.

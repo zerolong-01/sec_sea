@@ -1,6 +1,6 @@
 # 3주차 백엔드 공개 fixture 인계
 
-구현 코드 커밋 `ed1efb9`에서 생성한 로컬 HTTP fixture 기록이다. 실제 LLM 성능·팀 판정 합의·holdout 검증 결과가 아니다.
+구현 코드 커밋 `e23a6cf`에서 생성한 로컬 HTTP fixture 기록이다. 실제 LLM 성능·팀 판정 합의·holdout 검증 결과가 아니다.
 
 | 파일 | 용도 |
 | --- | --- |
