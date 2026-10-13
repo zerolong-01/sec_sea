@@ -7,6 +7,7 @@ from typing import TypeVar
 from pydantic import BaseModel, ValidationError
 
 from .models import CaseRecord, RunTrace, SourceDocument
+from .shared_variables import CANONICAL_PATHS, KEYS
 
 ModelType = TypeVar("ModelType", bound=BaseModel)
 
@@ -59,14 +60,14 @@ class ExperimentRepository:
 
     @property
     def cases_path(self) -> Path:
-        return self._data_dir / "cases.v0.1.jsonl"
+        return self._data_dir / Path(CANONICAL_PATHS["CASES"]).name
 
     @property
     def corpus_path(self) -> Path:
-        return self._data_dir / "corpus.v0.1.jsonl"
+        return self._data_dir / Path(CANONICAL_PATHS["CORPUS"]).name
 
     def get_case(self, case_id: str) -> CaseRecord:
-        for case in _read_jsonl(self.cases_path, CaseRecord, "case_id"):
+        for case in _read_jsonl(self.cases_path, CaseRecord, KEYS["CASE_ID"]):
             if case.case_id == case_id:
                 return case
         raise ArtifactNotFound(f"case_id를 찾을 수 없습니다: {case_id}")
@@ -74,7 +75,7 @@ class ExperimentRepository:
     def get_documents(
         self, document_ids: list[str], corpus_version: str
     ) -> list[SourceDocument]:
-        documents = _read_jsonl(self.corpus_path, SourceDocument, "document_id")
+        documents = _read_jsonl(self.corpus_path, SourceDocument, KEYS["DOCUMENT_ID"])
         by_id = {document.document_id: document for document in documents}
 
         requested_ids = document_ids or list(by_id)
@@ -100,13 +101,29 @@ class RunTraceStore:
 
     def save(self, trace: RunTrace) -> Path:
         target = self._runs_dir / f"{trace.run_id}.trace.json"
-        return self._save_json(target, trace.model_dump(mode="json"))
+        return self._save_json(target, trace.model_dump(mode="json", by_alias=True))
 
     def save_raw(self, run_id: str, raw_log: dict[str, object]) -> Path:
         """Save a local-only raw log. This artifact is never returned by the API."""
 
         target = self._runs_dir / f"{run_id}.raw.json"
         return self._save_json(target, raw_log)
+
+    def save_evaluation(self, run_id: str, evaluation: dict) -> Path:
+        target = self._runs_dir / f"{run_id}.evaluation.json"
+        history = json.loads(target.read_text(encoding="utf-8")) if target.exists() else []
+        history.append(evaluation)
+        return self._save_json(target, history)
+
+    def save_detector_gold(self, run_id: str, evaluation: dict) -> Path:
+        target = self._runs_dir / f"{run_id}.detector-gold.json"
+        history = json.loads(target.read_text(encoding="utf-8")) if target.exists() else []
+        history.append(evaluation)
+        return self._save_json(target, history)
+
+    def get_raw(self, run_id: str) -> dict:
+        path = self._runs_dir / f"{run_id}.raw.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
     def _save_json(self, target: Path, payload: object) -> Path:
         self._runs_dir.mkdir(parents=True, exist_ok=True)

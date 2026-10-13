@@ -6,6 +6,11 @@ RAG 데이터·코퍼스 버전은 `synthetic_v0.2`이며,
 이메일 데이터는 `synthetic_email_v0.1`로 별도 관리한다.
 파일명의 버전과 파일 내부의 데이터 버전은 구분한다.
 
+기본 실행 경로인 `data/`에는 기존 `synthetic_v0.1.1` 케이스·코퍼스·rubric과
+manifest를 유지한다. `week1/`은 같은 버전의 보관본이다.
+이 문서의 84개 RAG 케이스와 52개 문서는 `data/week2/`의 `synthetic_v0.2`를 가리킨다.
+아래 구성표의 파일 경로는 `data/week2/` 기준이다.
+
 ## 1. 데이터 구성
 
 본 데이터셋은 RAG 및 이메일 요약기의 프롬프트 인젝션
@@ -279,6 +284,20 @@ holdout 결과를 보고 방어 정책이나 임계값을 수정했다면,
 
 기존 검증 명령은 프로젝트 루트에서 실행한다.
 
+기본 세트와 2주차 세트는 각각의 manifest로 검증·실행한다.
+
+```bash
+python -m scripts.mvp check
+python -m scripts.mvp check --data-dir data/week2
+python -m scripts.mvp verify --data-dir data/week2
+python -m scripts.mvp serve --data-dir data/week2 --fixture-model
+```
+
+`data/week2/mvp-manifest.v0.1.json`은 `synthetic_v0.2`와 대표 검색 기대값을 고정한다.
+기본 `data/mvp-manifest.v0.1.json`은 `synthetic_v0.1.1`을 유지한다.
+RAG 파일명은 로더·UI 공통 계약에 맞춰 `cases.v0.1.jsonl`, `corpus.v0.1.jsonl`이다.
+이메일 JSONL은 별도 합성 샘플이며 위 RAG manifest와 `check/verify` 대상에는 포함하지 않는다.
+
 - `python -m scripts.mvp check`
   - 스키마·데이터·문서 참조 등의 구조 검증
 - `python -m scripts.mvp verify`
@@ -290,7 +309,7 @@ holdout 결과를 보고 방어 정책이나 임계값을 수정했다면,
 검증 기록에는 실행 환경이 실제 모델인지 데모·fixture인지 구분한다.
 실제 모델 실행에는 모델·설정·run_id를 함께 남긴다.
 
-기존 `mvp-manifest.v0.1.json`은 다음 항목을 현재 데이터와 대조한다.
+선택한 데이터 디렉터리의 `mvp-manifest.v0.1.json`은 다음 항목을 해당 데이터와 대조한다.
 
 - 대표 case_id와 연결 문서
 - 기대 검색 순위

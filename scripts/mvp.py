@@ -14,7 +14,7 @@ import urllib.error
 import urllib.request
 import uuid
 import venv
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from unittest.mock import patch
 
@@ -32,7 +32,7 @@ def setup() -> int:
 
 
 def require_dependencies() -> None:
-    missing = [name for name in ("pydantic", "fastapi", "uvicorn", "jsonschema", "streamlit", "requests") if importlib.util.find_spec(name) is None]
+    missing = [name for name in ("pydantic", "fastapi", "uvicorn", "jsonschema", "streamlit", "requests", "dotenv") if importlib.util.find_spec(name) is None]
     if missing:
         raise RuntimeError(f"Missing dependencies: {', '.join(missing)}. Run: python -m scripts.mvp setup")
 
@@ -112,10 +112,12 @@ def services(bundle, runs_dir: Path, api_port: int, ui_port: int, demo: bool):
     backend_url = f"http://127.0.0.1:{api_port}"
     frontend_url = f"http://127.0.0.1:{ui_port}"
     env = dict(os.environ, DATA_DIR=str(bundle.data_dir), MVP_MANIFEST=str(bundle.manifest_path), RUNS_DIR=str(runs_dir), BACKEND_URL=backend_url, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
+    env["MVP_LOAD_DOTENV"] = "0"
     if demo:
         env.update(MODEL_PROVIDER="demo", MODEL_ID="demo-rag-v0.1")
         env.pop("MODEL_BASE_URL", None)
         env.pop("MODEL_API_KEY", None)
+        env.pop("EVALUATION_RULES_FILE", None)
     children = []
     try:
         backend = ManagedProcess("backend", [sys.executable, "-m", "uvicorn", "app.main:app", "--app-dir", str(ROOT / "backend"), "--host", "127.0.0.1", "--port", str(api_port)], log_dir, env)
@@ -141,10 +143,12 @@ def validate_api_trace(bundle, item, trace: dict, request: dict) -> None:
     from backend.app.models import RunTrace
     from scripts.data_contract import CANARY_PATTERN, require
 
-    Draft202012Validator(bundle.schema).validate(trace)
+    schema = json.loads((ROOT / "contracts/execution-v0.3.schema.json").read_text(encoding="utf-8"))
+    Draft202012Validator(schema).validate(trace)
     record = RunTrace.model_validate(trace)
     require(record.status == "completed" and record.error is None, f"{item.case_id}: execution failed")
-    require(trace["request"] == request, f"{item.case_id}: request/version mismatch")
+    from backend.app.models import RunRequest
+    require(trace["request"] == RunRequest.model_validate(request).model_dump(mode="json"), f"{item.case_id}: request/version mismatch")
     require(record.output.outcome == "generated" and bool(record.output.display_text), f"{item.case_id}: missing output")
     require(record.metrics.latency_ms is not None and record.metrics.input_tokens is not None and record.metrics.output_tokens is not None, f"{item.case_id}: missing metrics")
     require(bool(record.manifest.model_id) and bool(record.manifest.system_prompt_version) and bool(record.manifest.retrieval_config_version), f"{item.case_id}: incomplete manifest")
@@ -216,17 +220,19 @@ def verify_ui(bundle, env: dict[str, str]) -> None:
 
 
 def parse_args(argv: list[str] | None = None):
-    parser = argparse.ArgumentParser(description="Run the integrated week-one RAG MVP.")
+    parser = argparse.ArgumentParser(description="Run and verify the integrated RAG MVP.")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("setup", help="Create .venv and install all dependencies.")
-    for name in ("check", "serve", "verify"):
+    for name in ("check", "serve", "verify", "verify-week2"):
         command = commands.add_parser(name)
-        command.add_argument("--data-dir", type=Path, default=Path(os.environ.get("DATA_DIR", ROOT / "data")))
-        command.add_argument("--manifest", type=Path, default=Path(os.environ["MVP_MANIFEST"]) if os.environ.get("MVP_MANIFEST") else None)
+        command.add_argument("--data-dir", type=Path, default=None)
+        command.add_argument("--manifest", type=Path, default=None)
         if name != "check":
             command.add_argument("--runs-dir", type=Path, default=None)
             command.add_argument("--api-port", type=int, default=8000 if name == "serve" else 0)
             command.add_argument("--ui-port", type=int, default=8501 if name == "serve" else 0)
+        if name == "serve":
+            command.add_argument("--fixture-model", action="store_true", help="Local HTTP fixtures for all four defense modes; no actual LLM.")
     return parser.parse_args(argv)
 
 
@@ -247,25 +253,39 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "setup":
             return setup()
         require_dependencies()
+        from backend.app.environment import load_project_environment, resolve_project_path
+        load_project_environment(ROOT)
         from scripts.data_contract import load_bundle
-        bundle = load_bundle(args.data_dir, args.manifest)
+        data_dir = args.data_dir or resolve_project_path(os.getenv("DATA_DIR") or "data", ROOT)
+        manifest = args.manifest or (resolve_project_path(os.environ["MVP_MANIFEST"], ROOT)
+                                    if os.getenv("MVP_MANIFEST") else None)
+        bundle = load_bundle(data_dir, manifest)
         print(f"Data validated: {len(bundle.cases)} cases, {len(bundle.documents)} documents; {bundle.manifest.dataset_version}", flush=True)
         if args.command == "check":
             return 0
         default_runs = ROOT / "runs" if args.command == "serve" else ROOT / "runs" / f"verification-{uuid.uuid4().hex[:8]}"
-        runs_dir = (args.runs_dir or Path(os.environ.get("RUNS_DIR", default_runs))).resolve()
+        runs_dir = (args.runs_dir or (resolve_project_path(os.environ["RUNS_DIR"], ROOT)
+                                     if os.getenv("RUNS_DIR") else default_runs)).resolve()
         report = None
-        with services(bundle, runs_dir, args.api_port, args.ui_port, demo=args.command == "verify") as (backend_url, frontend_url, env, children):
-            if args.command == "verify":
-                results = verify_http(bundle, backend_url, runs_dir)
-                verify_ui(bundle, env)
-                report = {"status": "passed", "provider": "demo", "dataset_version": bundle.manifest.dataset_version, "corpus_version": bundle.manifest.corpus_version, "ui_verified": True, "rerun_verified": True, "evaluation_scope": "integration_only", "cases": results}
-            else:
-                print(f"API: {backend_url}/docs\nUI:  {frontend_url}\nStop: Ctrl+C (both services will stop).", flush=True)
-                while True:
-                    for child in children:
-                        child.check_running()
-                    time.sleep(0.5)
+        from scripts.verify_week2 import fixture_environment, verify as verify_week2
+        fixture_context = (fixture_environment(bundle.data_dir)
+                           if args.command == "verify-week2" or getattr(args, "fixture_model", False) else nullcontext(None))
+        with fixture_context as fixture:
+            with services(bundle, runs_dir, args.api_port, args.ui_port, demo=args.command == "verify") as (backend_url, frontend_url, env, children):
+                if args.command == "verify":
+                    results = verify_http(bundle, backend_url, runs_dir)
+                    verify_ui(bundle, env)
+                    report = {"status": "passed", "provider": "demo", "dataset_version": bundle.manifest.dataset_version, "corpus_version": bundle.manifest.corpus_version, "ui_verified": True, "rerun_verified": True, "evaluation_scope": "integration_only", "cases": results}
+                elif args.command == "verify-week2":
+                    report = verify_week2(bundle, backend_url, env, runs_dir, fixture)
+                else:
+                    print(f"API: {backend_url}/docs\nUI:  {frontend_url}\nStop: Ctrl+C (all services will stop).", flush=True)
+                    if fixture:
+                        print("Model scope: fixture (predetermined responses, not actual model results).", flush=True)
+                    while True:
+                        for child in children:
+                            child.check_running()
+                        time.sleep(0.5)
         # Publish success only after all owned server processes have stopped.
         (runs_dir / "verification-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"HTTP + UI verification passed. Report: {runs_dir / 'verification-report.json'}", flush=True)

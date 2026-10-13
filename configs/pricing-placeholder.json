@@ -1,0 +1,22 @@
+{
+  "version": "unverified-placeholder-v0.1",
+  "currency": "USD",
+  "models": [
+    {
+      "model_id": "temporary-generation-model",
+      "input_usd_per_million": null,
+      "output_usd_per_million": null,
+      "source_url": null,
+      "effective_date": null,
+      "verified": false
+    },
+    {
+      "model_id": "temporary-classifier-model",
+      "input_usd_per_million": null,
+      "output_usd_per_million": null,
+      "source_url": null,
+      "effective_date": null,
+      "verified": false
+    }
+  ]
+}

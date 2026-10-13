@@ -8,24 +8,28 @@ from app.config import Settings
 from app.models import CaseRecord, RunRequest, RunTrace
 from app.repository import ExperimentRepository, RunTraceStore
 from app.service import RunService, build_provider
+from app.shared_variables import (
+    ArtifactType, CaseLabel, DefenseMode, OutputOutcome, RunStatus,
+    Scenario, SchemaVersion,
+)
 
-REQUIRED_LABELS = {"attack", "benign", "hard_negative"}
+REQUIRED_LABELS = set(CaseLabel)
 
 
 def validate_trace(trace: RunTrace, case: CaseRecord) -> None:
     """Assert the fields the week-one UI needs for one completed RAG run."""
 
-    if trace.status != "completed":
+    if trace.status != RunStatus.COMPLETED:
         raise RuntimeError(f"{case.case_id}: run status is {trace.status}")
     if trace.request.case_id != case.case_id:
         raise RuntimeError(f"{case.case_id}: trace request does not match the case")
-    if trace.request.defense_mode != "none" or trace.defense_events:
+    if trace.request.defense_mode != DefenseMode.NONE or trace.defense_events:
         raise RuntimeError(f"{case.case_id}: week-one run must have no defense events")
     if not trace.retrieval:
         raise RuntimeError(f"{case.case_id}: retrieval is empty")
     if len(trace.prompt_assembly) < 2:
         raise RuntimeError(f"{case.case_id}: prompt assembly is incomplete")
-    if trace.output.outcome != "generated" or trace.output.display_text is None:
+    if trace.output.outcome != OutputOutcome.GENERATED or trace.output.display_text is None:
         raise RuntimeError(f"{case.case_id}: generated output is missing")
     if trace.metrics.latency_ms is None:
         raise RuntimeError(f"{case.case_id}: latency metric is missing")
@@ -53,15 +57,15 @@ def run_representative_cases(
 
     for case_id in case_ids:
         case = repository.get_case(case_id)
-        if case.scenario != "rag_chat":
+        if case.scenario != Scenario.RAG_CHAT:
             raise RuntimeError(f"{case_id}: week-one verification only supports rag_chat")
         trace = service.execute(
             RunRequest(
-                schema_version="0.1",
-                artifact_type="run_request",
+                schema_version=SchemaVersion.CURRENT,
+                artifact_type=ArtifactType.RUN_REQUEST,
                 case_id=case.case_id,
                 scenario=case.scenario,
-                defense_mode="none",
+                defense_mode=DefenseMode.NONE,
                 dataset_version=case.source_version,
                 corpus_version=corpus_version,
                 requested_by=requested_by,

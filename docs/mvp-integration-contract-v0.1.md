@@ -4,6 +4,9 @@
 
 구조의 기준은 [mvp-integration-v0.1.schema.json](../contracts/mvp-integration-v0.1.schema.json)이며, 코드에서 반복해 쓰는 필드명·상태값·화면 표시명은 [shared-variables-v0.1.json](../contracts/shared-variables-v0.1.json)에서 가져온다.
 
+2주차부터 데이터는 v0.1을 유지하고 새 실행 요청/trace는 [실행 계약 v0.2](week2-backend.md)를 사용한다.
+아래의 v0.1 실행 trace 정의는 이전 소비자·저장물의 계약이다. 새 API 응답을 strict v0.1 스키마로 검증하지 않는다.
+
 ## 언어와 키 이름 원칙
 
 - 문서, 설명, 화면 표시명은 한국어로 작성한다.
@@ -20,7 +23,7 @@
 | run_request | 프론트엔드 또는 배치 실행기 | 백엔드 | 특정 케이스를 특정 방어 모드로 실행하는 요청 |
 | run_trace | 백엔드 | 프론트엔드, 실험·데이터 | 한 번의 실행 전체를 기록한 관측 로그 |
 
-모든 아티팩트는 "schema_version": "0.1"을 사용한다. 기존 필드의 이름·허용값·의미가 달라지면 새 버전을 만들며, 같은 키의 뜻을 조용히 바꾸지 않는다.
+이 v0.1 계약의 아티팩트는 "schema_version": "0.1"을 사용한다. 기존 필드의 이름·허용값·의미가 달라지면 새 버전을 만들며, 같은 키의 뜻을 조용히 바꾸지 않는다.
 
 ## 권장 파일 배치
 
@@ -47,6 +50,10 @@ JSONL 데이터 파일의 한 줄은 스키마 아티팩트 한 개다. 실행 t
 output.outcome의 표시명은 output_outcomes에서, prompt_assembly의 각 component_type 표시명은 prompt_component_types에서 value가 응답 값과 일치하는 항목의 label_ko를 읽는다. 예: "error"는 "오류", "retrieved_document"는 "검색 문서"로 표시한다. 표시명 추가는 기존 API enum이나 계약 버전을 변경하지 않는다.
 
 새 방어 모드, 실행 상태, 평가 상태가 필요하면 세 역할이 합의한 뒤 스키마와 통합 변수 파일을 같은 변경에서 갱신한다.
+
+백엔드는 `backend/app/shared_variables.py`에서 이 JSON 파일을 읽어 문자열 enum, `KEYS`, `METRIC_KEYS`, `CANONICAL_PATHS`를 제공한다. 요청 검증 모델, 실행·실패 trace 생성, API 응답, 저장소와 1주차 검증 스크립트는 이 모듈을 사용한다. JSON 응답과 저장 로그에는 enum 이름 대신 기존 계약의 문자열 value를 기록한다.
+
+방어 이벤트의 defense_id는 D1/D2만, normal_task_success는 not_applicable을 제외한 평가 상태만 허용하는 기존 제한을 유지한다. 공통 파일은 저장소 루트를 기준으로 프로세스 시작 시 읽으므로 실행 디렉터리에 영향을 받지 않는다. 파일 변경 시 API를 재시작하고, 필수 파일·항목이 없거나 JSON이 잘못되면 중복 상수로 대체하지 않고 시작을 실패시킨다.
 
 ## 공통 식별자와 공정 비교 단위
 
