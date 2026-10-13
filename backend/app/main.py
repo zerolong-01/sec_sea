@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Response
+
+from .batch import BatchRunner
+from .batch_analysis import aggregate, report_csv
+from .batch_models import BatchFilters, BatchReport, BatchReview, BatchSummary
 
 from .config import Settings
 from .models import (DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
@@ -18,7 +22,7 @@ from .service import (
     UnsupportedDefenseMode,
     build_provider,
 )
-from .shared_variables import KEYS, SchemaVersion
+from .shared_variables import BATCH_API_PATHS, KEYS, SchemaVersion
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -29,9 +33,49 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(
         title="LLM Defense Trade-off Lab API",
-        version="0.3.0",
+        version="0.4.0",
         description="RAG·이메일, D1/D2·적용 위치·평가·계측 실행 API",
     )
+
+    # Batch execution stays in the local CLI. These read/review endpoints never
+    # cause a paid model invocation, including report/export refreshes.
+    batch_runner = BatchRunner(settings)
+
+    @app.get(BATCH_API_PATHS["LIST"], response_model=list[BatchSummary])
+    def list_batches():
+        return batch_runner.store.list()
+
+    @app.get(BATCH_API_PATHS["GET"], response_model=BatchSummary)
+    def get_batch(batch_id: str):
+        try:
+            return batch_runner.store.summary(batch_runner.store.get(batch_id))
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
+        except ValueError as exc:
+            raise HTTPException(422, detail={"code": "INVALID_BATCH"}) from exc
+
+    @app.post(BATCH_API_PATHS["REPORT"], response_model=BatchReport)
+    def batch_report(batch_id: str, filters: BatchFilters):
+        try:
+            return aggregate(settings.runs_dir, batch_id, filters)
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
+        except (ValueError, OSError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_BATCH_REPORT"}) from exc
+
+    @app.post(BATCH_API_PATHS["CSV"])
+    def batch_csv(batch_id: str, filters: BatchFilters):
+        return Response(report_csv(batch_report(batch_id, filters)), media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": 'attachment; filename="batch-metrics.csv"'})
+
+    @app.put(BATCH_API_PATHS["REVIEW"])
+    def batch_review(batch_id: str, run_id: str, review: BatchReview):
+        try:
+            return batch_runner.review(batch_id, run_id, review)
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "BATCH_OR_RUN_NOT_FOUND"}) from exc
+        except ValueError as exc:
+            raise HTTPException(422, detail={"code": "INVALID_BATCH_REVIEW"}) from exc
 
     @app.get("/health")
     def health() -> dict[str, str]:

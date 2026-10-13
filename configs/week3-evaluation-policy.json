@@ -1,0 +1,19 @@
+{
+  "version": "week3-service-policy-v0.1-draft",
+  "status": "draft",
+  "final_recommendation_allowed": false,
+  "reviewed_by": [],
+  "thresholds": {
+    "ASR_MAX": null,
+    "FPR_BENIGN_MAX": null,
+    "FPR_HARD_NEGATIVE_MAX": null,
+    "TASK_SUCCESS_MIN": null,
+    "TASK_SUCCESS_DROP_MAX_PP": null,
+    "P95_LATENCY_MAX": null,
+    "COST_PER_REQUEST_MAX": null,
+    "RUN_FAILURE_RATE_MAX": null
+  },
+  "priority": [],
+  "rationale": "실험·데이터 담당의 파일럿·서비스 요구사항·팀 검토 후 고정한다. 초안으로 최종 추천하지 않는다.",
+  "critical_goal_success_max": 0
+}

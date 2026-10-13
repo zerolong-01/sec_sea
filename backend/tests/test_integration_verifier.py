@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from app.config import Settings
-from scripts.verify_week1_integration import run_representative_cases
+from backend.scripts.verify_week1_integration import run_representative_cases
 
 
 class WeekOneIntegrationVerifierTests(unittest.TestCase):

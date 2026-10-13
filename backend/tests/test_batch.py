@@ -85,6 +85,53 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(self.fixture.requests, [])
         self.assertEqual(state.calls, [])
 
+    def test_token_and_verified_dollar_reservations_stop_before_transport(self):
+        token_spec = self.one(budget={"max_calls": 10, "max_reserved_tokens": 100, "max_seconds": 60,
+                                     "unknown_price_policy": "calls_tokens"})
+        state = self.runner.execute(self.runner.create(token_spec).batch_id)
+        self.assertEqual(state.reason, "BATCH_TOKEN_BUDGET_EXCEEDED")
+        self.assertEqual(self.fixture.requests, [])
+        price_path = self.folder / "prices.json"
+        price_path.write_text(json.dumps({"version": "test-only-price", "currency": "USD", "models": [
+            {"model_id": "fixture-generation", "input_usd_per_million": 1, "output_usd_per_million": 1,
+             "source_url": "https://example.com/test-fixture-not-a-real-price", "effective_date": "2026-10-13", "verified": True}]}), encoding="utf-8")
+        runner = BatchRunner(replace(self.settings, pricing_path=price_path))
+        usd_spec = self.one(budget={"max_calls": 10, "max_reserved_tokens": 1000000, "max_seconds": 60,
+                                   "per_call_input_token_ceiling": 10000, "max_usd": .005})
+        state = runner.execute(runner.create(usd_spec).batch_id)
+        self.assertEqual(state.reason, "BATCH_USD_BUDGET_EXCEEDED")
+        self.assertEqual(self.fixture.requests, [])
+        usd_spec.budget.max_usd = .02
+        state = runner.execute(runner.create(usd_spec).batch_id)
+        self.assertEqual(state.status, "completed")
+        self.assertAlmostEqual(state.calls[0]["known_cost_usd"], .000022)
+        self.assertAlmostEqual(state.calls[0]["committed_usd"], .000022)
+        self.fixture.missing_usage = True
+        usd_spec.repeats = 2
+        usd_spec.budget.max_usd = .015
+        calls_before = len(self.fixture.requests)
+        state = runner.execute(runner.create(usd_spec).batch_id)
+        self.assertEqual(state.reason, "BATCH_USD_BUDGET_EXCEEDED")
+        self.assertEqual(len(self.fixture.requests) - calls_before, 1)
+        self.assertIsNone(state.calls[0]["known_cost_usd"])
+        self.assertEqual(state.calls[0]["committed_usd"], state.calls[0]["reserved_usd"])
+
+    def test_expired_wall_budget_prevents_new_attempts(self):
+        state = self.runner.create(self.one())
+        state.elapsed_seconds = state.spec.budget.max_seconds
+        self.runner.store.save(state)
+        state = self.runner.execute(state.batch_id)
+        self.assertEqual(state.reason, "BATCH_TIME_BUDGET_EXCEEDED")
+        self.assertEqual(state.plan[0]["status"], "pending")
+        self.assertEqual(self.fixture.requests, [])
+
+    def test_writer_lock_blocks_a_second_runner(self):
+        state = self.runner.create(self.one())
+        with batch_lock(self.runner.store.folder(state.batch_id)):
+            with self.assertRaisesRegex(ValueError, "active writer"):
+                self.runner.execute(state.batch_id)
+        self.assertEqual(self.fixture.requests, [])
+
     def test_durable_reservation_on_interrupt_is_not_silently_replayed(self):
         state = self.runner.create(self.one())
         with patch("app.batch_budget.BatchCallBudget.after", side_effect=KeyboardInterrupt):
@@ -147,6 +194,41 @@ class BatchTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.spec(sources=[{"source_id": "a", "data_dir": "data", "split": "dev"},
                                {"source_id": "b", "data_dir": "data", "split": "holdout"}])
+
+    def test_holdout_inventory_does_not_authorize_execution_and_selection_is_frozen(self):
+        raw = self.spec().model_dump(mode="json")
+        raw["sources"] = [{"source_id": "holdout-rag", "data_dir": "data/week2", "split": "holdout"}]
+        raw["repeats"] = 3
+        inventory_only = BatchSpec.model_validate(raw, context={"inventory_only": True})
+        hashes = self.runner.inspect_inputs(inventory_only)[-1]
+        self.assertIn("selection", hashes)
+        with self.assertRaises(ValueError):
+            self.runner.create(inventory_only)
+        # Changing a reviewed selection must alter the freeze inventory even
+        # when the underlying files and runtime model settings are identical.
+        changed = inventory_only.model_copy(deep=True)
+        changed.sources[0].languages = ["en"]
+        with self.assertRaisesRegex(ValueError, "selects no cases"):
+            self.runner.inspect_inputs(changed)
+        self.assertEqual(self.fixture.requests, [])
+
+    def test_comparison_cannot_change_threshold_and_effective_duplicates_are_rejected(self):
+        spec = self.spec(conditions=[
+            {"condition_id": "D2", "defense_mode": "D2", "comparisons": ["technique"], "d2_threshold": .5},
+            {"condition_id": "D1-D2", "defense_mode": "D1+D2", "comparisons": ["technique"], "d2_threshold": .9}])
+        with self.assertRaisesRegex(ValueError, "more than the intended"):
+            self.runner.create(spec)
+        spec = self.spec(conditions=[
+            {"condition_id": "default", "defense_mode": "D2", "comparisons": ["technique"]},
+            {"condition_id": "explicit", "defense_mode": "D2", "comparisons": ["technique"], "d2_threshold": .5}])
+        with self.assertRaisesRegex(ValueError, "Duplicate effective"):
+            self.runner.create(spec)
+
+    def test_planning_rejects_credential_bearing_endpoint_before_persisting_it(self):
+        bad = BatchRunner(replace(self.settings, model_base_url="https://user:private-password@example.com/v1"))
+        with self.assertRaisesRegex(ValueError, "without credentials"):
+            bad.create(self.one())
+        self.assertEqual(bad.store.list(), [])
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic import ConfigDict, Field, ValidationInfo, model_validator
 
 from .models import StrictModel
-from .shared_variables import DefenseMode, DefensePosition, ExecutionKind
+from .shared_variables import BATCH_VERSION, DefenseMode, DefensePosition, ExecutionKind
 
 
 class BatchModel(StrictModel):
@@ -47,6 +47,10 @@ class BatchCondition(BatchModel):
             raise ValueError("detector_only requires D2")
         if "position" in self.comparisons and self.defense_mode != DefenseMode.D2:
             raise ValueError("Position comparisons require D2 without D1")
+        if "technique" in self.comparisons and self.defense_mode in ("D2", "D1+D2") and self.defense_position != DefensePosition.BOTH:
+            raise ValueError("Technique comparisons fix D2 to input+retrieval")
+        if self.execution_kind == ExecutionKind.DETECTOR_ONLY and set(self.comparisons) & {"position", "technique"}:
+            raise ValueError("Detector-only runs require a separate diagnostic comparison")
         if len(set(self.comparisons)) != len(self.comparisons):
             raise ValueError("Duplicate comparison membership")
         return self
@@ -89,8 +93,40 @@ class StatisticsPolicy(BatchModel):
     minimum_evaluated_runs: int = Field(default=3, ge=1)
 
 
+class ServiceThresholds(BatchModel):
+    ASR_MAX: float | None = Field(default=None, ge=0, le=1)
+    FPR_BENIGN_MAX: float | None = Field(default=None, ge=0, le=1)
+    FPR_HARD_NEGATIVE_MAX: float | None = Field(default=None, ge=0, le=1)
+    TASK_SUCCESS_MIN: float | None = Field(default=None, ge=0, le=1)
+    TASK_SUCCESS_DROP_MAX_PP: float | None = Field(default=None, ge=0, le=100)
+    P95_LATENCY_MAX: float | None = Field(default=None, ge=0)
+    COST_PER_REQUEST_MAX: float | None = Field(default=None, ge=0)
+    RUN_FAILURE_RATE_MAX: float | None = Field(default=None, ge=0, le=1)
+
+
+class RecommendationPolicy(BatchModel):
+    version: str = Field(min_length=1)
+    status: Literal["draft", "frozen"] = "draft"
+    final_recommendation_allowed: bool = False
+    reviewed_by: list[str] = Field(default_factory=list)
+    thresholds: ServiceThresholds = Field(default_factory=ServiceThresholds)
+    priority: list[Literal["asr", "benign_fpr", "hard_negative_fpr", "task_success",
+                           "latency_p95_ms", "cost_per_request_usd"]] = Field(default_factory=list)
+    rationale: str = Field(min_length=1)
+    critical_goal_success_max: Literal[0] = 0
+
+    @model_validator(mode="after")
+    def validate_frozen(self):
+        if len(self.priority) != len(set(self.priority)):
+            raise ValueError("Priority must not contain duplicates")
+        if self.status == "frozen" and (len(set(self.reviewed_by)) < 2 or not self.priority
+                or not self.final_recommendation_allowed or any(v is None for v in self.thresholds.model_dump().values())):
+            raise ValueError("Frozen recommendation policy requires reviewed, complete criteria")
+        return self
+
+
 class BatchSpec(BatchModel):
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal[BATCH_VERSION] = BATCH_VERSION
     artifact_type: Literal["batch_spec"] = "batch_spec"
     sources: list[BatchSource] = Field(min_length=1)
     conditions: list[BatchCondition] = Field(default_factory=default_conditions, min_length=1)
@@ -138,6 +174,7 @@ class BatchFilters(BatchModel):
     attack_type: str | None = None
     label: Literal["attack", "benign", "hard_negative"] | None = None
     goal_kind: str | None = None
+    severity: str | None = None
     execution_kind: str | None = None
 
 
@@ -150,7 +187,7 @@ class BatchReview(BatchModel):
 
 
 class BatchArtifact(BatchModel):
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal[BATCH_VERSION] = BATCH_VERSION
     artifact_type: Literal["batch_manifest"] = "batch_manifest"
     batch_id: str = Field(pattern=r"^batch-[a-f0-9]{12}$")
     created_at: str
@@ -167,16 +204,37 @@ class BatchArtifact(BatchModel):
 
 
 class BatchReport(BatchModel):
-    schema_version: Literal["0.1"] = "0.1"
+    schema_version: Literal[BATCH_VERSION] = BATCH_VERSION
     artifact_type: Literal["batch_report"] = "batch_report"
     batch_id: str
     report_version: str
     evaluation_snapshot_sha256: str
     filters: BatchFilters
     statistics: StatisticsPolicy
+    provenance: dict
     counts: dict
     groups: list[dict]
     payload_comparisons: list[dict]
     detector_report: dict
     decisions: dict
+
+
+class BatchSummary(BatchModel):
+    schema_version: Literal[BATCH_VERSION] = BATCH_VERSION
+    artifact_type: Literal["batch_summary"] = "batch_summary"
+    batch_id: str
+    created_at: str
+    code_commit: str
+    status: str
+    reason: str | None
+    planned_count: int = Field(ge=0)
+    status_counts: dict[str, int]
+    attempt_count: int = Field(ge=0)
+    budget: dict
+    configuration_hashes: dict[str, str]
+    execution_scope: str
+    statistics: StatisticsPolicy
+    sources: list[dict]
+    conditions: list[BatchCondition]
+    plan: list[dict]
 
