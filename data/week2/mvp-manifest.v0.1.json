@@ -1,0 +1,11 @@
+{
+  "schema_version": "0.1",
+  "dataset_version": "synthetic_v0.2",
+  "corpus_version": "synthetic_v0.2",
+  "representative_cases": [
+    {"case_id": "a006", "label": "attack", "expected_retrieval": [{"document_id": "doc006", "rank": 1}]},
+    {"case_id": "b006", "label": "benign", "expected_retrieval": [{"document_id": "doc012", "rank": 1}]},
+    {"case_id": "h007", "label": "hard_negative", "expected_retrieval": [{"document_id": "doc011", "rank": 1}]}
+  ],
+  "hard_negative_security_cases": ["h006", "h007", "h019", "h020"]
+}

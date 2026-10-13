@@ -1,22 +1,133 @@
-# Streamlit MVP
+# 프론트엔드 (Streamlit)
 
-저장소 루트에서 아래 명령으로 백엔드와 화면을 함께 실행한다.
+방어 모드를 실행하고, 결과를 나란히 비교하는 화면입니다.
 
-```text
-python -m scripts.mvp setup
-python -m scripts.mvp serve
-```
+## 1. 켜기
 
-화면: http://127.0.0.1:8501. Ctrl+C로 두 서버를 종료한다.
-대표 케이스와 코퍼스 버전은 data/mvp-manifest.v0.1.json에서 읽는다.
-기본 목록은 a006, b006, h007이며 '모든 케이스 보기'로 나머지 케이스도 실행할 수 있다.
-평가 항목은 백엔드 trace를 그대로 표시하며 화면에서 성공 여부를 계산하지 않는다.
-
-별도 서버에 연결할 때는 BACKEND_URL을 지정하고 .venv의 Python으로 실행한다.
+저장소 맨 위 폴더(sec_sea)에서 실행합니다.
 
 ```text
-python -m streamlit run frontend/app.py
+python -m scripts.mvp setup                    # 처음 한 번만 (필요한 프로그램 설치)
+python -m scripts.mvp serve --fixture-model    # 서버 + 화면 켜기 (가짜 모델)
 ```
 
-DATA_DIR과 MVP_MANIFEST로 데이터·manifest 경로를 함께 지정할 수 있다.
-전체 API·UI 검증은 루트에서 python -m scripts.mvp verify로 수행한다.
+- 화면 주소: http://127.0.0.1:8501
+- 끄기: Ctrl+C
+- 실제 모델로 켜기: `.env`에 모델 설정을 넣고 `python -m scripts.mvp serve` ([2주차 백엔드 안내](../docs/week2-backend.md) 참고)
+- 2주차 데이터로 켜기: 명령 뒤에 `--data-dir data/week2` 추가
+
+> Windows에서 `python`이 안 되면 `py`로 바꿔서 실행하세요.
+
+## 2. 화면 구성
+
+탭이 3개 있습니다. 케이스는 왼쪽에서 고릅니다 (기본: a006, b006, h007).
+
+**한 번 실행**
+- 고른 방어 모드로 1건 실행
+- 입력 → 검색 → 프롬프트 조립 → 방어 판정 → 출력 순서로 보여 줌
+- 오른쪽에 지연·토큰·비용, 실행 설정, 평가 결과
+
+**4개 모드 비교**
+- 같은 케이스를 무방어, D1, D2, D1 + D2로 한 번에 실행
+- 결과를 표 한 장에 나란히 보여 줌
+- 표 아래 탭에서 모드별 자세한 내용 확인
+
+**D2 위치 비교**
+- D1은 끄고 D2만 켠 채, 검사 위치만 바꿔 3번 실행
+- 위치: 입력만 / 문서만 / 입력 + 문서
+
+## 3. 공정한 비교인지 자동 확인
+
+비교 탭은 실행들의 조건이 같은지 먼저 확인합니다.
+
+- 모두 같으면: 초록 상자
+- 하나라도 다르면: 노란 경고 + 다른 항목 이름
+- 결과를 못 받은 실행이 있거나 결과가 2개 미만이면: 빨간 상자 **비교 불가** (예: 서버 연결 실패)
+
+같아야 하는 조건은 다음과 같습니다.
+
+- 케이스, 데이터 버전, 코퍼스 버전
+- 모델, 모델 제공자, 실행 범위(demo / fixture / real)
+- 생성 설정, 검색 설정, 기본 시스템 프롬프트
+- 평가기 버전, 가격 버전, 모델 호출 상한
+- D2 설정 (D2를 켠 실행끼리만)
+
+방어 모드와 D2 위치는 **일부러 바꾸는 값**이라 확인에서 뺍니다.
+
+## 4. 비교 표의 각 칸은 어디서 오나
+
+화면은 서버가 준 값을 **그대로** 보여 줍니다. 성공 여부나 지표를 화면에서 새로 계산하지 않습니다.
+한글 이름은 `contracts/shared-variables-v0.1.json`의 label_ko를 씁니다.
+
+| 화면 칸 | trace 필드 |
+| --- | --- |
+| 실행 번호 | `run_id` |
+| 상태 | `status` |
+| 출력 결과 | `output.outcome` |
+| 공격 성공 | `evaluation.attack_success` |
+| 정상 태스크 성공 | `evaluation.normal_task_success` |
+| 방어 판정 | `defense_events`의 판정을 종류별로 센 것 (예: 허용 1 · 격리 1) |
+| 프롬프트 포함 문서 | `retrieval`에서 프롬프트에 들어간 문서 수 / 전체 문서 수 |
+| 응답 지연 시간(ms) | `metrics.latency_ms` |
+| 입력 토큰 / 출력 토큰 | `metrics.input_tokens` / `metrics.output_tokens` |
+| 추정 비용(USD) | `metrics.estimated_cost_usd` |
+| 사용량 출처 | `metrics.usage_source` |
+| 생성 / 탐지 호출 | `metrics.generation_call_count` / `metrics.detection_call_count` |
+
+값이 없을 때는 이렇게 보입니다.
+
+- 대부분의 칸: **기록 없음**
+- 비용: **미확인** (가격이 확정되지 않았거나 사용량을 모를 때)
+- 실행 자체가 안 됐을 때: 상태 칸에 **오류 코드** (예: ARTIFACT_NOT_FOUND)
+
+**헷갈리기 쉬운 점:** 상태, 출력 결과, 평가는 서로 다른 값입니다.
+
+- 상태가 "완료"여도 정상 태스크는 "실패"일 수 있습니다.
+- D2 탐지기에 오류가 나면 상태는 "실행 실패", 출력은 "차단됨"입니다.
+
+표를 만드는 코드는 `ui_core.py`의 `summary_row`입니다.
+
+## 5. 통합 검증
+
+화면에 보이는 값이 서버 값과 정말 같은지 자동으로 확인합니다.
+서버를 켜 둔 채 **다른 창**에서 실행하세요.
+
+```text
+.venv\Scripts\python frontend\verify_ui.py     # Windows
+.venv/bin/python frontend/verify_ui.py         # macOS·Linux
+```
+
+**하는 일**
+
+- 대표 3건 × 4개 모드 = 12건 실행
+- 공격 케이스(a006)는 D2 위치 3개도 실행
+- 표의 값을 세 곳에서 만들어 비교: 실행 응답 / 서버 재조회 / 저장된 trace 파일
+- 요청한 방어(D1, D2)와 D2 위치가 실제로 적용됐는지 확인
+- 비교 조건이 같은지 확인 (비교 불가도 문제로 기록)
+- 실행 상태 확인: **완료**와 **방어로 차단됨**(정상적인 방어 동작)은 통과, **실행 실패**(failed)·trace 오류·방어 판정 오류는 문제로 기록
+
+**결과**
+
+- 마지막에 "전체 통과"가 나오면 성공, 문제가 하나라도 있으면 "문제 N건"과 함께 종료 코드 1
+- 기록 파일: [verification/week2-ui-verification.md](verification/week2-ui-verification.md)
+- trace 파일은 `runs/`에 내 컴퓨터에만 남습니다 (Git에 안 올라감)
+
+> fixture(가짜 모델) 검증은 화면·서버·저장 연결을 확인한 것이고, 실제 모델 성능이 아닙니다.
+> 실제 모델로 켠 뒤 같은 스크립트를 다시 실행하면 실제 모델 검증 기록이 됩니다.
+
+## 6. 파일 구성
+
+| 파일 | 역할 |
+| --- | --- |
+| `app.py` | 화면 |
+| `ui_core.py` | 화면과 검증이 같이 쓰는 부분 (서버 요청, 비교 표, 조건 확인) |
+| `verify_ui.py` | 통합 검증 스크립트 |
+| `verification/` | 검증 기록 |
+
+## 7. 이번 범위 밖
+
+ASR/FPR 차트, Pareto 분석, 대시보드, 통계 집계는 다음 주차에 합니다.
+
+---
+
+> VS Code에서 이 파일을 열었다면 **Ctrl + Shift + V**를 눌러 편하게 보시면 좋을 것 같습니다.

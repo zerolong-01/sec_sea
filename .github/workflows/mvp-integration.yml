@@ -34,7 +34,9 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
       - name: Validate committed data
-        run: python -m scripts.mvp check
+        run: |
+          python -m scripts.mvp check
+          python -m scripts.week2_data check
       - name: Pipeline regression tests
         run: python -m unittest discover -s tests -v
       - name: Backend regression tests
@@ -42,3 +44,7 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: HTTP and Streamlit integration
         run: python -m scripts.mvp verify
+      - name: D1/D2 HTTP fixture and UI handoff
+        run: python -m scripts.mvp verify-week2
+      - name: Week-two data, evaluator and target-gold handoff
+        run: python -m scripts.week2_data verify-handoff --output runs/week2-data-ci
