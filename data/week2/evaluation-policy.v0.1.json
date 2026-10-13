@@ -1,0 +1,26 @@
+{
+  "version": "week2-evaluation-policy-v0.1-draft",
+  "status": "team_agreement_pending",
+  "thresholds": {
+    "ASR_MAX": null,
+    "FPR_BENIGN_MAX": null,
+    "FPR_HARD_NEGATIVE_MAX": null,
+    "TASK_SUCCESS_MIN": null,
+    "TASK_SUCCESS_DROP_MAX_PP": null,
+    "P95_LATENCY_MAX": null,
+    "COST_PER_REQUEST_MAX": null,
+    "RUN_FAILURE_RATE_MAX": null
+  },
+  "threshold_reason": "파일럿과 목표 서비스 요구사항 및 팀 합의 전에는 수치를 임의로 확정하지 않음",
+  "priority_proposal": [
+    "critical_leak",
+    "hard_negative_fpr",
+    "normal_task_success",
+    "benign_fpr",
+    "latency",
+    "cost"
+  ],
+  "week3_repeats_proposal": 3,
+  "freeze_before_holdout": true,
+  "final_recommendation_allowed": false
+}

@@ -38,6 +38,7 @@ class SharedVariableTests(unittest.TestCase):
                 ("run_statuses", "COMPLETED", "finished"),
                 ("run_statuses", "FAILED", "execution_error"),
                 ("evaluation_statuses", "NOT_EVALUATED", "pending_review"),
+                ("evaluation_statuses", "NOT_APPLICABLE", "not_relevant"),
                 ("output_outcomes", "GENERATED", "generated_response"),
                 ("prompt_component_types", "USER", "user_content"),
                 ("metric_keys", "LATENCY_MS", "latency_contract_test"),
@@ -71,7 +72,7 @@ body = response.json()
 trace = body["trace"]
 assert body["status"] == trace["status"] == "finished"
 assert trace["request"]["defense_mode"] == "unprotected"
-assert trace["evaluation"]["attack_success"] == "pending_review"
+assert trace["evaluation"]["attack_success"] == "not_relevant"
 assert trace["evaluation"]["normal_task_success"] == "pending_review"
 assert trace["output"]["outcome"] == "generated_response"
 assert trace["prompt_assembly"][1]["component_type"] == "user_content"

@@ -356,5 +356,11 @@ python -m scripts.mvp serve --data-dir data/week2 --fixture-model
 파일명 `v0.1`은 공통 로더 계약이며 실제 데이터 버전은 `source_version`과 manifest를 따릅니다.
 이메일 샘플 3건, D2 공격 6건과 정상 인용 대조군, 언어·split 구성 및 평가 기준은
 [데이터 가이드](data/README.md)와 [2주차 rubric](data/week2/rubric_v0.2.md)을 참고하세요.
-실제 모델 판정, 독립 gold 검수·API 등록, 팀 합의 기록은 #21의 후속 작업으로 남아 있으며
+실제 모델 판정, gold의 팀 검토·실제 모델 결과에 대한 API 등록, 팀 합의 기록은 #21의 후속 작업으로 남아 있으며
 데이터 초안 반영이나 fixture 통과를 이 작업들의 완료로 간주하지 않습니다.
+
+2주차 RAG·이메일·영어 변형·공격 목록·대상별 검수·평가 규칙을 한 번에 검사하려면
+`python -m scripts.week2_data check`를 실행합니다.
+단일 정적 검수 초안 48개와 검사 후 gold API 인계 검증을 추가했습니다.
+이메일/영어 실행 준비, evaluator 설정과 실제 모델·팀 합의에 남은 작업은
+[2주차 데이터 인계 안내](docs/week2-data.md)를 참고하세요.

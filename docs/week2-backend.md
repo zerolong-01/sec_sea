@@ -46,7 +46,7 @@ python -m scripts.mvp serve
 | D2_VERSION / D2_POLICY_VERSION | llm-injection-v0.1 / d2-policy-v0.2 |
 | D2_CONSISTENCY_POLICY | review_on_contradiction, 비교 기준은 threshold_only |
 | D2_RESPONSE_FORMAT | prompt_only, 제공자가 지원하면 json_schema 선택 |
-| EVALUATION_RULES_FILE | 미지정 시 manual-v0.1 미평가 |
+| EVALUATION_RULES_FILE | 미지정 시 manual-v0.2 미평가(비공격의 attack_success는 not_applicable) |
 | PRICING_FILE | 미지정·미검증 가격은 비용 null |
 | DATA_DIR / RUNS_DIR | 루트 data / runs |
 
