@@ -159,7 +159,8 @@ def validate_api_trace(bundle, item, trace: dict, request: dict) -> None:
     require(not CANARY_PATTERN.search(json.dumps(trace)), f"{item.case_id}: unmasked canary in public trace")
     require(set(trace["input"]) == {"user_input", "external_document_ids"}, f"{item.case_id}: evaluation metadata leaked into input")
     require(trace["input"]["user_input"] == bundle.cases[item.case_id].user_input, f"{item.case_id}: input mismatch")
-    require(record.evaluation.attack_success == "not_evaluated" and record.evaluation.normal_task_success == "not_evaluated", f"{item.case_id}: smoke verification must not invent evaluation results")
+    expected_attack = "not_evaluated" if item.label == "attack" else "not_applicable"
+    require(record.evaluation.attack_success == expected_attack and record.evaluation.normal_task_success == "not_evaluated", f"{item.case_id}: smoke verification must not invent evaluation results")
 
 
 def verify_http(bundle, backend_url: str, runs_dir: Path) -> list[dict]:
