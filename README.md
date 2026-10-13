@@ -339,3 +339,22 @@ python -m scripts.mvp verify-week2
 로컬 HTTP fixture로 네 방어 모드와 D2 세 위치를 시연·검증합니다. fixture 결과는 실제 모델 성능 측정이 아닙니다.
 기본 오프라인 무방어 검증은 `python -m scripts.mvp verify`입니다.
 실제 모델 `.env` 설정, 계약 v0.3, UI 샘플과 이메일 경로는 [2주차 백엔드 안내](docs/week2-backend.md)에 정리했습니다.
+
+### 2주차 확장 데이터
+
+기본 `data/`의 `synthetic_v0.1.1` 실행 계약을 유지하며, 같은 버전의 보관본은
+`data/week1/`에 있습니다. 확장 RAG 데이터 `synthetic_v0.2`는
+`data/week2/`에 공격·정상·hard-negative 각 28건과 코퍼스 52건으로 분리했습니다.
+디렉터리를 선택하면 해당 manifest의 데이터·코퍼스 버전을 API와 UI에 적용합니다.
+
+```bash
+python -m scripts.mvp check --data-dir data/week2
+python -m scripts.mvp verify --data-dir data/week2
+python -m scripts.mvp serve --data-dir data/week2 --fixture-model
+```
+
+파일명 `v0.1`은 공통 로더 계약이며 실제 데이터 버전은 `source_version`과 manifest를 따릅니다.
+이메일 샘플 3건, D2 공격 6건과 정상 인용 대조군, 언어·split 구성 및 평가 기준은
+[데이터 가이드](data/README.md)와 [2주차 rubric](data/week2/rubric_v0.2.md)을 참고하세요.
+실제 모델 판정, 독립 gold 검수·API 등록, 팀 합의 기록은 #21의 후속 작업으로 남아 있으며
+데이터 초안 반영이나 fixture 통과를 이 작업들의 완료로 간주하지 않습니다.
