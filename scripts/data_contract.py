@@ -43,7 +43,8 @@ class MVPManifest(Metadata):
     dataset_version: str = Field(min_length=1)
     corpus_version: str = Field(min_length=1)
     representative_cases: list[RepresentativeCase] = Field(min_length=3, max_length=3)
-    hard_negative_security_cases: list[str] = Field(min_length=3)
+    scenario: Literal["rag_chat", "email_summary"] = "rag_chat"
+    hard_negative_security_cases: list[str]
 
 
 @dataclass
@@ -90,14 +91,20 @@ def load_bundle(data_dir: Path, manifest_path: Path | None = None) -> DataBundle
     cases = load_jsonl(data_dir / "cases.v0.1.jsonl", CaseRecord, "case_id", validator)
     documents = load_jsonl(data_dir / "corpus.v0.1.jsonl", SourceDocument, "document_id", validator)
     counts = Counter(case.label for case in cases.values())
-    require(all(counts[label] >= 3 for label in ("attack", "benign", "hard_negative")), "at least 3 cases per label are required")
+    minimum = 3 if manifest.scenario == "rag_chat" else 1
+    require(all(counts[label] >= minimum for label in ("attack", "benign", "hard_negative")), f"at least {minimum} cases per label are required")
     for case in cases.values():
+        require(case.scenario == manifest.scenario, f"{case.case_id}: scenario mismatch")
         require(case.source_version == manifest.dataset_version, f"{case.case_id}: dataset_version mismatch")
         require(bool(case.source_document_ids), f"{case.case_id}: explicit source_document_ids required")
         require(all(doc_id in documents for doc_id in case.source_document_ids), f"{case.case_id}: missing source document")
     require(all(doc.source_version == manifest.corpus_version for doc in documents.values()), "corpus_version mismatch")
     attack_types = {case.attack_type for case in cases.values() if case.label == "attack"}
-    require({"direct_instruction", "indirect_document"} <= attack_types, "direct and indirect attacks required")
+    if manifest.scenario == "rag_chat":
+        require({"direct_instruction", "indirect_document"} <= attack_types, "direct and indirect attacks required")
+        require(len(manifest.hard_negative_security_cases) >= 3, "at least 3 security negatives required")
+    else:
+        require(all(doc.source_type == "email_body" for doc in documents.values()), "email_body documents required")
 
     representatives = manifest.representative_cases
     require(len({item.case_id for item in representatives}) == 3, "duplicate representative case")
@@ -105,13 +112,14 @@ def load_bundle(data_dir: Path, manifest_path: Path | None = None) -> DataBundle
     for item in representatives:
         require(item.case_id in cases, f"{item.case_id}: missing representative case")
         case = cases[item.case_id]
-        require(case.label == item.label and case.scenario == "rag_chat", f"{item.case_id}: representative label/scenario mismatch")
+        require(case.label == item.label and case.scenario == manifest.scenario, f"{item.case_id}: representative label/scenario mismatch")
         ranked = lexical_retrieve(case.user_input, [documents[doc_id] for doc_id in case.source_document_ids])
         actual = [(result.document_id, result.rank) for _, result in ranked]
         expected = [(result.document_id, result.rank) for result in item.expected_retrieval]
         require(actual == expected, f"{item.case_id}: expected retrieval mismatch")
         if item.label == "benign":
-            require(all(not documents[doc_id].is_untrusted_content and not CANARY_PATTERN.search(documents[doc_id].content) for doc_id in case.source_document_ids), f"{item.case_id}: benign representative contains attack content/canary")
+            require(all((manifest.scenario == "email_summary" or not documents[doc_id].is_untrusted_content)
+                        and not CANARY_PATTERN.search(documents[doc_id].content) for doc_id in case.source_document_ids), f"{item.case_id}: benign representative contains attack content/canary")
         if item.label == "attack":
             require(case.success_criterion.criterion_type == "canary_leak", f"{item.case_id}: concrete canary criterion required")
             canaries = {value for doc_id in case.source_document_ids for value in CANARY_PATTERN.findall(documents[doc_id].content)}
