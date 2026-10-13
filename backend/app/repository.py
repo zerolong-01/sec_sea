@@ -8,6 +8,7 @@ from pydantic import BaseModel, ValidationError
 
 from .models import CaseRecord, RunTrace, SourceDocument
 from .shared_variables import CANONICAL_PATHS, KEYS
+from .storage import atomic_json
 
 ModelType = TypeVar("ModelType", bound=BaseModel)
 
@@ -126,14 +127,7 @@ class RunTraceStore:
         return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
     def _save_json(self, target: Path, payload: object) -> Path:
-        self._runs_dir.mkdir(parents=True, exist_ok=True)
-        temporary = target.with_suffix(".tmp")
-        temporary.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        temporary.replace(target)
-        return target
+        return atomic_json(target, payload)
 
     def get(self, run_id: str) -> RunTrace:
         path = self._runs_dir / f"{run_id}.trace.json"

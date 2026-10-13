@@ -24,6 +24,7 @@ from .models import RunRequest
 from .repository import ArtifactNotFound, ExperimentRepository, RunTraceStore
 from .service import RunService, TraceableRunError, build_provider
 from .shared_variables import BATCH_VERSION
+from .storage import atomic_json
 
 
 def digest(value) -> str:
@@ -64,16 +65,6 @@ def verify_frozen_artifacts(store, state):
         expected = state.configuration_hashes[name]
         if expected != "not_configured" and file_hash(folder / (name + ".snapshot")) != expected:
             raise ValueError("Frozen configuration hash mismatch")
-
-
-def atomic_json(path: Path, value):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
-    with temporary.open("w", encoding="utf-8") as handle:
-        json.dump(value, handle, ensure_ascii=False, indent=2, allow_nan=False)
-        handle.flush()
-        os.fsync(handle.fileno())
-    temporary.replace(path)
 
 
 @contextmanager

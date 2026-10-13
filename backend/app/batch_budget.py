@@ -17,6 +17,9 @@ class BatchCallBudget:
     def checkpoint(self):
         self.state.elapsed_seconds = self.elapsed_before + self.clock() - self.started
         self.save(self.state)
+        # Durable replacement may wait on a Windows reader. Admission must use
+        # time AFTER that wait, not only the timestamp written before it.
+        self.state.elapsed_seconds = self.elapsed_before + self.clock() - self.started
 
     def before(self, call):
         self.checkpoint()
@@ -65,7 +68,14 @@ class BatchCallBudget:
                  "error_code": None}
         self.state.calls.append(entry)
         self.checkpoint()
-        return {"index": entry["call_index"], "timeout_seconds": max(0.001, limits.max_seconds - self.state.elapsed_seconds)}
+        remaining = limits.max_seconds - self.state.elapsed_seconds
+        if remaining <= 0:
+            # Transport has not started. Persist the cancellation, so a slow
+            # durable write is not counted as an actually admitted model call.
+            self.state.calls.pop()
+            self.checkpoint()
+            raise ProviderError("예약 저장 중 배치 시간 예산을 소진했습니다.", "BATCH_TIME_BUDGET_EXCEEDED")
+        return {"index": entry["call_index"], "timeout_seconds": remaining}
 
     def after(self, ticket, call):
         self.accounting.price(call)

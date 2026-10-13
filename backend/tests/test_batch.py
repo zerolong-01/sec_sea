@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from dataclasses import replace
 from pathlib import Path
@@ -11,8 +13,12 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from app.batch import BatchRunner, batch_lock
+from app.batch import BatchRunner, batch_lock, atomic_json
 from app.batch_models import BatchCondition, BatchSource, BatchSpec
+from app.batch_budget import BatchCallBudget
+from app.accounting import Accounting
+from app.models import ModelCall, ChatMessage
+from app.providers import ProviderError
 from app.config import Settings
 from app.repository import RunTraceStore
 from backend.testing.fixture_model import FixtureModelServer
@@ -238,6 +244,35 @@ class BatchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "without credentials"):
             bad.create(self.one())
         self.assertEqual(bad.store.list(), [])
+
+    def test_status_replace_survives_a_concurrent_windows_reader(self):
+        target = self.folder / "state.json"
+        atomic_json(target, {"status": "old"})
+        handle = target.open("r", encoding="utf-8")
+        release = threading.Thread(target=lambda: (time.sleep(.05), handle.close()))
+        release.start()
+        try:
+            atomic_json(target, {"status": "new"})
+        finally:
+            release.join()
+            handle.close()
+        self.assertEqual(json.loads(target.read_text(encoding="utf-8")), {"status": "new"})
+        self.assertEqual(list(self.folder.glob("*.tmp")), [])
+
+    def test_reservation_write_delay_cannot_send_a_call_after_deadline(self):
+        spec = self.one()
+        spec.budget.max_seconds = 1
+        state = self.runner.create(spec)
+        elapsed = [0]
+        def slow_save(_):
+            elapsed[0] += .6
+        budget = BatchCallBudget(state, slow_save, Accounting(), "delayed-attempt", clock=lambda: elapsed[0])
+        call = ModelCall(purpose="generation", model_id="fixture-generation", parameters={"max_tokens": 512},
+                         messages=[ChatMessage(role="user", content="test")], latency_ms=0)
+        with self.assertRaises(ProviderError) as raised:
+            budget.before(call)
+        self.assertEqual(raised.exception.code, "BATCH_TIME_BUDGET_EXCEEDED")
+        self.assertEqual(state.calls, [])
 
 
 if __name__ == "__main__":
