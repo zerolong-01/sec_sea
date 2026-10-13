@@ -3,35 +3,20 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import requests
 import streamlit as st
 
-# 통합 변수 파일을 읽어 온다 (화면 글자는 여기의 label_ko를 쓴다)
-ROOT = Path(__file__).resolve().parent.parent
-SHARED = json.loads(
-    (ROOT / "contracts" / "shared-variables-v0.1.json").read_text(encoding="utf-8")
+from ui_core import (
+    COMPARE_DIFFERENT, COMPARE_UNAVAILABLE, D2_MODES, NO_VALUE, ROOT, SHARED,
+    compare_verdict, label_of, run_case, summary_row,
 )
+
 DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT / "data")).resolve()
 CASES_PATH = DATA_DIR / "cases.v0.1.jsonl"
 MANIFEST_PATH = Path(os.environ.get("MVP_MANIFEST", DATA_DIR / "mvp-manifest.v0.1.json"))
 MANIFEST = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 KST = timezone(timedelta(hours=9))
-NO_VALUE = "기록 없음"
-D2_MODES = tuple(SHARED["defense_modes"][name]["value"] for name in ("D2", "D1_D2"))
 
 st.set_page_config(page_title="LLM Defense Trade-off Lab", layout="wide")
-
-
-def label_of(group, value):
-    """value에 해당하는 한글 이름을 찾는다. 없으면 value를 그대로 돌려준다."""
-    items = SHARED.get(group, {})
-    if isinstance(items, dict):
-        items = items.values()
-    for item in items:
-        if item.get("value") == value:
-            return item.get("label_ko", value)
-    return value
 
 
 def stage_title(value):
@@ -65,63 +50,6 @@ def load_cases():
         if line.strip():
             cases.append(json.loads(line))
     return cases
-
-
-def run_case(case_id, scenario, dataset_version, corpus_version, mode,
-             defense_position=SHARED["defense_positions"]["BOTH"]["value"]):
-    """백엔드에 실행을 요청하고 (trace, 오류)를 돌려준다."""
-    body = {
-        "schema_version": SHARED["execution_contract_version"],
-        "artifact_type": SHARED["artifact_types"]["RUN_REQUEST"]["value"],
-        "case_id": case_id,
-        "scenario": scenario,
-        "defense_mode": mode,
-        "defense_position": defense_position,
-        "dataset_version": dataset_version,
-        "corpus_version": corpus_version,
-        "requested_by": "frontend-ui",
-    }
-    try:
-        res = requests.post(f"{BACKEND_URL}/api/v1/runs", json=body, timeout=120)
-    except requests.RequestException:
-        return None, {
-            "status": None,
-            "code": None,
-            "message": "백엔드에 연결할 수 없습니다. 서버가 켜져 있는지 확인하세요.",
-            "run_id": None,
-        }
-
-    try:
-        payload = res.json()
-    except ValueError:
-        payload = {}
-
-    # 성공 또는 제공자 실패: trace가 함께 온다
-    if res.status_code == 201:
-        return payload.get("trace"), None
-
-    # 404, 422 등: detail의 code, message, run_id를 그대로 쓴다
-    detail = payload.get("detail")
-    if not isinstance(detail, dict):
-        detail = {"code": None, "message": str(detail), "run_id": None}
-    error = {
-        "status": res.status_code,
-        "code": detail.get("code"),
-        "message": detail.get("message"),
-        "run_id": detail.get("run_id"),
-    }
-
-    # run_id가 있으면 실패 trace도 조회한다
-    trace = None
-    if error["run_id"]:
-        try:
-            got = requests.get(f"{BACKEND_URL}/api/v1/runs/{error['run_id']}", timeout=30)
-            if got.status_code == 200:
-                trace = got.json()
-        except requests.RequestException:
-            pass
-    return trace, error
-
 
 def render_header(trace):
     """결과 맨 위: 상태, 실행 번호, 실행 시각, 방어 모드"""
@@ -319,6 +247,50 @@ def render_meta(trace):
                            "근거": item.get("reason") or NO_VALUE} for item in rows], hide_index=True)
 
 
+def render_comparison(column, results):
+    """비교 결과: 조건 확인 → 요약 표 → 실행별 자세한 trace"""
+    verdict, message, rows = compare_verdict(results)
+    if verdict == COMPARE_UNAVAILABLE:
+        st.error(f"{COMPARE_UNAVAILABLE}: {message} 서버 상태를 확인하고 다시 실행하세요.")
+    elif verdict == COMPARE_DIFFERENT:
+        st.warning(f"{message}. 같은 조건에서 다시 실행한 뒤 비교하세요.")
+    else:
+        st.success(message)
+    with st.expander("비교 조건 자세히 보기"):
+        st.dataframe(rows, hide_index=True)
+
+    st.dataframe(
+        [summary_row(column, item["title"], item["trace"], item["error"]) for item in results],
+        hide_index=True,
+    )
+
+    tabs = st.tabs([item["title"] for item in results])
+    for tab, item in zip(tabs, results):
+        with tab:
+            if item["error"]:
+                st.error(f"{item['error'].get('code') or '오류'}: {item['error'].get('message') or ''}")
+            if item["trace"]:
+                render_header(item["trace"])
+                left, right = st.columns([2, 1])
+                with left:
+                    render_timeline(item["trace"])
+                with right:
+                    render_meta(item["trace"])
+
+
+def run_many(settings, case_id, scenario, dataset_version, corpus_version):
+    """(제목, 방어 모드, D2 위치) 목록을 차례로 실행하고 진행 막대를 보여 준다."""
+    results = []
+    progress = st.progress(0.0, text="실행 준비")
+    for index, (title, each_mode, each_position) in enumerate(settings):
+        progress.progress(index / len(settings), text=f"{title} 실행 중")
+        trace, error = run_case(case_id, scenario, dataset_version, corpus_version,
+                                each_mode, each_position)
+        results.append({"title": title, "trace": trace, "error": error})
+    progress.progress(1.0, text="실행 끝")
+    return results
+
+
 st.title("LLM Defense Trade-off Lab")
 st.write("방어 모드 실행 · trace 확인")
 
@@ -382,31 +354,85 @@ if run_clicked:
         trace, error = run_case(case_id, scenario, dataset_version, corpus_version, mode, position)
     st.session_state["result"] = {"trace": trace, "error": error}
 
-# 결과 영역
-result = st.session_state.get("result")
-if result is None:
-    st.info("아직 실행 기록이 없습니다. 왼쪽에서 케이스를 고르고 실행을 누르세요.")
-else:
-    error = result["error"]
-    trace = result["trace"]
+tab_single, tab_compare, tab_position = st.tabs(["한 번 실행", "4개 모드 비교", "D2 위치 비교"])
 
-    if trace:
-        render_header(trace)
+# 결과 영역 (한 번 실행)
+with tab_single:
+    result = st.session_state.get("result")
+    if result is None:
+        st.info("아직 실행 기록이 없습니다. 왼쪽에서 케이스를 고르고 실행을 누르세요.")
+    else:
+        error = result["error"]
+        trace = result["trace"]
 
-    # 오류 상자: 404·422의 detail, 또는 trace 안의 error
-    if error:
-        title = error["code"] or "오류"
-        if error["status"]:
-            title = f"{title} (응답 {error['status']})"
-        st.error(title)
-        st.text(error["message"] or "")
-    elif trace and trace.get("error"):
-        st.error(str(trace["error"].get("code") or "오류"))
-        st.text(str(trace["error"].get("message") or ""))
+        if trace:
+            render_header(trace)
 
-    if trace:
-        left, right = st.columns([2, 1])
-        with left:
-            render_timeline(trace)
-        with right:
-            render_meta(trace)
+        # 오류 상자: 404·422의 detail, 또는 trace 안의 error
+        if error:
+            title = error["code"] or "오류"
+            if error["status"]:
+                title = f"{title} (응답 {error['status']})"
+            st.error(title)
+            st.text(error["message"] or "")
+        elif trace and trace.get("error"):
+            st.error(str(trace["error"].get("code") or "오류"))
+            st.text(str(trace["error"].get("message") or ""))
+
+        if trace:
+            left, right = st.columns([2, 1])
+            with left:
+                render_timeline(trace)
+            with right:
+                render_meta(trace)
+
+# 4개 모드 비교: 같은 케이스를 네 방어 모드로 차례로 실행해 나란히 놓는다
+with tab_compare:
+    st.caption(f"왼쪽에서 고른 케이스 {case_id}를 무방어, D1, D2, D1 + D2로 차례로 실행합니다.")
+    compare_position = st.selectbox(
+        "D2 적용 위치 (D2, D1 + D2에 적용)",
+        positions,
+        index=positions.index(SHARED["defense_positions"]["BOTH"]["value"]),
+        format_func=lambda value: label_of("defense_positions", value),
+        key="compare_position",
+    )
+    if st.button("4개 모드 한 번에 실행", type="primary", key="run_compare"):
+        settings = [(label_of("defense_modes", m), m, compare_position) for m in modes]
+        st.session_state["compare"] = {
+            "case_id": case_id,
+            "position": compare_position,
+            "results": run_many(settings, case_id, scenario, dataset_version, corpus_version),
+        }
+
+    compare = st.session_state.get("compare")
+    if compare is None:
+        st.info("아직 비교 기록이 없습니다. 위 버튼을 누르세요.")
+    else:
+        st.caption(
+            f"비교한 케이스: {compare['case_id']} · "
+            f"D2 적용 위치: {label_of('defense_positions', compare['position'])}"
+        )
+        if compare["case_id"] != case_id:
+            st.warning("왼쪽에서 지금 고른 케이스와 다른 케이스의 비교 결과입니다. 다시 실행하면 바뀝니다.")
+        render_comparison("방어 모드", compare["results"])
+
+# D2 위치 비교: D1 없이 D2만 켜고 위치만 바꿔 같은 탐지 설정으로 비교한다
+with tab_position:
+    st.caption(f"왼쪽에서 고른 케이스 {case_id}를 D2로, 적용 위치만 바꿔 세 번 실행합니다. "
+               "D1은 끄고 탐지 모델·임계값·정책은 같게 둡니다.")
+    if st.button("D2 위치 3개 한 번에 실행", type="primary", key="run_positions"):
+        d2_only = SHARED["defense_modes"]["D2"]["value"]
+        settings = [(label_of("defense_positions", p), d2_only, p) for p in positions]
+        st.session_state["positions"] = {
+            "case_id": case_id,
+            "results": run_many(settings, case_id, scenario, dataset_version, corpus_version),
+        }
+
+    position_compare = st.session_state.get("positions")
+    if position_compare is None:
+        st.info("아직 위치 비교 기록이 없습니다. 위 버튼을 누르세요.")
+    else:
+        st.caption(f"비교한 케이스: {position_compare['case_id']} · 방어 모드: D2")
+        if position_compare["case_id"] != case_id:
+            st.warning("왼쪽에서 지금 고른 케이스와 다른 케이스의 비교 결과입니다. 다시 실행하면 바뀝니다.")
+        render_comparison("D2 적용 위치", position_compare["results"])
