@@ -43,6 +43,8 @@ class BatchCondition(BatchModel):
 
     @model_validator(mode="after")
     def validate_condition(self):
+        if self.defense_mode not in ("D2", "D1+D2") and (self.d2_threshold is not None or self.consistency_policy is not None):
+            raise ValueError("D2 overrides require a D2-enabled condition")
         if self.execution_kind == ExecutionKind.DETECTOR_ONLY and self.defense_mode != DefenseMode.D2:
             raise ValueError("detector_only requires D2")
         if "position" in self.comparisons and self.defense_mode != DefenseMode.D2:

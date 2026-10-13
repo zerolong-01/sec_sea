@@ -187,6 +187,14 @@ class BatchTests(unittest.TestCase):
             other.execute(state.batch_id)
         self.assertEqual(self.fixture.requests, [])
 
+    def test_plan_case_or_family_cannot_change_after_snapshot_freeze(self):
+        state = self.runner.create(self.one())
+        state.plan[0]["metadata"]["family_id"] = "different-family"
+        self.runner.store.save(state)
+        with self.assertRaisesRegex(ValueError, "plan metadata changed"):
+            self.runner.execute(state.batch_id)
+        self.assertEqual(self.fixture.requests, [])
+
     def test_common_policy_identical_in_actual_none_and_d1_requests(self):
         spec = self.one(conditions=[{"condition_id": name, "defense_mode": name, "comparisons": ["technique"]}
                                    for name in ("none", "D1")])
@@ -228,6 +236,9 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(self.fixture.requests, [])
 
     def test_comparison_cannot_change_threshold_and_effective_duplicates_are_rejected(self):
+        with self.assertRaisesRegex(ValueError, "D2 overrides"):
+            self.one(conditions=[{"condition_id": "invalid-none", "defense_mode": "none",
+                                  "d2_threshold": .9, "comparisons": ["technique"]}])
         spec = self.spec(conditions=[
             {"condition_id": "D2", "defense_mode": "D2", "comparisons": ["technique"], "d2_threshold": .5},
             {"condition_id": "D1-D2", "defense_mode": "D1+D2", "comparisons": ["technique"], "d2_threshold": .9}])

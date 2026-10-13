@@ -52,10 +52,20 @@ def selection_hash(spec):
     return digest([s.model_dump(mode="json", exclude={"data_dir"}) for s in spec.sources])
 
 
+def plan_hash(plan):
+    return digest([{k: v for k, v in entry.items() if k not in ("status", "attempts")} for entry in plan])
+
+
 def verify_frozen_artifacts(store, state):
     folder = store.folder(state.batch_id)
     if state.configuration_hashes["design"] != design_hash(state.spec) or state.configuration_hashes["selection"] != selection_hash(state.spec):
         raise ValueError("Frozen design or selection changed")
+    if state.configuration_hashes.get("plan") != plan_hash(state.plan):
+        raise ValueError("Frozen plan metadata changed; re-create legacy development batches without a plan hash")
+    if state.configuration_hashes.get("source_snapshots") != digest(state.source_snapshots):
+        raise ValueError("Frozen source inventory changed")
+    if state.configuration_hashes["settings"] != digest(state.execution_settings):
+        raise ValueError("Frozen execution settings changed")
     for snapshot in state.source_snapshots:
         for filename, key in (("cases.v0.1.jsonl", "cases_sha256"), ("corpus.v0.1.jsonl", "corpus_sha256"),
                               ("mvp-manifest.v0.1.json", "manifest_sha256")):
@@ -262,6 +272,8 @@ class BatchRunner:
                                      "metadata": meta.model_dump(mode="json"), "repeat": repeat,
                                      "condition_id": condition.condition_id, "status": "pending", "attempts": []})
         random.Random(spec.random_seed).shuffle(plan)
+        hashes["plan"] = plan_hash(plan)
+        hashes["source_snapshots"] = digest(snapshots)
         try:
             commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.settings.project_root,
                                              text=True, stderr=subprocess.DEVNULL).strip()
