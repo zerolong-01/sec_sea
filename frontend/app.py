@@ -6,7 +6,8 @@ from pathlib import Path
 import streamlit as st
 
 from ui_core import (
-    D2_MODES, NO_VALUE, ROOT, SHARED, condition_rows, label_of, run_case, summary_row,
+    COMPARE_DIFFERENT, COMPARE_UNAVAILABLE, D2_MODES, NO_VALUE, ROOT, SHARED,
+    compare_verdict, label_of, run_case, summary_row,
 )
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT / "data")).resolve()
@@ -248,12 +249,13 @@ def render_meta(trace):
 
 def render_comparison(column, results):
     """비교 결과: 조건 확인 → 요약 표 → 실행별 자세한 trace"""
-    rows, different = condition_rows(results)
-    if different:
-        st.warning("비교 조건이 다른 실행이 있습니다: " + ", ".join(different)
-                   + ". 같은 조건에서 다시 실행한 뒤 비교하세요.")
+    verdict, message, rows = compare_verdict(results)
+    if verdict == COMPARE_UNAVAILABLE:
+        st.error(f"{COMPARE_UNAVAILABLE}: {message} 서버 상태를 확인하고 다시 실행하세요.")
+    elif verdict == COMPARE_DIFFERENT:
+        st.warning(f"{message}. 같은 조건에서 다시 실행한 뒤 비교하세요.")
     else:
-        st.success("비교한 실행들의 조건(데이터·모델·검색·생성 설정 등)이 모두 같습니다.")
+        st.success(message)
     with st.expander("비교 조건 자세히 보기"):
         st.dataframe(rows, hide_index=True)
 

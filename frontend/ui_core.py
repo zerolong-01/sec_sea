@@ -179,8 +179,33 @@ def condition_rows(results):
             value = condition_value(item["trace"], path)
             row[item["title"]] = value
             values.add(value)
-        row["같음"] = "예" if len(values) <= 1 else "아니오"
+        if not values:
+            row["같음"] = "확인 불가"
+        else:
+            row["같음"] = "예" if len(values) == 1 else "아니오"
         if len(values) > 1:
             different.append(name)
         rows.append(row)
     return rows, different
+
+
+# 비교 판정 결과 (화면과 검증 스크립트가 같이 쓴다)
+COMPARE_UNAVAILABLE = "비교 불가"
+COMPARE_DIFFERENT = "조건 다름"
+COMPARE_SAME = "조건 같음"
+
+
+def compare_verdict(results):
+    """비교할 수 있는지, 조건이 같은지 판정한다. (판정, 설명, 조건 표)를 돌려준다.
+    trace가 없는 실행이 하나라도 있거나 실행이 2개 미만이면 비교 불가다."""
+    rows, different = condition_rows(results)
+    missing = [item["title"] for item in results if not item["trace"]]
+    if len(results) < 2 or missing:
+        if missing:
+            message = "결과를 받지 못한 실행이 있습니다: " + ", ".join(missing)
+        else:
+            message = "비교하려면 실행 결과가 2개 이상 필요합니다."
+        return COMPARE_UNAVAILABLE, message, rows
+    if different:
+        return COMPARE_DIFFERENT, "비교 조건이 다른 항목: " + ", ".join(different), rows
+    return COMPARE_SAME, "비교한 실행들의 조건(데이터·모델·검색·생성 설정 등)이 모두 같습니다.", rows
