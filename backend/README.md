@@ -66,3 +66,15 @@ python -m scripts.mvp verify-week2
 ```
 
 실제 모델 대표 12건과 dev 임계값/오탐/미탐, #21의 최종 평가 rubric은 설정·인계 후 재검증한다. 두 앱 전체 배치·반복·통계는 3주차 범위다.
+
+## 3주차 배치·집계 인계
+
+[3주차 백엔드 안내](../docs/week3-backend.md)에 고정 스냅샷, 6개 고유 조건의 반복 배치,
+호출/토큰/금액 예약·중단/재개, 집계·수동 검토·CSV/JSON·추천 gate와 조회 API를 정리했다.
+실행 계약 v0.3을 유지하며 별도 `contracts/batch-v0.1.schema.json`을 사용한다.
+
+```text
+python -m scripts.verify_week3 --output runs/week3-handoff
+```
+
+두 앱의 108건·3회 반복을 로컬 HTTP fixture로 검증한다. 실제 모델 성능·팀 정책 확정·holdout 및 프론트엔드 대시보드 인수는 후속 작업이다.
