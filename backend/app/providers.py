@@ -107,6 +107,7 @@ class OpenAICompatibleProvider:
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             if isinstance(exc, urllib.error.HTTPError):
                 call.http_status = exc.code
+                exc.close()
             timed_out = isinstance(exc, TimeoutError) or isinstance(getattr(exc, "reason", None), TimeoutError)
             call.error_code = "MODEL_TIMEOUT" if timed_out else "MODEL_PROVIDER_ERROR"
             raise ProviderError(f"모델 호출에 실패했습니다 ({type(exc).__name__})", call.error_code, call) from exc

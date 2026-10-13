@@ -85,6 +85,15 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(self.fixture.requests, [])
         self.assertEqual(state.calls, [])
 
+    def test_http_failure_keeps_its_admitted_call_and_unknown_usage(self):
+        self.fixture.fail_detection = "http_error"
+        state = self.runner.execute(self.runner.create(self.one("D2")).batch_id)
+        self.assertEqual(state.status, "partial")
+        self.assertEqual(len(state.calls), 1)
+        self.assertEqual(state.calls[0]["error_code"], "MODEL_PROVIDER_ERROR")
+        self.assertIsNone(state.calls[0]["input_tokens"])
+        self.assertIsNone(self.runner.store.summary(state)["budget"]["total_cost_usd"])
+
     def test_token_and_verified_dollar_reservations_stop_before_transport(self):
         token_spec = self.one(budget={"max_calls": 10, "max_reserved_tokens": 100, "max_seconds": 60,
                                      "unknown_price_policy": "calls_tokens"})
