@@ -101,6 +101,9 @@ def check_package(data_dir: Path) -> dict:
         require(variant.parent_case_id in bundle.cases and variant.case_id not in cases, "invalid variant parent/ID")
         require(variant.split == cases[variant.parent_case_id].split, "translation crosses dev/holdout")
         require(variant.user_input != cases[variant.parent_case_id].user_input, "translation duplicates original input")
+        CaseRecord.model_validate(cases[variant.parent_case_id].model_dump(mode="json") |
+                                  {"case_id": variant.case_id, "language": variant.language,
+                                   "user_input": variant.user_input})
     require({cases[v.parent_case_id].label for v in variants.variants} == {"attack", "benign", "hard_negative"}, "language variants require all three labels")
 
     catalog = read_model(data_dir / "attack-catalog.v0.1.json", Catalog)
@@ -153,6 +156,9 @@ def check_package(data_dir: Path) -> dict:
             require(rule.canary in values and rule.canary in case.success_criterion.description, "canary rule mismatches case criterion")
             if "인용" in case.success_criterion.description:
                 require(rule.exact_canary_requires_review, "context-dependent marker must require review")
+    for variant in variants.variants:
+        require(rule_map[variant.case_id].model_dump(exclude={"case_id"}) ==
+                rule_map[variant.parent_case_id].model_dump(exclude={"case_id"}), "translation changed evaluation criterion")
     policy = json.loads((data_dir / "evaluation-policy.v0.1.json").read_text(encoding="utf-8"))
     require(policy["status"] == "team_agreement_pending" and policy["final_recommendation_allowed"] is False, "draft policy cannot make final recommendations")
     require(all(v is None for v in policy["thresholds"].values()), "unagreed thresholds must remain null")
@@ -229,7 +235,7 @@ def gold_plan(data_dir: Path, runs_dir: Path, include_single_review: bool = Fals
                 for call in calls:
                     try:
                         payload = json.loads(call["messages"][1]["content"])
-                        if payload.get("stage") == event.stage:
+                        if payload.get("stage") == event.stage and isinstance(payload.get("text"), str):
                             texts.append(payload["text"])
                     except (KeyError, IndexError, TypeError, ValueError):
                         continue
@@ -287,7 +293,10 @@ def verify_handoff(data_dir: Path, output: Path) -> dict:
                     require(response.status_code == 201, "detector handoff request failed")
                     trace = response.json()["trace"]
                     require(trace["metrics"]["generation_call_count"] == 0 and trace["evaluation"]["attack_success"] == "not_evaluated", "detector-only result invented a final outcome")
-                    summaries.append({"run_id": trace["run_id"], "case_id": cid, "kind": "detector_only", "status": trace["status"]})
+                    summaries.append({"run_id": trace["run_id"], "case_id": cid, "kind": "detector_only", "status": trace["status"],
+                                      "created_at": trace["created_at"], "dataset_version": case.source_version,
+                                      "scenario": case.scenario, "model_id": trace["manifest"]["model_id"],
+                                      "evaluator_version": trace["manifest"]["evaluator_version"]})
                 for representative in bundle.manifest.representative_cases:
                     case = bundle.cases[representative.case_id]
                     response = client.post("/api/v1/runs", json={"schema_version": "0.3", "artifact_type": "run_request",
@@ -299,7 +308,9 @@ def verify_handoff(data_dir: Path, output: Path) -> dict:
                     require(trace["manifest"]["evaluator_version"] == "week2-rules-v0.1@rules-v0.2", "wrong evaluator version")
                     require(trace["evaluation"]["normal_task_success"] != "success", "semantic task was approved without manual review")
                     summaries.append({"run_id": trace["run_id"], "case_id": case.case_id, "kind": "full_pipeline",
-                                      "status": trace["status"], "evaluation": trace["evaluation"]})
+                                      "status": trace["status"], "created_at": trace["created_at"],
+                                      "dataset_version": case.source_version, "scenario": case.scenario,
+                                      "model_id": trace["manifest"]["model_id"], "evaluation": trace["evaluation"]})
                 for payload in fixture.requests:
                     # Classification receives precisely the stage and actual text.
                     from backend.app.defenses import D2_SYSTEM

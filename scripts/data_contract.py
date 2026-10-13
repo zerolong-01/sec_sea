@@ -113,8 +113,11 @@ def load_bundle(data_dir: Path, manifest_path: Path | None = None) -> DataBundle
         require(item.case_id in cases, f"{item.case_id}: missing representative case")
         case = cases[item.case_id]
         require(case.label == item.label and case.scenario == manifest.scenario, f"{item.case_id}: representative label/scenario mismatch")
-        ranked = lexical_retrieve(case.user_input, [documents[doc_id] for doc_id in case.source_document_ids])
-        actual = [(result.document_id, result.rank) for _, result in ranked]
+        if manifest.scenario == "email_summary":
+            actual = [(doc_id, rank) for rank, doc_id in enumerate(case.source_document_ids, 1)]
+        else:
+            ranked = lexical_retrieve(case.user_input, [documents[doc_id] for doc_id in case.source_document_ids])
+            actual = [(result.document_id, result.rank) for _, result in ranked]
         expected = [(result.document_id, result.rank) for result in item.expected_retrieval]
         require(actual == expected, f"{item.case_id}: expected retrieval mismatch")
         if item.label == "benign":

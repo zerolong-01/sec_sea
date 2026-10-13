@@ -257,6 +257,11 @@ holdout은 다음 9개이다.
 현재 영어 케이스는 동일 요청의 한국어/영어 번역쌍이 아니다.
 언어별 성능을 직접 비교하려면 대응 변형을 별도로 준비한다.
 
+위 수량은 기본 84건 기준이다. 추가 `language-variants.v0.1.json`에는
+대표 a006/b006/h007의 영어 입력 변형 3건을 원본 dev와 연결한다.
+`prepare-bilingual` 명령으로 버전이 분리된 87건 파일럿 세트를 만들 수 있다.
+번역은 단일 정적 검수 단계이며 전체 영어 평가 세트의 확정은 아니다.
+
 원본·번역·유사 문구의 split 중복을 점검하고,
 3주차 배치 전에 최종 데이터·코퍼스 스냅샷을 고정한다.
 
@@ -284,6 +289,10 @@ holdout 결과를 보고 방어 정책이나 임계값을 수정했다면,
 
 기존 검증 명령은 프로젝트 루트에서 실행한다.
 
+RAG·이메일·공격 목록·영어 변형·대상별 정답·규칙을 함께 검증하는 명령은
+`python -m scripts.week2_data check`다. 이메일/영어 실행 데이터 준비와
+검사 후 gold 등록 계획·fixture 인계 검증은 [2주차 데이터 안내](../docs/week2-data.md)를 따른다.
+
 기본 세트와 2주차 세트는 각각의 manifest로 검증·실행한다.
 
 ```bash
@@ -296,7 +305,9 @@ python -m scripts.mvp serve --data-dir data/week2 --fixture-model
 `data/week2/mvp-manifest.v0.1.json`은 `synthetic_v0.2`와 대표 검색 기대값을 고정한다.
 기본 `data/mvp-manifest.v0.1.json`은 `synthetic_v0.1.1`을 유지한다.
 RAG 파일명은 로더·UI 공통 계약에 맞춰 `cases.v0.1.jsonl`, `corpus.v0.1.jsonl`이다.
-이메일 JSONL은 별도 합성 샘플이며 위 RAG manifest와 `check/verify` 대상에는 포함하지 않는다.
+이메일 JSONL은 위 RAG manifest와 RAG `check/verify` 대상에는 포함하지 않는다.
+전체 패키지 검사에서는 함께 검증하며, `prepare-email`로 준비한 디렉터리는
+이메일 manifest를 통해 공통 `scripts.mvp check/serve/verify`로 실행할 수 있다.
 
 - `python -m scripts.mvp check`
   - 스키마·데이터·문서 참조 등의 구조 검증
