@@ -75,6 +75,7 @@ class CompareVerdictTests(unittest.TestCase):
                    for p in ("input", "retrieval", "input_retrieval")]
         for item in results:
             item["trace"]["manifest"]["defense_position"] = item["title"]
+            item["trace"]["request"]["defense_position"] = item["title"]
         self.assertEqual(ui_core.compare_verdict(results, "positions")[0], ui_core.COMPARE_SAME)
         results[0]["trace"]["request"]["defense_mode"] = "D1+D2"
         self.assertEqual(ui_core.compare_verdict(results, "positions")[0], ui_core.COMPARE_UNAVAILABLE)
@@ -84,6 +85,13 @@ class CompareVerdictTests(unittest.TestCase):
             results = self.results()
             results[1]["trace"]["manifest"][path] = value
             self.assertEqual(ui_core.compare_verdict(results)[0], ui_core.COMPARE_DIFFERENT)
+
+    def test_requested_position_must_match_saved_position(self):
+        results = self.results()
+        results[2]["trace"]["request"]["defense_position"] = "input"
+        verdict, message, _ = ui_core.compare_verdict(results, "modes")
+        self.assertEqual(verdict, ui_core.COMPARE_DIFFERENT)
+        self.assertIn("요청과 저장된", message)
 
     def test_all_connections_failed_is_unavailable(self):
         error = {"status": None, "code": None, "message": "연결 실패", "run_id": None}
@@ -225,6 +233,9 @@ class ScreenTests(unittest.TestCase):
             self.assertFalse(app.exception)
             self.assertEqual(get.call_count, 4)
             post.assert_not_called()
+        app.session_state["compare"]["results"][0]["trace"]["evaluation"]["normal_task_success"] = "not_evaluated"
+        app.run()
+        self.assertTrue(any("미평가" in e.value for e in app.warning))
         app.session_state["compare"]["results"][0]["trace"]["error"] = {"code": "SAVED_FAILURE", "message": "failed"}
         app.run()
         self.assertTrue(any(ui_core.COMPARE_UNAVAILABLE in e.value for e in app.error))
@@ -266,6 +277,24 @@ class CheckRunTests(unittest.TestCase):
         problems, row = verify_ui.check_run(None, {"code": None}, "D1", "input_retrieval", self.runs)
         self.assertTrue(problems)
         self.assertEqual(row["방어 모드"], "D1")
+
+    def test_get_disconnect_and_corrupt_saved_trace_are_reported(self):
+        trace = sample("a006-none")
+        (self.runs / f"{trace['run_id']}.trace.json").write_text("broken", encoding="utf-8")
+        with patch.object(verify_ui.requests, "get", side_effect=requests.ConnectionError):
+            problems, _ = verify_ui.check_run(trace, None, "none", ui_core.BOTH, self.runs)
+        self.assertTrue(any("GET 조회 실패" in item for item in problems))
+        self.assertTrue(any("파일을 읽을 수 없음" in item for item in problems))
+
+    def test_non_summary_trace_differences_are_detected(self):
+        trace = sample("a006-none")
+        saved = copy.deepcopy(trace)
+        saved["prompt_assembly"][0]["display_text"] = "different prompt"
+        (self.runs / f"{trace['run_id']}.trace.json").write_text(json.dumps(saved), encoding="utf-8")
+        with patch.object(verify_ui.requests, "get", return_value=FakeResponse(200, saved)):
+            problems, _ = verify_ui.check_run(trace, None, "none", ui_core.BOTH, self.runs)
+        self.assertTrue(any("GET 값이 다름" in item for item in problems))
+        self.assertTrue(any("저장 파일 값이 다름" in item for item in problems))
 
 
 class VerifyMainTests(unittest.TestCase):

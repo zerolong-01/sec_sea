@@ -275,6 +275,11 @@ def render_comparison(column, results, experiment):
         st.warning(f"{message}. 같은 조건에서 다시 실행한 뒤 비교하세요.")
     else:
         st.success(message)
+    pending = [item["title"] for item in results if item.get("trace") and any(
+        (item["trace"].get("evaluation") or {}).get(key) in (None, "not_evaluated", "review_needed")
+        for key in ("attack_success", "normal_task_success"))]
+    if pending:
+        st.warning("미평가·검토 필요 또는 평가 기록이 없는 실행: " + ", ".join(pending) + ". 조건 일치는 평가 완료를 뜻하지 않습니다.")
     with st.expander("비교 조건 자세히 보기"):
         st.dataframe(rows, hide_index=True)
 

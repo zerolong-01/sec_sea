@@ -251,6 +251,11 @@ def compare_verdict(results, experiment=None):
         for item in results)]
     if incomplete:
         return COMPARE_UNAVAILABLE, "확인할 수 없는 비교 조건: " + ", ".join(incomplete), rows
+    mismatched = [item["title"] for item in results
+                  if item["trace"]["request"].get("defense_mode") in D2_MODES and
+                  item["trace"]["request"].get("defense_position") != item["trace"]["manifest"].get("defense_position")]
+    if mismatched:
+        return COMPARE_DIFFERENT, "요청과 저장된 D2 위치가 다릅니다: " + ", ".join(mismatched), rows
     if experiment == "modes":
         modes = [(item["trace"].get("request") or {}).get("defense_mode") for item in results]
         if sorted(modes) != sorted(m["value"] for m in SHARED["defense_modes"].values()):

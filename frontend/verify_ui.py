@@ -173,6 +173,7 @@ def main():
         f"- 백엔드: {BACKEND_URL} · 계약 버전 {health.get('schema_version')} · 제공자 {health.get('model_provider')}",
         f"- 데이터: {args.data_dir} · 코퍼스 버전 {corpus_version}",
         "- 확인 방법: 비교 화면 표의 값을 ① 실행 응답 ② GET 재조회 ③ runs/{run_id}.trace.json 에서 각각 만들어 같은지 비교.",
+        "  프롬프트·방어 근거·평가·설정·호출 기록을 포함한 상세 trace 전체도 대조.",
         "  요청한 방어(D1/D2)와 D2 위치가 manifest·판정 이벤트에 실제로 남았는지, 비교 조건이 같은지도 확인.",
         "- 실행 상태: 완료와 방어로 차단됨(정상적인 방어 동작)은 통과, 실행 실패(failed)·trace 오류·방어 판정 오류·결과 없음은 문제로 기록.",
         "- 화면은 서버 판정·지표를 그대로 옮기며 성공 여부나 지표를 새로 계산하지 않음.",
