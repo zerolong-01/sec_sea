@@ -60,20 +60,26 @@ def check_run(trace, error, mode, position, runs_dir):
         problems.append(f"방어 판정 오류 {len(detector_errors)}건")
 
     # ② API 재조회 값과 비교
-    got = requests.get(f"{BACKEND_URL}/api/v1/runs/{run_id}", timeout=30)
-    if got.status_code != 200:
-        problems.append(f"GET 응답 {got.status_code}")
-    elif summary_row("방어 모드", title, got.json(), error) != shown:
-        problems.append("화면 값과 GET 값이 다름")
+    try:
+        got = requests.get(f"{BACKEND_URL}/api/v1/runs/{run_id}", timeout=30)
+        if got.status_code != 200:
+            problems.append(f"GET 응답 {got.status_code}")
+        elif got.json() != trace:
+            problems.append("화면 trace와 GET 값이 다름")
+    except (requests.RequestException, ValueError):
+        problems.append("GET 조회 실패 또는 잘못된 JSON 응답")
 
     # ③ 저장된 trace 파일과 비교
     saved = runs_dir / f"{run_id}.trace.json"
     if not saved.exists():
         problems.append(f"저장 파일 없음: {saved.name}")
     else:
-        file_trace = json.loads(saved.read_text(encoding="utf-8"))
-        if summary_row("방어 모드", title, file_trace, error) != shown:
-            problems.append("화면 값과 저장 파일 값이 다름")
+        try:
+            file_trace = json.loads(saved.read_text(encoding="utf-8"))
+            if file_trace != trace:
+                problems.append("화면 trace와 저장 파일 값이 다름")
+        except (OSError, ValueError):
+            problems.append("저장 trace 파일을 읽을 수 없음")
 
     # 요청한 방어가 실제로 적용됐는지 (서버가 남긴 manifest·이벤트 기준)
     manifest = trace.get("manifest") or {}
@@ -109,7 +115,7 @@ def main():
 
     try:
         health = requests.get(f"{BACKEND_URL}/health", timeout=10).json()
-    except requests.RequestException:
+    except (requests.RequestException, ValueError):
         print(f"백엔드({BACKEND_URL})에 연결할 수 없습니다. 서버를 먼저 켜세요.")
         return 1
 
@@ -136,7 +142,7 @@ def main():
             all_problems += [f"{case['case_id']} {mode}: {p}" for p in problems]
             rows.append(row)
             results.append({"title": label_of("defense_modes", mode), "trace": trace, "error": error})
-        verdict, message, _ = compare_verdict(results)
+        verdict, message, _ = compare_verdict(results, "modes")
         if verdict != COMPARE_SAME:
             all_problems.append(f"{case['case_id']} 모드 비교 {verdict}: {message}")
         mode_sections.append((case, rows, f"{verdict} - {message}"))
@@ -153,7 +159,7 @@ def main():
                 all_problems += [f"{case['case_id']} D2@{position}: {p}" for p in problems]
                 rows.append(row)
                 results.append({"title": position, "trace": trace, "error": error})
-            verdict, message, _ = compare_verdict(results)
+            verdict, message, _ = compare_verdict(results, "positions")
             if verdict != COMPARE_SAME:
                 all_problems.append(f"{case['case_id']} 위치 비교 {verdict}: {message}")
             position_sections.append((case, rows, f"{verdict} - {message}"))
@@ -167,6 +173,7 @@ def main():
         f"- 백엔드: {BACKEND_URL} · 계약 버전 {health.get('schema_version')} · 제공자 {health.get('model_provider')}",
         f"- 데이터: {args.data_dir} · 코퍼스 버전 {corpus_version}",
         "- 확인 방법: 비교 화면 표의 값을 ① 실행 응답 ② GET 재조회 ③ runs/{run_id}.trace.json 에서 각각 만들어 같은지 비교.",
+        "  프롬프트·방어 근거·평가·설정·호출 기록을 포함한 상세 trace 전체도 대조.",
         "  요청한 방어(D1/D2)와 D2 위치가 manifest·판정 이벤트에 실제로 남았는지, 비교 조건이 같은지도 확인.",
         "- 실행 상태: 완료와 방어로 차단됨(정상적인 방어 동작)은 통과, 실행 실패(failed)·trace 오류·방어 판정 오류·결과 없음은 문제로 기록.",
         "- 화면은 서버 판정·지표를 그대로 옮기며 성공 여부나 지표를 새로 계산하지 않음.",
