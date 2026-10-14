@@ -2,6 +2,7 @@
 Streamlit을 쓰지 않으므로 화면 없이도 불러올 수 있다."""
 import json
 import os
+import re
 from pathlib import Path
 
 import requests
@@ -14,6 +15,47 @@ SHARED = json.loads(
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 NO_VALUE = "기록 없음"
 D2_MODES = tuple(SHARED["defense_modes"][name]["value"] for name in ("D2", "D1_D2"))
+BOTH = SHARED["defense_positions"]["BOTH"]["value"]
+
+
+def api_error(status=None, code=None, message=None, run_id=None):
+    return {"status": status, "code": code, "message": message, "run_id": run_id}
+
+
+def read_response(res, expected_status, wrapped=False):
+    """API 오류와 잘못된 JSON/빈 응답을 화면에서 표시할 오류로 바꾼다."""
+    try:
+        payload = res.json()
+    except ValueError:
+        payload = None
+    if not isinstance(payload, dict):
+        return None, api_error(res.status_code, "INVALID_RESPONSE", "서버 응답이 JSON 객체가 아닙니다.")
+    if res.status_code == expected_status:
+        trace = payload.get("trace") if wrapped else payload
+        if not isinstance(trace, dict) or not trace.get("run_id"):
+            return None, api_error(res.status_code, "INVALID_RESPONSE", "서버 응답에 실행 기록이 없습니다.")
+        return trace, None
+    detail = payload.get("detail")
+    if isinstance(detail, dict):
+        return None, api_error(res.status_code, detail.get("code"), detail.get("message"), detail.get("run_id"))
+    return None, api_error(res.status_code, "HTTP_ERROR", str(detail or "서버 요청이 실패했습니다."))
+
+
+def load_run(run_id):
+    """표시용 저장 trace만 GET 조회한다. 모델 실행을 요청하지 않는다."""
+    run_id = run_id.strip()
+    if not re.fullmatch(r"run-[a-z0-9_-]{1,60}", run_id):
+        return None, api_error(code="INVALID_RUN_ID", message="올바른 실행 번호(run-...)를 입력하세요.")
+    try:
+        res = requests.get(f"{BACKEND_URL}/api/v1/runs/{run_id}", timeout=30)
+    except requests.RequestException:
+        return None, api_error(code="CONNECTION_ERROR", message="저장 결과를 조회할 수 없습니다. 서버 연결을 확인하세요.", run_id=run_id)
+    trace, error = read_response(res, 200)
+    if error:
+        error["run_id"] = run_id
+    if trace and trace["run_id"] != run_id:
+        return None, api_error(code="INVALID_RESPONSE", message="요청한 실행 번호와 조회 결과가 다릅니다.", run_id=run_id)
+    return trace, error
 
 
 def label_of(group, value):
@@ -50,35 +92,9 @@ def run_case(case_id, scenario, dataset_version, corpus_version, mode,
             "run_id": None,
         }
 
-    try:
-        payload = res.json()
-    except ValueError:
-        payload = {}
-
-    # 성공 또는 제공자 실패: trace가 함께 온다
-    if res.status_code == 201:
-        return payload.get("trace"), None
-
-    # 404, 422 등: detail의 code, message, run_id를 그대로 쓴다
-    detail = payload.get("detail")
-    if not isinstance(detail, dict):
-        detail = {"code": None, "message": str(detail), "run_id": None}
-    error = {
-        "status": res.status_code,
-        "code": detail.get("code"),
-        "message": detail.get("message"),
-        "run_id": detail.get("run_id"),
-    }
-
-    # run_id가 있으면 실패 trace도 조회한다
-    trace = None
-    if error["run_id"]:
-        try:
-            got = requests.get(f"{BACKEND_URL}/api/v1/runs/{error['run_id']}", timeout=30)
-            if got.status_code == 200:
-                trace = got.json()
-        except requests.RequestException:
-            pass
+    trace, error = read_response(res, 201, wrapped=True)
+    if error and error["run_id"]:
+        trace, _ = load_run(error["run_id"])
     return trace, error
 
 def text_or_missing(value):
@@ -127,9 +143,10 @@ def summary_row(column, title, trace, error):
         else:
             row[item["label_ko"]] = text_or_missing(value)
     row["사용량 출처"] = label_of("usage_sources", metrics.get("usage_source")) or NO_VALUE
-    row["생성 / 탐지 호출"] = f"{metrics.get('generation_call_count', 0)} / {metrics.get('detection_call_count', 0)}"
-    if error:
-        row["오류"] = error.get("code") or NO_VALUE
+    row["생성 / 탐지 호출"] = f"{text_or_missing(metrics.get('generation_call_count'))} / {text_or_missing(metrics.get('detection_call_count'))}"
+    trace_error = error or trace.get("error")
+    if trace_error:
+        row["오류"] = trace_error.get("code") or NO_VALUE
     return row
 
 
@@ -137,9 +154,11 @@ def summary_row(column, title, trace, error):
 # D2 설정은 D2가 켜진 실행끼리만 비교한다.
 SAME_CONDITIONS = [
     ("케이스", ("request", "case_id"), False),
+    ("앱", ("request", "scenario"), False),
     ("데이터 버전", ("request", "dataset_version"), False),
     ("코퍼스 버전", ("request", "corpus_version"), False),
     ("실행 범위", ("manifest", "execution_scope"), False),
+    ("실행 종류", ("manifest", "execution_kind"), False),
     ("모델 제공자", ("manifest", "provider"), False),
     ("생성 모델", ("manifest", "model_id"), False),
     ("생성 설정", ("manifest", "generation_parameters"), False),
@@ -147,16 +166,26 @@ SAME_CONDITIONS = [
     ("기본 시스템 프롬프트", ("manifest", "base_system_prompt_version"), False),
     ("평가기 버전", ("manifest", "evaluator_version"), False),
     ("가격 버전", ("manifest", "pricing_version"), False),
+    ("가격표", ("manifest", "pricing_snapshot"), False),
     ("모델 호출 상한", ("manifest", "max_model_calls"), False),
     ("D2 설정", ("manifest", "d2_configuration"), True),
+    ("D1 버전", ("manifest", "defense_config_versions", "D1"), "D1"),
 ]
+
+
+def raw_condition(trace, path):
+    value = trace
+    for key in path:
+        value = (value or {}).get(key)
+    # 0.2 계약은 실행 종류가 없으며 전체 파이프라인만 지원했다.
+    if path == ("manifest", "execution_kind") and value is None and trace.get("schema_version") == "0.2":
+        return SHARED["execution_kinds"]["FULL_PIPELINE"]["value"]
+    return value
 
 
 def condition_value(trace, path):
     """trace 안의 값을 찾아 글자로 바꾼다. 묶음 값은 JSON 글자로 바꾼다."""
-    value = trace
-    for key in path:
-        value = (value or {}).get(key)
+    value = raw_condition(trace, path)
     if isinstance(value, (dict, list)):
         return json.dumps(value, ensure_ascii=False, sort_keys=True)
     return text_or_missing(value)
@@ -173,13 +202,14 @@ def condition_rows(results):
                 row[item["title"]] = "실행 안 됨"
                 continue
             mode = (item["trace"].get("request") or {}).get("defense_mode")
-            if only_d2 and mode not in D2_MODES:
+            if (only_d2 is True and mode not in D2_MODES or
+                    only_d2 == "D1" and mode not in ("D1", "D1+D2")):
                 row[item["title"]] = "해당 없음"
                 continue
             value = condition_value(item["trace"], path)
             row[item["title"]] = value
             values.add(value)
-        if not values:
+        if not values or NO_VALUE in values:
             row["같음"] = "확인 불가"
         else:
             row["같음"] = "예" if len(values) == 1 else "아니오"
@@ -195,7 +225,7 @@ COMPARE_DIFFERENT = "조건 다름"
 COMPARE_SAME = "조건 같음"
 
 
-def compare_verdict(results):
+def compare_verdict(results, experiment=None):
     """비교할 수 있는지, 조건이 같은지 판정한다. (판정, 설명, 조건 표)를 돌려준다.
     trace가 없는 실행이 하나라도 있거나 실행이 2개 미만이면 비교 불가다."""
     rows, different = condition_rows(results)
@@ -206,6 +236,33 @@ def compare_verdict(results):
         else:
             message = "비교하려면 실행 결과가 2개 이상 필요합니다."
         return COMPARE_UNAVAILABLE, message, rows
+    invalid = []
+    for item in results:
+        trace = item["trace"]
+        if (item.get("error") or trace.get("error") or
+                trace.get("status") not in {SHARED["run_statuses"][name]["value"] for name in ("COMPLETED", "BLOCKED")} or
+                any(e.get("error") for e in trace.get("defense_events") or [])):
+            invalid.append(item["title"])
+    if invalid:
+        return COMPARE_UNAVAILABLE, "실패하거나 끝나지 않은 실행이 있습니다: " + ", ".join(invalid), rows
+    incomplete = [row["조건"] for row in rows if any(
+        row.get(item["title"]) in (NO_VALUE, "") or
+        row["조건"] in ("D2 설정", "가격표") and row.get(item["title"]) == "{}"
+        for item in results)]
+    if incomplete:
+        return COMPARE_UNAVAILABLE, "확인할 수 없는 비교 조건: " + ", ".join(incomplete), rows
+    if experiment == "modes":
+        modes = [(item["trace"].get("request") or {}).get("defense_mode") for item in results]
+        if sorted(modes) != sorted(m["value"] for m in SHARED["defense_modes"].values()):
+            return COMPARE_UNAVAILABLE, "네 방어 모드의 결과가 각각 한 개씩 필요합니다.", rows
+        if any((item["trace"].get("manifest") or {}).get("defense_position") != BOTH
+               for item in results if item["trace"]["request"]["defense_mode"] in D2_MODES):
+            return COMPARE_DIFFERENT, "기법 비교의 D2 위치는 입력 + 검색 문서여야 합니다.", rows
+    if experiment == "positions":
+        positions = [(item["trace"].get("manifest") or {}).get("defense_position") for item in results]
+        if (any((item["trace"].get("request") or {}).get("defense_mode") != "D2" for item in results) or
+                sorted(str(p) for p in positions) != sorted(p["value"] for p in SHARED["defense_positions"].values())):
+            return COMPARE_UNAVAILABLE, "D1 없이 D2만 적용한 세 위치의 결과가 각각 필요합니다.", rows
     if different:
         return COMPARE_DIFFERENT, "비교 조건이 다른 항목: " + ", ".join(different), rows
     return COMPARE_SAME, "비교한 실행들의 조건(데이터·모델·검색·생성 설정 등)이 모두 같습니다.", rows

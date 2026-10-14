@@ -7,7 +7,7 @@ import streamlit as st
 
 from ui_core import (
     COMPARE_DIFFERENT, COMPARE_UNAVAILABLE, D2_MODES, NO_VALUE, ROOT, SHARED,
-    compare_verdict, label_of, run_case, summary_row,
+    BOTH, compare_verdict, label_of, load_run, run_case, summary_row, text_or_missing,
 )
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT / "data")).resolve()
@@ -65,8 +65,17 @@ def render_header(trace):
     cols[3].text(str(label_of("defense_modes", request.get("defense_mode")) or NO_VALUE))
     scope = (trace.get("manifest") or {}).get("execution_scope")
     st.caption(f"실행 범위: {label_of('execution_scopes', scope) or NO_VALUE}")
-    kind = (trace.get("manifest") or {}).get("execution_kind", SHARED["execution_kinds"]["FULL_PIPELINE"]["value"])
-    st.caption(f"실행 종류: {label_of('execution_kinds', kind)}")
+    kind = (trace.get("manifest") or {}).get("execution_kind")
+    if kind is None and trace.get("schema_version") == "0.2":
+        kind = SHARED["execution_kinds"]["FULL_PIPELINE"]["value"]
+    st.caption(f"실행 종류: {label_of('execution_kinds', kind) or NO_VALUE}")
+    st.caption(f"케이스: {request.get('case_id') or NO_VALUE} · 앱: {label_of('scenarios', request.get('scenario')) or NO_VALUE}")
+    if request.get("defense_mode") in D2_MODES:
+        st.caption(f"요청한 D2 위치: {label_of('defense_positions', request.get('defense_position')) or NO_VALUE} · "
+                   f"저장된 D2 위치: {label_of('defense_positions', (trace.get('manifest') or {}).get('defense_position')) or NO_VALUE}")
+    error = trace.get("error")
+    if error:
+        st.error(f"{error.get('code') or '오류'}: {error.get('message') or ''}")
 
 
 def render_timeline(trace):
@@ -102,7 +111,7 @@ def render_timeline(trace):
                     "순위": doc.get("rank"),
                     "문서 ID": doc.get("document_id"),
                     "점수": NO_VALUE if doc.get("score") is None else str(doc.get("score")),
-                    "프롬프트 포함": "포함" if doc.get("included_in_prompt") else "미포함",
+                    "프롬프트 포함": NO_VALUE if doc.get("included_in_prompt") is None else ("포함" if doc["included_in_prompt"] else "미포함"),
                 }
                 for doc in sorted(docs, key=lambda d: d.get("rank") or 0)
             ]
@@ -140,7 +149,9 @@ def render_timeline(trace):
             rows = [
                 {
                     "방어": event.get("defense_id"),
-                    "단계": event.get("stage"),
+                    "방어 버전": event.get("defense_version") or NO_VALUE,
+                    "정책 버전": event.get("policy_version") or NO_VALUE,
+                    "단계": label_of("trace_stages", event.get("stage")),
                     "판정": label_of("defense_decisions", event.get("decision")),
                     "근거 코드": event.get("reason_code") or NO_VALUE,
                     "점수": NO_VALUE if event.get("score") is None else str(event.get("score")),
@@ -150,7 +161,7 @@ def render_timeline(trace):
                     "오류": event.get("error") or NO_VALUE,
                     "임계값 기준 판정": label_of("defense_decisions", event.get("threshold_decision")) or NO_VALUE,
                     "모순": event.get("consistency_issue") or "없음",
-                    "검토 필요": "예" if event.get("review_needed") else "아니오",
+                    "검토 필요": NO_VALUE if event.get("review_needed") is None else ("예" if event["review_needed"] else "아니오"),
                 }
                 for event in events
             ]
@@ -180,15 +191,15 @@ def render_meta(trace):
         for item in SHARED["metric_keys"].values():
             value = metrics.get(item["value"])
             st.caption(item["label_ko"])
-            st.text(NO_VALUE if value is None else str(value))
+            st.text(("미확인" if item["value"] == "estimated_cost_usd" else NO_VALUE) if value is None else str(value))
         st.caption(f"사용량 출처: {label_of('usage_sources', metrics.get('usage_source')) or NO_VALUE}")
-        st.text(f"생성 호출 {metrics.get('generation_call_count', 0)} · 탐지 호출 {metrics.get('detection_call_count', 0)}")
+        st.text(f"생성 호출 {text_or_missing(metrics.get('generation_call_count'))} · 탐지 호출 {text_or_missing(metrics.get('detection_call_count'))}")
         if not metrics.get("cost_complete"):
-            st.caption(f"비용 미확인 호출: {metrics.get('unpriced_call_count', 0)} · 확인된 소계(USD): {metrics.get('known_cost_usd', 0)}")
+            st.caption(f"비용 미확인 호출: {text_or_missing(metrics.get('unpriced_call_count'))} · 확인된 소계(USD): {text_or_missing(metrics.get('known_cost_usd'))}")
         if metrics.get("generation_skipped_reason"):
             st.caption(f"생성 생략 사유: {metrics['generation_skipped_reason']}")
         if metrics.get("stages"):
-            st.dataframe([{"단계": label_of("trace_stages", item["stage"]), "지연(ms)": item["latency_ms"]}
+            st.dataframe([{"단계": label_of("trace_stages", item.get("stage")), "지연(ms)": text_or_missing(item.get("latency_ms"))}
                           for item in metrics["stages"]], hide_index=True)
 
     with st.container(border=True):
@@ -223,14 +234,22 @@ def render_meta(trace):
         if evaluation.get("reason"):
             st.caption("판정 근거")
             st.text(str(evaluation["reason"]))
+        for key, title in (("policy_version", "평가 정책"), ("reviewer", "검토자"), ("evaluated_at", "평가 시각")):
+            st.caption(title)
+            st.text(text_or_missing(evaluation.get(key)))
 
     with st.expander("모델 호출 기록 (마스킹됨)"):
         for call in trace.get("model_calls") or []:
-            st.caption(f"{label_of('call_purposes', call['purpose'])} · {call['model_id']} · {call['latency_ms']}ms")
+            st.caption(f"{label_of('call_purposes', call.get('purpose')) or NO_VALUE} · {call.get('model_id') or NO_VALUE} · {text_or_missing(call.get('latency_ms'))}ms")
+            st.caption(f"사용량 출처: {label_of('usage_sources', call.get('usage_source')) or NO_VALUE} · "
+                       f"입력/출력 토큰: {text_or_missing(call.get('input_tokens'))} / {text_or_missing(call.get('output_tokens'))} · "
+                       f"비용(USD): {text_or_missing(call.get('estimated_cost_usd'))}")
             st.caption(call.get("cost_reason") or NO_VALUE)
-            for message in call["messages"]:
-                st.caption(message["role"])
-                show_text(message["content"])
+            if call.get("error_code"):
+                st.error(call["error_code"])
+            for message in call.get("messages") or []:
+                st.caption(message.get("role") or NO_VALUE)
+                show_text(message.get("content") or "")
 
     with st.container(border=True):
         st.subheader("탐지 대상별 독립 평가")
@@ -238,7 +257,7 @@ def render_meta(trace):
         if not rows:
             st.caption("탐지 대상별 평가 기록 없음")
         else:
-            st.dataframe([{"단계": label_of("trace_stages", item["stage"]),
+            st.dataframe([{"단계": label_of("trace_stages", item.get("stage")),
                            "대상": item.get("target_ref") or "사용자 입력",
                            "정답": label_of("detector_gold_labels", item.get("gold_label")) or NO_VALUE,
                            "분석": label_of("detector_analysis_statuses", item.get("analysis_status")) or NO_VALUE,
@@ -247,9 +266,9 @@ def render_meta(trace):
                            "근거": item.get("reason") or NO_VALUE} for item in rows], hide_index=True)
 
 
-def render_comparison(column, results):
+def render_comparison(column, results, experiment):
     """비교 결과: 조건 확인 → 요약 표 → 실행별 자세한 trace"""
-    verdict, message, rows = compare_verdict(results)
+    verdict, message, rows = compare_verdict(results, experiment)
     if verdict == COMPARE_UNAVAILABLE:
         st.error(f"{COMPARE_UNAVAILABLE}: {message} 서버 상태를 확인하고 다시 실행하세요.")
     elif verdict == COMPARE_DIFFERENT:
@@ -264,6 +283,9 @@ def render_comparison(column, results):
         hide_index=True,
     )
 
+    if not results:
+        st.info("비교할 실행 결과가 없습니다.")
+        return
     tabs = st.tabs([item["title"] for item in results])
     for tab, item in zip(tabs, results):
         with tab:
@@ -289,6 +311,16 @@ def run_many(settings, case_id, scenario, dataset_version, corpus_version):
         results.append({"title": title, "trace": trace, "error": error})
     progress.progress(1.0, text="실행 끝")
     return results
+
+
+def refresh_comparison(results):
+    """같은 run_id를 GET 재조회한다. 모델은 호출하지 않는다."""
+    refreshed = []
+    for item in results:
+        run_id = (item.get("trace") or {}).get("run_id") or (item.get("error") or {}).get("run_id")
+        trace, error = load_run(run_id) if run_id else (None, item.get("error"))
+        refreshed.append({"title": item["title"], "trace": trace, "error": error})
+    return refreshed
 
 
 st.title("LLM Defense Trade-off Lab")
@@ -358,7 +390,28 @@ tab_single, tab_compare, tab_position = st.tabs(["한 번 실행", "4개 모드 
 
 # 결과 영역 (한 번 실행)
 with tab_single:
+    with st.expander("실행 번호로 저장 결과 조회", expanded=False):
+        stored_run_id = st.text_input("실행 번호 (run_id)", key="stored_run_id")
+        if st.button("저장 결과 조회", key="load_run"):
+            with st.spinner("저장 결과 조회 중"):
+                trace, error = load_run(stored_run_id)
+            st.session_state["lookup_error"] = error
+            if trace:
+                st.session_state["result"] = {"trace": trace, "error": None}
+        if st.session_state.get("lookup_error"):
+            error = st.session_state["lookup_error"]
+            st.error(f"{error.get('code') or '오류'}: {error.get('message') or ''}")
     result = st.session_state.get("result")
+    if result and result.get("trace"):
+        if st.button("표시 중인 결과 새로고침", key="refresh_run"):
+            trace, error = load_run(result["trace"]["run_id"])
+            st.session_state["lookup_error"] = error
+            if trace:
+                st.session_state["result"] = result = {"trace": trace, "error": None}
+            elif error:
+                st.error(f"{error.get('code') or '오류'}: {error.get('message') or ''}")
+        if (result["trace"].get("request") or {}).get("case_id") != case_id:
+            st.warning("왼쪽에서 고른 케이스와 다른 케이스의 저장 결과입니다. 결과의 케이스와 실행 번호를 확인하세요.")
     if result is None:
         st.info("아직 실행 기록이 없습니다. 왼쪽에서 케이스를 고르고 실행을 누르세요.")
     else:
@@ -375,9 +428,6 @@ with tab_single:
                 title = f"{title} (응답 {error['status']})"
             st.error(title)
             st.text(error["message"] or "")
-        elif trace and trace.get("error"):
-            st.error(str(trace["error"].get("code") or "오류"))
-            st.text(str(trace["error"].get("message") or ""))
 
         if trace:
             left, right = st.columns([2, 1])
@@ -389,13 +439,8 @@ with tab_single:
 # 4개 모드 비교: 같은 케이스를 네 방어 모드로 차례로 실행해 나란히 놓는다
 with tab_compare:
     st.caption(f"왼쪽에서 고른 케이스 {case_id}를 무방어, D1, D2, D1 + D2로 차례로 실행합니다.")
-    compare_position = st.selectbox(
-        "D2 적용 위치 (D2, D1 + D2에 적용)",
-        positions,
-        index=positions.index(SHARED["defense_positions"]["BOTH"]["value"]),
-        format_func=lambda value: label_of("defense_positions", value),
-        key="compare_position",
-    )
+    compare_position = BOTH
+    st.caption("기법 비교의 D2 위치는 입력 + 검색 문서로 고정합니다. 위치 변경은 D2 위치 비교 탭을 사용하세요.")
     if st.button("4개 모드 한 번에 실행", type="primary", key="run_compare"):
         settings = [(label_of("defense_modes", m), m, compare_position) for m in modes]
         st.session_state["compare"] = {
@@ -414,7 +459,9 @@ with tab_compare:
         )
         if compare["case_id"] != case_id:
             st.warning("왼쪽에서 지금 고른 케이스와 다른 케이스의 비교 결과입니다. 다시 실행하면 바뀝니다.")
-        render_comparison("방어 모드", compare["results"])
+        if st.button("모드 비교 저장 결과 새로고침", key="refresh_compare"):
+            compare["results"] = refresh_comparison(compare["results"])
+        render_comparison("방어 모드", compare["results"], "modes")
 
 # D2 위치 비교: D1 없이 D2만 켜고 위치만 바꿔 같은 탐지 설정으로 비교한다
 with tab_position:
@@ -435,4 +482,6 @@ with tab_position:
         st.caption(f"비교한 케이스: {position_compare['case_id']} · 방어 모드: D2")
         if position_compare["case_id"] != case_id:
             st.warning("왼쪽에서 지금 고른 케이스와 다른 케이스의 비교 결과입니다. 다시 실행하면 바뀝니다.")
-        render_comparison("D2 적용 위치", position_compare["results"])
+        if st.button("위치 비교 저장 결과 새로고침", key="refresh_positions"):
+            position_compare["results"] = refresh_comparison(position_compare["results"])
+        render_comparison("D2 적용 위치", position_compare["results"], "positions")
