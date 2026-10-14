@@ -106,7 +106,7 @@ def count_decisions(trace):
     """방어 판정을 종류별로 세어 '허용 1 · 격리 1'처럼 만든다."""
     counts = {}
     for event in trace.get("defense_events") or []:
-        name = label_of("defense_decisions", event.get("decision"))
+        name = label_of("defense_decisions", event.get("decision")) or NO_VALUE
         counts[name] = counts.get(name, 0) + 1
     if not counts:
         return "방어 판정 없음"
@@ -130,12 +130,14 @@ def summary_row(column, title, trace, error):
     included = sum(1 for doc in docs if doc.get("included_in_prompt"))
 
     row["실행 번호"] = trace.get("run_id") or NO_VALUE
-    row["상태"] = label_of("run_statuses", trace.get("status"))
+    row["상태"] = label_of("run_statuses", trace.get("status")) or NO_VALUE
     row["출력 결과"] = label_of("output_outcomes", output.get("outcome")) or NO_VALUE
     row["공격 성공"] = label_of("evaluation_statuses", evaluation.get("attack_success")) or NO_VALUE
     row["정상 태스크 성공"] = label_of("evaluation_statuses", evaluation.get("normal_task_success")) or NO_VALUE
     row["방어 판정"] = count_decisions(trace)
-    row["프롬프트 포함 문서"] = f"{included} / {len(docs)}"
+    row["프롬프트 포함 문서"] = (NO_VALUE if trace.get("retrieval") is None or
+                                  any(doc.get("included_in_prompt") is None for doc in docs)
+                                  else f"{included} / {len(docs)}")
     for item in SHARED["metric_keys"].values():
         value = metrics.get(item["value"])
         if item["value"] == "estimated_cost_usd" and value is None:

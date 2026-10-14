@@ -202,6 +202,9 @@ class ScreenTests(unittest.TestCase):
         self.assertIn("실행 종류: 기록 없음", shown)
         self.assertIn("미확인", shown)
         self.assertIn("기록 없음", app.dataframe[0].value["프롬프트 포함"].tolist())
+        row = ui_core.summary_row("방어 모드", "무방어", trace, None)
+        self.assertEqual(row["상태"], ui_core.NO_VALUE)
+        self.assertEqual(row["프롬프트 포함 문서"], ui_core.NO_VALUE)
 
     def test_status_samples_render_masked_and_keep_evaluation_separate(self):
         app = self.app()
