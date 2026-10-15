@@ -30,10 +30,14 @@ class ProviderResponse:
 
 class DemoRagProvider:
     """Offline integration fixture; never a measurement of model quality."""
+    observer = None
     def generate(self, question: str, documents: list[SourceDocument]) -> ProviderResponse:
         return self.generate_prepared(prepare_prompt(question, documents, Scenario.RAG_CHAT), {})
 
     def generate_prepared(self, prompt: PreparedPrompt, parameters: dict) -> ProviderResponse:
+        pending = ModelCall(purpose=CallPurpose.GENERATION, model_id="demo-rag-v0.1",
+                            messages=prompt.messages, parameters=parameters, latency_ms=0)
+        ticket = self.observer.before(pending) if self.observer else None
         started = time.perf_counter()
         if prompt.documents:
             first = prompt.documents[0]
@@ -46,6 +50,8 @@ class DemoRagProvider:
                          parameters=parameters, latency_ms=round((time.perf_counter()-started)*1000),
                          input_tokens=input_tokens, output_tokens=output_tokens, usage_source=UsageSource.ESTIMATED,
                          estimated_cost_usd=0.0, cost_reason="offline_demo_no_external_charge", response_text=answer)
+        if self.observer:
+            self.observer.after(ticket, call)
         return ProviderResponse(answer, input_tokens, output_tokens, 0.0, call)
 
 
@@ -56,6 +62,7 @@ class OpenAICompatibleProvider:
         if url.scheme not in ("http", "https") or not url.netloc or url.username or url.password or url.query or url.fragment:
             raise ValueError("Model endpoint must be an http(s) URL without credentials, query or fragment")
         self._base_url, self._api_key, self._model_id, self._timeout = base_url.rstrip("/"), api_key, model_id, timeout
+        self.observer = None
 
     def generate(self, question: str, documents: list[SourceDocument]) -> ProviderResponse:
         return self.generate_prepared(prepare_prompt(question, documents, Scenario.RAG_CHAT), {"temperature": 0})
@@ -76,8 +83,12 @@ class OpenAICompatibleProvider:
         call = ModelCall(purpose=purpose, target_ref=target_ref, model_id=self._model_id,
                          endpoint=f"{self._base_url}/chat/completions", messages=messages,
                          parameters=parameters, latency_ms=0)
+        # Persist a reservation before any external call. A crash keeps that
+        # reservation unresolved rather than silently replaying a paid request.
+        ticket = self.observer.before(call) if self.observer else None
         try:
-            with urllib.request.urlopen(request, timeout=self._timeout) as response:
+            timeout = min(self._timeout, ticket["timeout_seconds"]) if ticket else self._timeout
+            with urllib.request.urlopen(request, timeout=timeout) as response:
                 call.http_status = response.status
                 body = json.loads(response.read().decode("utf-8"))
             text = body["choices"][0]["message"]["content"]
@@ -96,6 +107,7 @@ class OpenAICompatibleProvider:
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             if isinstance(exc, urllib.error.HTTPError):
                 call.http_status = exc.code
+                exc.close()
             timed_out = isinstance(exc, TimeoutError) or isinstance(getattr(exc, "reason", None), TimeoutError)
             call.error_code = "MODEL_TIMEOUT" if timed_out else "MODEL_PROVIDER_ERROR"
             raise ProviderError(f"모델 호출에 실패했습니다 ({type(exc).__name__})", call.error_code, call) from exc
@@ -104,4 +116,6 @@ class OpenAICompatibleProvider:
             raise ProviderError("모델 응답 형식 또는 사용량이 잘못되었습니다.", call.error_code, call) from exc
         finally:
             call.latency_ms = round((time.perf_counter()-started)*1000)
+            if self.observer:
+                self.observer.after(ticket, call)
         return ProviderResponse(text, call.input_tokens, call.output_tokens, None, call)

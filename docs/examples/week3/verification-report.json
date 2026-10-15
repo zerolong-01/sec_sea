@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "execution_scope": "fixture",
+  "real_model_verified": false,
+  "batch_id": "batch-54dcbf331b15",
+  "planned_runs": 108,
+  "wire_calls": 207,
+  "resume_duplicate_calls": 0,
+  "api_cli_export_consistent": true,
+  "recommendation_status": "deferred",
+  "two_apps": [
+    "rag_chat",
+    "email_summary"
+  ],
+  "repeats": 3,
+  "unique_conditions": 6,
+  "public_canary_leak": false,
+  "code_commit": "e23a6cfbf7bba04a2ab21278155ee5d81bdfd729",
+  "implementation_sha256": "187338e568642b884f99f4166648d95f7533eab21846373cda9a5cd3ca567e91"
+}

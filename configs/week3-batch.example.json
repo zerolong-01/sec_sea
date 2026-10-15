@@ -1,0 +1,27 @@
+{
+  "schema_version": "0.1",
+  "artifact_type": "batch_spec",
+  "sources": [
+    {"source_id": "rag-dev", "data_dir": "data/week2", "split": "dev", "case_ids": ["a006", "b006", "h007"]}
+  ],
+  "repeats": 3,
+  "random_seed": 2026,
+  "budget": {
+    "max_calls": 180,
+    "max_reserved_tokens": 6000000,
+    "max_seconds": 300,
+    "unknown_price_policy": "calls_tokens",
+    "per_call_input_token_ceiling": 32768
+  },
+  "statistics": {
+    "version": "cluster-bootstrap-v0.1-draft",
+    "status": "draft",
+    "reviewed_by": [],
+    "bootstrap_samples": 1000,
+    "seed": 2026,
+    "minimum_families": 2,
+    "minimum_evaluated_runs": 3
+  },
+  "evaluation_policy_file": "configs/week3-evaluation-policy.json",
+  "common_policy_file": "configs/week3-common-policy.txt"
+}

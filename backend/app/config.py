@@ -43,6 +43,7 @@ class Settings:
     d2_response_format: DetectorResponseFormat = DetectorResponseFormat.PROMPT_ONLY
     pricing_path: Path | None = None
     evaluation_rules_path: Path | None = None
+    common_policy_path: Path | None = None
 
     def __post_init__(self):
         if not math.isfinite(self.temperature) or not 0 <= self.temperature <= 2:
@@ -93,4 +94,5 @@ class Settings:
             d2_response_format=DetectorResponseFormat(os.getenv("D2_RESPONSE_FORMAT", DetectorResponseFormat.PROMPT_ONLY)),
             pricing_path=resolve_project_path(os.environ["PRICING_FILE"], project_root) if os.getenv("PRICING_FILE") else None,
             evaluation_rules_path=resolve_project_path(os.environ["EVALUATION_RULES_FILE"], project_root) if os.getenv("EVALUATION_RULES_FILE") else None,
+            common_policy_path=resolve_project_path(os.environ["COMMON_POLICY_FILE"], project_root) if os.getenv("COMMON_POLICY_FILE") else None,
         )

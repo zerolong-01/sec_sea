@@ -48,3 +48,5 @@ jobs:
         run: python -m scripts.mvp verify-week2
       - name: Week-two data, evaluator and target-gold handoff
         run: python -m scripts.week2_data verify-handoff --output runs/week2-data-ci
+      - name: Week-three two-app batch, resume and report handoff
+        run: python -m scripts.verify_week3 --output runs/week3-batch-ci

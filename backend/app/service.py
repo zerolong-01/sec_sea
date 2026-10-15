@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import hashlib
 import re
 import time
 import threading
@@ -70,6 +71,13 @@ class RunService:
         self._evaluator = evaluator or (RuleEvaluator(settings.evaluation_rules_path)
                                        if settings.evaluation_rules_path else ManualEvaluator())
         self._accounting = Accounting(settings.pricing_path)
+        self._common_policy = (settings.common_policy_path.read_text(encoding="utf-8").strip()
+                               if settings.common_policy_path else None)
+        if settings.common_policy_path and not self._common_policy:
+            raise ValueError("COMMON_POLICY_FILE must contain a nonempty common application policy")
+        self._base_prompt_version = settings.system_prompt_version + (
+            "+policy-sha256:" + hashlib.sha256(self._common_policy.encode()).hexdigest()
+            if self._common_policy else "")
         # The local single-worker API may receive concurrent review updates.
         self._review_lock = threading.RLock()
 
@@ -115,7 +123,7 @@ class RunService:
             return decision
         except ProviderError as exc:
             self._record(execution, exc.call)
-            budget_exceeded = exc.code == "MODEL_CALL_BUDGET_EXCEEDED"
+            budget_exceeded = exc.code == "MODEL_CALL_BUDGET_EXCEEDED" or exc.code.startswith("BATCH_")
             closed = budget_exceeded or self._settings.d2_error_policy == DetectorErrorPolicy.FAIL_CLOSED
             execution.events.append(DefenseEvent(
                 defense_id=DefenseMode.D2, defense_version=self._settings.d2_version, stage=stage,
@@ -130,8 +138,12 @@ class RunService:
                 raise ProviderError(str(exc), exc.code) from exc
             return DefenseDecision.ALLOW
 
-    def execute(self, request: RunRequest) -> RunTrace:
+    def execute(self, request: RunRequest, *, run_id: str | None = None) -> RunTrace:
         execution = Execution(request, self._build_manifest(request))
+        if run_id is not None:
+            if not re.fullmatch(r"run-[a-z0-9_-]{1,60}", run_id):
+                raise ValueError("Invalid run ID")
+            execution.run_id = run_id
         d1 = request.defense_mode in (DefenseMode.D1, DefenseMode.D1_D2)
         d2 = request.defense_mode in (DefenseMode.D2, DefenseMode.D1_D2)
         diagnostic = request.execution_kind == ExecutionKind.DETECTOR_ONLY
@@ -199,7 +211,8 @@ class RunService:
                 execution.skipped = "all_documents_quarantined"
                 return self._finish(execution, RunStatus.BLOCKED, OutputOutcome.BLOCKED)
             with self._stage(execution, TraceStage.PROMPT_ASSEMBLY):
-                prompt = prepare_prompt(case.user_input, included, request.scenario, d1, self._settings.system_prompt_version)
+                prompt = prepare_prompt(case.user_input, included, request.scenario, d1,
+                                        self._base_prompt_version, self._common_policy)
                 execution.components = prompt.components
                 if d1:
                     execution.events.append(DefenseEvent(
@@ -313,9 +326,9 @@ class RunService:
         return Manifest(
             execution_kind=request.execution_kind,
             model_id=self._settings.model_id, provider=self._settings.model_provider, execution_scope=scope,
-            base_system_prompt_version=self._settings.system_prompt_version,
-            system_prompt_version=(self._settings.system_prompt_version+"+"+D1_VERSION if d1
-                                   else self._settings.system_prompt_version),
+            base_system_prompt_version=self._base_prompt_version,
+            system_prompt_version=(self._base_prompt_version+"+"+D1_VERSION if d1
+                                   else self._base_prompt_version),
             generation_parameters={"temperature": self._settings.temperature, "max_tokens": self._settings.max_tokens},
             retrieval_config_version=self._settings.retrieval_config_version, defense_config_versions=versions,
             defense_position=request.defense_position, evaluator_version=("detector-only-v0.1"

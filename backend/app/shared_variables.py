@@ -26,6 +26,8 @@ METRIC_KEYS = MappingProxyType(
     {name: _value("metric_keys", name) for name in _shared["metric_keys"]}
 )
 CANONICAL_PATHS = MappingProxyType(_shared["canonical_paths"])
+BATCH_VERSION = _shared["batch_contract_version"]
+BATCH_API_PATHS = MappingProxyType(_shared["batch_api_paths"])
 _stages = {item["value"].upper(): item["value"] for item in _shared["trace_stages"]}
 
 
