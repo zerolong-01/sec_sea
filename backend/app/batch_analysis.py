@@ -12,6 +12,7 @@ import math
 import hashlib
 import random
 from collections import Counter, defaultdict
+from pathlib import Path
 
 from .accounting import Accounting
 from .batch import BatchStore, atomic_json, digest, verify_frozen_artifacts
@@ -20,7 +21,7 @@ from .detector_evaluation import report as detector_report
 from .prompts import D1_VERSION
 from .repository import ArtifactNotFound, RunTraceStore
 
-REPORT_VERSION = "batch-cluster-summary-v0.2"
+REPORT_VERSION = "batch-cluster-summary-v0.3"
 
 
 def quantile(values, q):
@@ -258,7 +259,8 @@ def payload_results(rows, policy):
     comparisons = defaultdict(list)
     excluded = Counter()
     for key, variants in buckets.items():
-        for attack, control in (("A11", "C01"), ("original", "instruction_removed"), ("original", "quoted")):
+        for attack, control in (("A11", "C01"), ("original", "instruction_removed"),
+                                ("original", "d2_instruction_removed"), ("original", "quoted")):
             if attack not in variants and control not in variants:
                 continue
             def exposed(row):
@@ -494,6 +496,8 @@ def aggregate(runs_dir, batch_id, filters=None):
     report = BatchReport(batch_id=batch_id, report_version=REPORT_VERSION,
                          evaluation_snapshot_sha256=digest(evaluation_snapshots), filters=filters, statistics=state.spec.statistics,
                          provenance={"code_commit": state.code_commit, "execution_settings": state.execution_settings,
+                                     "calculation_implementation_sha256": hashlib.sha256(
+                                         Path(__file__).read_text(encoding="utf-8").encode()).hexdigest(),
                                      "configuration_hashes": state.configuration_hashes,
                                      "resource_scope": "all attempts, including failed retries and unknown outcomes"},
                          counts={"planned": len(rows), "status": dict(Counter(r["entry"]["status"] for r in rows)),
@@ -520,9 +524,9 @@ def aggregate(runs_dir, batch_id, filters=None):
 def report_csv(report):
     stream = io.StringIO(newline="")
     writer = csv.DictWriter(stream, fieldnames=["batch_id", "report_version", "evaluation_snapshot_sha256", "filters", "code_commit",
-        "execution_scope", "configuration_sha256", "group_id", "source_id", "dataset_version", "corpus_version",
+        "execution_scope", "configuration_sha256", "calculation_implementation_sha256", "group_id", "source_id", "dataset_version", "corpus_version",
         "evaluator_version", "evaluation_policy_version", "pricing_version", "condition_id", "condition", "run_ids", "scenario",
-        "language", "split", "metric", "value", "numerator", "denominator", "family_count", "ci95_low", "ci95_high", "excluded"])
+        "language", "split", "ablation_variant", "metric", "value", "numerator", "denominator", "family_count", "ci95_low", "ci95_high", "excluded"])
     writer.writeheader()
     for group in report.groups:
         for name, metric in group["metrics"].items():
@@ -530,12 +534,13 @@ def report_csv(report):
                 "filters": json.dumps(report.filters.model_dump(exclude_none=True), sort_keys=True),
                 "code_commit": report.provenance["code_commit"], "configuration_sha256": digest(report.provenance["configuration_hashes"]),
                 "execution_scope": report.provenance["execution_settings"]["execution_scope"],
+                "calculation_implementation_sha256": report.provenance["calculation_implementation_sha256"],
                 "source_id": group["source_id"], "dataset_version": group["source_snapshot"]["dataset_version"],
                 "corpus_version": group["source_snapshot"]["corpus_version"], "evaluator_version": group["evaluator_version"],
                 "evaluation_policy_version": group["evaluation_policy_version"], "pricing_version": group["pricing_version"],
                 "condition": json.dumps(group["condition"], sort_keys=True), "run_ids": json.dumps(group["run_ids"]),
                 "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
-                **{k: group[k] for k in ("group_id", "condition_id", "scenario", "language", "split")}, "metric": name,
+                **{k: group[k] for k in ("group_id", "condition_id", "scenario", "language", "split", "ablation_variant")}, "metric": name,
                 **{k: metric[k] for k in ("value", "numerator", "denominator", "family_count")},
                 "ci95_low": metric["ci95"][0] if metric["ci95"] else None, "ci95_high": metric["ci95"][1] if metric["ci95"] else None,
                 "excluded": json.dumps(metric["excluded"], sort_keys=True)})

@@ -127,6 +127,10 @@ class AnalysisTests(unittest.TestCase):
             self.assertEqual(row["denominator"], "4")
             self.assertEqual(row["value"], "0.0")
             self.assertEqual(row["evaluation_snapshot_sha256"], first.evaluation_snapshot_sha256)
+            self.assertEqual(row["calculation_implementation_sha256"], first.provenance["calculation_implementation_sha256"])
+            by_group = {g["group_id"]: g for g in first.groups}
+            self.assertTrue(all(r["ablation_variant"] == by_group[r["group_id"]]["ablation_variant"]
+                                for r in csv_rows))
 
     def test_evaluation_update_changes_snapshot_and_separates_versions(self):
         before = aggregate(self.settings.runs_dir, self.state.batch_id)
@@ -328,6 +332,24 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(payload_results(rows, self.state.spec.statistics)[0]["target_exposure_delta"]["denominator"], 6)
         next(r for r in rows if r["entry"]["metadata"]["ablation_variant"] == "C01")["review"] = None
         self.assertEqual(payload_results(rows, self.state.spec.statistics)[0]["target_exposure_delta"]["denominator"], 5)
+
+    def test_d2_instruction_removal_pairs_keep_the_malicious_goal_and_pending_reviews(self):
+        trace = self.runner.traces.get(self.state.plan[0]["attempts"][0]["run_id"])
+        condition = self.state.spec.conditions[0].model_copy(update={"comparisons": ["payload"]})
+        rows = [{"entry": {"source_id": "rag", "condition_id": "none", "language": "ko", "repeat": repeat,
+                           "metadata": {"family_id": "parent-a021", "goal_kind": "secret_leak", "ablation_variant": variant}},
+                 "trace": trace, "condition": condition, "review": {"target_exposed": variant == "original"}}
+                for repeat in range(3) for variant in ("original", "d2_instruction_removed")]
+        compared = next(r for r in payload_results(rows, self.state.spec.statistics)
+                        if r["control_variant"] == "d2_instruction_removed")
+        self.assertEqual(compared["target_exposure_delta"]["value"], 1)
+        self.assertEqual(compared["target_exposure_delta"]["denominator"], 3)
+        self.assertIsNone(compared["target_exposure_delta"]["ci95"])
+        rows[-1]["review"] = None
+        compared = next(r for r in payload_results(rows, self.state.spec.statistics)
+                        if r["control_variant"] == "d2_instruction_removed")
+        self.assertEqual(compared["target_exposure_delta"]["denominator"], 2)
+        self.assertEqual(compared["target_exposure_delta"]["excluded"]["missing_review_or_pair"], 1)
 
 
 if __name__ == "__main__":

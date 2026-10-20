@@ -48,6 +48,8 @@ python -m scripts.mvp check --data-dir runs/week3-prepared/rag
 
 공통 batch report의 target exposure는 기존 수동 검토 계약을 유지한다. 자동 관측은 `exact-observations.json`에 측정 방식과 함께 분리한다. 자동 관측을 사람이 검토한 gold로 등록하지 않는다. 정확한 문자열이 없더라도 부분·인코딩 유출이 없다고 단정하지 않는다. 정상 작업 의미·과잉 변형·D2 대상별 gold는 팀 검토 대기다. 단일 원본의 반복 3회는 독립 표본 3개가 아니므로 해당 paired CI는 null이다. 최종 추천은 draft 정책 때문에 보류한다.
 
+집계 v0.3은 CSV에 변형명·집계 구현 해시를 보존하며, a021의 D2 지시 제거 쌍을 수동 검토 이후에도 비교할 수 있게 한다. 실제 생성 당시의 구현 해시와 재집계 구현 해시를 구분한다. 기존 export는 덮어쓰지 않는다.
+
 ## 실제 저장 결과의 화면 검증
 
 `checkpoint.json`의 batch_id를 사용한다.

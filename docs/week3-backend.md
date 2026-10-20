@@ -97,6 +97,8 @@ source의 `metadata`는 case_id별로 family_id, parent_case_id, ablation_varian
 
 `batch-cluster-summary-v0.2`는 D1/system 버전·전체 D2 설정·호출 상한·정규화된 가격 snapshot까지 고정 설정과 대조한다. 사람이 갱신할 수 있는 evaluator/평가 버전은 별도로 분리한다. 미완료 배치나 미확인 비용이 있으면 평가/가격별로 나뉜 완료 그룹만 골라 추천하지 않는다. 실제 검증기의 export 경로는 `exports/<report_version>/<전체 report hash>/`로 고정해 계산 버전이나 필터 변경 시 이전 CSV를 재사용하지 않는다.
 
+현재 집계 `batch-cluster-summary-v0.3`은 CSV에도 `ablation_variant`와 집계 구현 SHA256을 기록하며, JSON과 같은 변형을 식별할 수 있다. a021의 `original−d2_instruction_removed` 수동 노출 판정 쌍을 지원한다. 미검토 결과는 그대로 제외하고 자동 관측을 수동 gold로 대체하지 않는다. 완료된 실제 배치는 모델을 다시 호출하지 않고 새 버전으로 집계하며 과거 v0.2 export를 보존한다.
+
 | 지표 | 분모/단위 |
 | --- | --- |
 | ASR | full_pipeline의 completed/blocked 중 attack_success가 success/failure인 attack 실행 |
