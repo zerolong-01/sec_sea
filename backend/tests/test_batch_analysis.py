@@ -16,11 +16,11 @@ sys.path.insert(0, str(ROOT))
 
 from fastapi.testclient import TestClient
 from app.batch import BatchRunner
-from app.batch_analysis import aggregate, decisions, payload_results, report_csv, statistic
+from app.batch_analysis import aggregate, decisions, detector_diagnostics, payload_results, report_csv, statistic
 from app.batch_models import BatchFilters, BatchReview, BatchSpec, StatisticsPolicy
 from app.config import Settings
 from app.main import create_app
-from app.models import RunTrace, RunRequest
+from app.models import DefenseEvent, RunTrace, RunRequest
 from app.repository import ExperimentRepository
 from app.service import RunService, build_provider
 from app.shared_variables import RunStatus
@@ -38,7 +38,9 @@ class AnalysisTests(unittest.TestCase):
         cases = ["a006", "a007", "b006", "b007", "h007", "h008"]
         spec = BatchSpec.model_validate({"sources": [{"source_id": "rag", "data_dir": "data", "split": "dev", "case_ids": cases,
             "metadata": {cid: {"family_id": "family1" if cid in ("a006", "b006", "h007") else "family2",
-                               "goal_kind": "marker" if cid.startswith("a") else "normal", "severity": "high"} for cid in cases}}],
+                               # These normal cases are matched controls in
+                               # the same marker experiment as the attacks.
+                               "goal_kind": "marker", "severity": "high"} for cid in cases}}],
             "conditions": [{"condition_id": mode, "defense_mode": mode, "comparisons": ["technique"]} for mode in ("none", "D2")],
             "repeats": 2, "budget": {"max_calls": 1000, "max_reserved_tokens": 10000000, "max_seconds": 60,
                                      "unknown_price_policy": "calls_tokens"},
@@ -350,6 +352,92 @@ class AnalysisTests(unittest.TestCase):
                         if r["control_variant"] == "d2_instruction_removed")
         self.assertEqual(compared["target_exposure_delta"]["denominator"], 2)
         self.assertEqual(compared["target_exposure_delta"]["excluded"]["missing_review_or_pair"], 1)
+
+    def test_per_metric_case_repeat_counts_do_not_inflate_unique_samples(self):
+        group = next(g for g in aggregate(self.settings.runs_dir, self.state.batch_id).groups if g["condition_id"] == "none")
+        self.assertEqual(group["sample_counts"]["planned_requests"], 12)
+        self.assertEqual(group["sample_counts"]["unique_case_count"], 6)
+        self.assertEqual(group["sample_counts"]["repeat_indices"], [0, 1])
+        asr = group["metrics"]["asr"]
+        self.assertEqual((asr["denominator"], asr["unique_case_count"], asr["repeat_count"]), (4, 2, 2))
+        self.assertEqual((asr["evaluated_count"], asr["excluded_count"]), (4, 8))
+
+    def test_version_filters_use_actual_latest_evaluation_and_keep_complete_options(self):
+        entry = self.state.plan[0]
+        trace = self.runner.traces.get(entry["attempts"][0]["run_id"])
+        trace.evaluation.evaluator_version = "corrected-review-v2"
+        self.runner.traces.save(trace)
+        report = aggregate(self.settings.runs_dir, self.state.batch_id,
+                           BatchFilters(evaluator_version="corrected-review-v2", model_id=self.settings.model_id))
+        self.assertEqual(report.counts["planned"], 1)
+        self.assertEqual(report.groups[0]["evaluator_version"], "corrected-review-v2")
+        self.assertEqual(report.provenance["filter_options"]["evaluator_version"], ["corrected-review-v2", "golden-test-v1"])
+        self.assertEqual(aggregate(self.settings.runs_dir, self.state.batch_id,
+                                  BatchFilters(pricing_version="absent-price")).groups, [])
+
+    def test_payload_reports_variant_rates_and_single_family_uncertainty(self):
+        trace = self.runner.traces.get(self.state.plan[0]["attempts"][0]["run_id"])
+        condition = self.state.spec.conditions[0].model_copy(update={"comparisons": ["payload"]})
+        rows = [{"entry": {"source_id": "rag", "condition_id": "none", "language": "ko", "repeat": repeat,
+                           "metadata": {"family_id": "parent", "goal_kind": "secret_leak", "ablation_variant": variant}},
+                 "trace": trace, "condition": condition, "review": {"target_exposed": variant == "A11"}}
+                for repeat in range(3) for variant in ("A11", "C01")]
+        rows[-1]["review"] = None
+        result = payload_results(rows, self.state.spec.statistics)[0]
+        self.assertEqual(result["attack_exposure"]["numerator"], 3)
+        self.assertEqual(result["control_exposure"]["denominator"], 2)
+        self.assertEqual(result["target_exposure_delta"]["denominator"], 2)
+        self.assertEqual(result["family_details"][0]["family_id"], "parent")
+        self.assertIsNone(result["family_details"][0]["target_exposure_delta"]["ci95"])
+
+    def test_protected_disclosure_is_rejected_even_below_overall_asr_limit(self):
+        groups = aggregate(self.settings.runs_dir, self.state.batch_id).groups
+        defended = next(g for g in groups if g["condition_id"] == "D2")
+        defended["protected_value_exposure_count"] = 1
+        statistics = StatisticsPolicy(status="frozen", reviewed_by=["synthetic-a", "synthetic-b"], bootstrap_samples=100)
+        policy = {"version": "synthetic-policy", "status": "frozen", "reviewed_by": ["synthetic-a", "synthetic-b"],
+            "final_recommendation_allowed": True, "priority": ["asr"],
+            "rationale": "test CANARY_PRIVATE_POLICY", "thresholds": {
+                "ASR_MAX": 1, "FPR_BENIGN_MAX": 1, "FPR_HARD_NEGATIVE_MAX": 1, "TASK_SUCCESS_MIN": 0,
+                "TASK_SUCCESS_DROP_MAX_PP": 100, "P95_LATENCY_MAX": 10000, "COST_PER_REQUEST_MAX": 1,
+                "RUN_FAILURE_RATE_MAX": 1}}
+        result = decisions([defended], policy, statistics, "real")
+        self.assertEqual(result["records"][0]["status"], "rejected")
+        self.assertIn("protected_value_exposure_observed", result["records"][0]["reasons"])
+        self.assertNotIn("CANARY_PRIVATE_POLICY", json.dumps(result))
+        self.assertEqual(result["evaluation_policy"]["thresholds"], policy["thresholds"])
+
+    def test_marker_and_secret_goal_never_share_an_asr_group(self):
+        spec = self.state.spec.model_copy(deep=True)
+        for cid, metadata in spec.sources[0].metadata.items():
+            metadata.goal_kind = "secret_leak" if cid in ("a007", "b007", "h008") else "marker"
+        state = self.runner.create(spec)
+        # A planned report is sufficient to test grouping without a model call.
+        report = aggregate(self.settings.runs_dir, state.batch_id)
+        self.assertEqual({g["goal_kind"] for g in report.groups}, {"marker", "secret_leak"})
+        self.assertEqual(len(report.groups), 4)
+        self.assertTrue(all(g["unique_case_count"] == 3 for g in report.groups))
+        rows = list(csv.DictReader(io.StringIO(report_csv(report))))
+        self.assertEqual({row["goal_kind"] for row in rows}, {"marker", "secret_leak"})
+
+    def test_d2_contradictions_do_not_invent_gold_or_final_attack_outcomes(self):
+        entry = next(e for e in self.state.plan if e["condition_id"] == "D2")
+        trace = self.runner.traces.get(entry["attempts"][0]["run_id"])
+        trace.defense_events = [DefenseEvent(defense_id="D2", defense_version="synthetic-detector",
+            stage="input", decision="block", reason_code="malicious_instruction", score=0,
+            consistency_issue="malicious_reason_below_threshold", review_needed=True)]
+        result = detector_diagnostics([trace])
+        self.assertEqual(result["groups"][0]["contradiction_count"], 1)
+        self.assertEqual(result["groups"][0]["contradiction_counts"], {"malicious_reason_below_threshold": 1})
+        self.assertEqual(result["groups"][0]["review_needed_count"], 1)
+        self.assertEqual(result["groups"][0]["fnr"]["denominator"], 0)
+
+    def test_new_version_filters_match_the_published_json_schema(self):
+        from jsonschema import Draft202012Validator
+        schema = json.loads((ROOT / "contracts/batch-v0.1.schema.json").read_text(encoding="utf-8"))
+        filters = BatchFilters(model_id="synthetic-model", evaluator_version="review-v2",
+                               evaluation_policy_version="policy-v2", pricing_version="price-v2")
+        Draft202012Validator(schema).validate(filters.model_dump(mode="json"))
 
 
 if __name__ == "__main__":

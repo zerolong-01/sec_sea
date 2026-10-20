@@ -178,6 +178,10 @@ class BatchFilters(BatchModel):
     goal_kind: str | None = None
     severity: str | None = None
     execution_kind: str | None = None
+    model_id: str | None = None
+    evaluator_version: str | None = None
+    evaluation_policy_version: str | None = None
+    pricing_version: str | None = None
 
 
 class BatchReview(BatchModel):
