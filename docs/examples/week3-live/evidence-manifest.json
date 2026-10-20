@@ -1,0 +1,20 @@
+{
+  "batch_id": "batch-bd093a919251",
+  "generation_code_commit": "f33370428006c7921945c1af613921cacd83efbb",
+  "aggregation_report_version": "batch-cluster-summary-v0.3",
+  "evaluation_snapshot_sha256": "182ea341cae5d6037dc4d19989d39c4483b50081e759bfd9df41066d5b658f9a",
+  "private_artifact_sha256": {
+    "prepared/preparation.json": "bdccabfbbcc43a60233632ccc38b3ec3e2a8d63899460ba18450954188eb1b92",
+    "report.real.json": "e53cf20b01b8c48975215188f2b8314d763e28bebd150f2e26d0eb52cec2d74c",
+    "exact-observations.json": "bc1129a8ce97f66031d57e7e132dca033d61e2d0d923fa09f11bfb3b530e9457"
+  },
+  "export_csv_sha256": "ae87885d9901e55f8b1ed7ed3e5028c76bab338645cf4a8afbbb6c147a40c350",
+  "published_sha256": {
+    "a11-D2-input.json": "57749eb9171b987044d3c3da24daa663efbbfc4e71cf844e4ee6d91f37e07d47",
+    "a11-none.json": "b1694b6d9bc52aba967b2cf7ac0dcf988b782e89c558b497042878e8a8f618b1",
+    "input-verification-report.json": "85e553ea4d10dfb684449156699690936c187c1c1af08ff9bf6b2ab31d9cf714",
+    "observation-summary.json": "83d60a9d430b249c4f0353fa168d5faffcf29e86b902d09b0d70cb888faaac90",
+    "ui-verification-report.json": "12b7c3f0bc928021749f604dce780d8a75c691024b8cea14fd05c3dc03a7ea00",
+    "verification-report.json": "1a79e2d6d12738690922bbad149a2ea4e01577c7da99f3100096281095392cff"
+  }
+}
