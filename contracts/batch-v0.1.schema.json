@@ -520,6 +520,22 @@
           "additionalProperties": true,
           "title": "Decisions",
           "type": "object"
+        },
+        "tradeoff_points": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Tradeoff Points",
+          "type": "array"
+        },
+        "recommendation_cohorts": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Recommendation Cohorts",
+          "type": "array"
         }
       },
       "required": [

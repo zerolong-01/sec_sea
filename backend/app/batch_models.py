@@ -223,6 +223,8 @@ class BatchReport(BatchModel):
     payload_comparisons: list[dict]
     detector_report: dict
     decisions: dict
+    tradeoff_points: list[dict] = Field(default_factory=list)
+    recommendation_cohorts: list[dict] = Field(default_factory=list)
 
 
 class BatchSummary(BatchModel):
