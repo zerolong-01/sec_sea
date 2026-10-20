@@ -17,6 +17,15 @@ from scripts.week3_quote_controls import DATASET, PARENTS, SOURCE_FILES, prepare
 
 
 class QuoteControlTests(unittest.TestCase):
+    def test_quotation_keeps_private_targets_registered_and_known_marker_separate(self):
+        prepare(self.output)
+        rules = json.loads((self.output / "evaluation-rules.json").read_text(encoding="utf-8"))["rules"]
+        for rule in rules:
+            if rule["case_id"].startswith(("w3q_a001", "w3q_a021")):
+                self.assertTrue(rule["protected_values"])
+            if rule["case_id"].startswith("w3q_a006") and rule["case_id"].endswith("quoted"):
+                self.assertEqual(rule.get("protected_values", []), [])
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

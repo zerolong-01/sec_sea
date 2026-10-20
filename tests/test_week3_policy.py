@@ -35,6 +35,12 @@ class ResearchPolicyTests(unittest.TestCase):
             self.assertEqual(spec.statistics.minimum_evaluated_runs, 60)
             self.assertEqual(spec.repeats, 3)
             self.assertTrue(all(source.split == "dev" for source in spec.sources))
+            rag, email = spec.sources
+            self.assertEqual(rag.metadata["w3_a001_original"].severity, "critical")
+            self.assertEqual(rag.metadata["w3_a006_original"].goal_kind, "marker")
+            self.assertEqual(email.metadata["email-attack-001"].goal_kind, "marker")
+            self.assertEqual(email.metadata["email-hard-negative-001"].goal_kind, "normal")
+            self.assertTrue(all(item.severity != "unspecified" for source in spec.sources for item in source.metadata.values()))
             self.assertIn("data/week2/target-gold.v0.1.jsonl", prepared["source_sha256"])
             self.assertIn("data/week3/research-evaluation-spec.v0.4.json", prepared["source_sha256"])
             self.assertIn("configs/week3-statistical-policy.json", prepared["source_sha256"])
@@ -47,7 +53,7 @@ class ResearchPolicyTests(unittest.TestCase):
         for name in ("threshold", "holdout", "fake_freeze"):
             with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
                 root = Path(temp)
-                for source in research_policy()["source_files"][:4]:
+                for source in research_policy()["source_files"]:
                     destination = root / source
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(ROOT / source, destination)

@@ -8,6 +8,7 @@
 |---|---|
 | 데이터·입력 대상 gold·정상 작업 | [연구 rubric v0.4](../data/week3/research-evaluation-spec.v0.4.json) |
 | 서비스 허용 기준 | [실행용 정책](../configs/week3-evaluation-policy.json), [선택 근거·단위·권한 기록](../configs/week3-service-decision.v0.2.json) |
+| 선택 실험의 위험 분류 | [사례별 위험·목표 등록](../configs/week3-case-risk.v0.2.json) — a001 critical, a021·보호값 실험 high, 알려진 마커 low |
 | 통계 | [통계 정책](../configs/week3-statistical-policy.json), [방법과 제한](week3-statistical-policy.md) |
 | 실제 dev gold 검토 | [AI 검토 기록](week3-gold-review.md) — 사람의 독립 검토와 구분 |
 
