@@ -375,10 +375,17 @@ python -m scripts.verify_week3 --output runs/week3-handoff
 ```
 
 RAG·이메일의 대표 3종×6개 고유 구성×3회, 총 108건을 로컬 HTTP fixture로 검증합니다.
-실제 모델 성능이나 최종 추천의 증빙이 아니며, 통계·서비스 정책은 팀 검토 전 draft입니다.
+fixture 통과만으로 실제 모델 성능이나 최종 추천을 주장하지 않습니다.
+사용자 위임으로 통계·서비스 기준을 dev용으로 채택했으며, 실제 사람의 독립 검토와 최종 추천 gate는 유지합니다.
 실행/예산/재개·집계/API와 남은 인수 항목은 [3주차 백엔드 안내](docs/week3-backend.md)를 따릅니다.
 
 PR #38의 ablation·보호값 초안은 [3주차 실제 실행 파이프라인](docs/week3-live-pipeline.md)에서
 버전을 분리해 준비하고 두 앱 324건의 예산 제한 실행·재개·원시 출력 관측·저장 조회로 연결합니다.
 2026-10-20 실제 실행 324건·557호출, 추정 비용 $0.1022296과 마스킹된 노출 사례는
 [갱신 데이터 실제 API 검증 기록](docs/examples/week3-live/README.md)에 정리했습니다.
+
+이후 인용 대조 108회와 D2 공격·정상 인용 216회를 추가 실행했습니다.
+논문·공식 기업 자료를 근거로 결정한 [평가·서비스 기준](docs/week3-research-decisions.md),
+[통계 정책](docs/week3-statistical-policy.md), [실제 실행·AI 검토·재생 요약](docs/examples/week3-completion/README.md),
+[이슈별 완료 대조표](docs/week3-completion-status.md)를 함께 확인하세요.
+holdout은 보존했으며, AI 검토를 사람의 독립 검토로 표시하지 않습니다.
