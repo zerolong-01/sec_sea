@@ -49,7 +49,14 @@ def design_hash(spec):
 
 
 def selection_hash(spec):
-    return digest([s.model_dump(mode="json", exclude={"data_dir"}) for s in spec.sources])
+    sources = [s.model_dump(mode="json", exclude={"data_dir"}) for s in spec.sources]
+    for source in sources:
+        for metadata in source["metadata"].values():
+            # Preserve the exact pre-pair-id frozen selection representation.
+            # Other optional nulls/defaults remain part of the original hash.
+            if metadata.get("comparison_pair_id") is None:
+                metadata.pop("comparison_pair_id", None)
+    return digest(sources)
 
 
 def plan_hash(plan):
@@ -404,11 +411,8 @@ class BatchRunner:
                 raise ValueError("Final-output review requires a completed or defense-blocked full pipeline")
             service = RunService(self.settings, ExperimentRepository(self.settings.data_dir), self.traces,
                                  build_provider(self.settings))
-            from .service import CANARY_PATTERN
-            raw = self.traces.get_raw(run_id)
-            payload = service._safe({**review.model_dump(mode="json"), "run_id": run_id,
-                                     "reviewed_at": datetime.now(timezone.utc).isoformat()},
-                                    set(CANARY_PATTERN.findall(json.dumps(raw))))
+            payload = service.safe_for_trace(trace, {**review.model_dump(mode="json"), "run_id": run_id,
+                                                     "reviewed_at": datetime.now(timezone.utc).isoformat()})
             path = self.store.folder(batch_id) / "reviews.json"
             history = json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
             history.append(payload)

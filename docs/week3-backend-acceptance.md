@@ -1,10 +1,40 @@
 # 3주차 B 백엔드 인수 기록
 
+## 2026-10-20 추가 인계: 현재 확인한 상태
+
+현재 완료 범위는 [전체 요구사항·증빙 대조표](week3-completion-status.md), [위임 연구 결정](week3-research-decisions.md),
+[공개 안전 요약](examples/week3-completion/README.md), [실제 artifact hash·수치](examples/week3-completion/summary.v0.4.json)를 따른다.
+**아래 PR36 당시 표는 역사 기록으로 보존한다.** 당시의 정책 미정·인용 미실행·C 연결/마스킹 대기·로컬 회귀 대기 문구를 현재 상태로 읽지 않는다.
+
+| 이번에 추가 완료한 범위 | 실제 증거 |
+| --- | --- |
+| dev 데이터·gold·정상 rubric·서비스/통계 기준 결정 | 사용자 위임으로 공개 논문·기업 자료를 근거로 adopted_for_dev 채택. runtime draft와 빈 reviewer는 미수행 사람 검수/최종 승인을 숨기지 않는 지위이며 수치 미정이 아님. |
+| 신규 실제 인용 대조108 | batch-8fb19849d67c: 생성85·차단23·오류0·184호출·추정$0.0373288. [별도 AI 의미 검토](week3-quotation-output-review.md), quoted utility54/54·attack 아래18/54. |
+| 신규 실제 D2 6종216 | batch-fb671ff629f0: 생성180·차단36·오류0·396호출·추정$0.0754176. [의미 검토](week3-d2-output-review.md), HN utility60/108·attack 아래6/108. marker102와 비밀 공개를 분리. |
+| 실제 D2 대상 gold·지표 | [현재 등록 기록](week3-target-gold-registration.md): legacy306·quotation99·D2 216의621 actual target 모두 AI annotation 완료·오류/모순/보류/gold누락 각0·모델0. 배치별 benign/malicious/HN은198/72/36,45/27/27,108/54/54. 최종 생성 ASR과 별도. 옛306/99 미등록 문구는 당시 snapshot에만 해당. |
+| legacy pairing·신규 paired 검산 | fbf9120: 명시적 comparison_pair_id와 inherited family cluster 분리·모호한 legacy 짝 사유 공개. 신규 quotation54/D2 108 matched pairs·각3family exact overlay. frozen metadata 재작성 없음. |
+| 공개 privacy·실제 API/UI | 보호값 설정72 trace의 과거54노출→GET0노출. frozen 규칙 사용·독립 privacy 회귀. 당시 legacy API/schema/CSV/UI 읽기 전용 재생의 원 pipeline845파일 불변·모델0. 이후 gold 등록은 public trace의 후속 주석/표시·gold history를 변경하고 raw·원자동평가·frozen snapshot·manifest/ledger를 보존. |
+| 후속 report/export | v0.4 legacy90그룹/CSV990·quotation24/264·D2 12/132. 현재621 target 등록 후 각각922/297/585 runs파일 읽기 전후 불변·추가모델0·선정 deferred. [후속 artifact 증거](examples/week3-completion/followup.v0.5.json)는 당시706/225/585파일인 옛v0.4 snapshot을 덮어쓰지 않음. |
+| 실제 실패 구간 분석 | [앱·유형·심각도별 표](week3-failure-slices.md): 세 배치648행을 따로 검증해144교차·216case slice, CSV729행(지표720+미평가scope9). 최종 재출판은1,821개 입력 파일 불변·API0. 정상·attack 아래 업무·원ASR·두FPR 분모를 분리하고 옛severity unspecified와 영어/실제다중턴/도구의0/0·null을 보존. |
+| D2 조작 문구 제거의 실제 FNR | [파생 target·paired FNR 검토](week3-derived-detector-review.md):12조건/stage 비교·72target행. 공통 유효 input 반복 각3에서 D2-input2/3→0/3, D2-both·D1-D2 각3/3→0/3. 미검사/비악성 제외와 family1·CI null·API0을 명시하고 일반적 인과 효과를 주장하지 않음. |
+| 대표 사례·4주차 인계 | [13사례 catalog 설명](week3-case-handoff.md), [기계 판독 catalog](examples/week3-completion/case-handoff.v0.4.json), [저장 재생·시연](week4-handoff-demo.md). 현재 공개 trace13개 독립 검사에서 보호값 노출0·1,811개 입력 파일 불변·API0. [현재 사람 검토 packet](examples/week3-completion/review-handoff.v0.4.json)은648output+621target=1,269task·applied=false·human pending. |
+| 검증된 head 회귀·두 OS CI | head63ef871: root191 tests/325.060s·backend113/67.179s OK, Ubuntu/Windows CI passed. [CI 고정 기록](examples/week3-completion/ci-63ef871.json), [실제 run](https://github.com/zerolong-01/sec_sea/actions/runs/39428651601). UI paired focused1 별도pass. 후속 도구·annotation·문서의 최신 head 검증과 구별. |
+| 앞으로 확인할 항목 | 후속 최신 head의 PR Checks를 확인한다. PR39 draft/base dev는 미병합이므로 #32의 실제 최신dev 회귀 착수 조건은 별도 대기다. 실제 사람2인/세 역할 합의·holdout 동결/실행·운영 최종 선택도 각각 미수행이며 AI 결과로 대체하지 않음. |
+
+기존324·별도942 탐색·신규108/216을 한 ASR로 합치지 않는다. 새로운 AI gold/출력 검토는 사람 검수나 source 서명 인증이 아니다.
+각 신규 세트의3family는 채택 최소20에 미달하며 반복으로 독립 표본을 늘리지 않는다. CI null·최종 deferred를 유지한다.
+
+이 추가 인계로 #12-08의 **선택된 dev 관측 범위** 실패 구간 분석과 #33-18의 실제 하위 실패·정상 손실 표를 제공했다.
+영어·실제 다중 턴·도구 실행의 미관측, 충분한 독립 family, 사람 검수·공동 인수는 완료로 바꾸지 않는다.
+
+## PR #36 당시 인수 기록 — 보존
+
+
 대상은 [#34](https://github.com/zerolong-01/sec_sea/issues/34)의 배치 실행·예산·평가 저장·집계·export와 [PR #36](https://github.com/zerolong-01/sec_sea/pull/36)이다. 실행 방법과 API 계약은 [백엔드 안내](week3-backend.md)를 따른다. 작성일은 2026-10-20이다.
 
 B의 완료 기준은 재현 가능한 실행·기록·분석 기능과 그 검증 근거를 제공하는 것이다. A의 최종 데이터·gold·서비스 기준 확정, C의 전체 대시보드 공동 인수, 최종 성능 실험은 각각 별도 인수 항목이다. `completed` 배치나 이 문서의 기능 완료를 연구 결과 확정으로 해석하지 않는다.
 
-## 요구사항과 증빙
+## 당시 요구사항과 증빙
 
 `구현·검증`은 기존 회귀 또는 저장된 fixture/실제 dev 결과에서 확인한 범위다. 이번 보완의 최종 회귀·CI 결과는 아래 최종 검증 표에 별도로 기록한다.
 
@@ -31,7 +61,7 @@ B의 완료 기준은 재현 가능한 실행·기록·분석 기능과 그 검�
 
 이번 집계 보완의 `report_version`은 `batch-cluster-summary-v0.2`다. 기존 공개 fixture와 실제 파일럿 문서는 생성 당시의 v0.1 기록으로 보존한다. v0.2의 최종 회귀와 재생성 검증 결과는 아래 표에서 확인한다. 실행 계약 v0.3과 배치 계약 v0.1의 버전 번호와는 별개다.
 
-## 실제 실행과 공개 인계물
+## 당시 실제 실행과 공개 인계물
 
 | 증빙 | 확인한 범위 |
 | --- | --- |
@@ -44,9 +74,9 @@ B의 완료 기준은 재현 가능한 실행·기록·분석 기능과 그 검�
 
 실제 run_id·raw·전체 공개 trace·고정 snapshot·호출 ledger와 export는 Git에서 제외된 `runs/real-api-2026-10-20/pilot/` 및 `detector/`에 있다. 파일럿 export는 v0.1? `exports/<evaluation_snapshot_sha256>/`? v0.2? `exports/<report_version>/<?? report hash>/` ?? `report.json`, `metrics.csv`, `decision-record.json`을 포함한다. 공개 문서에는 키와 원시 보호값을 넣지 않는다. 저장된 배치 재조회·export 재생성은 유료 모델 호출을 요구하지 않는다.
 
-## 최종 회귀·CI 기록
+## 당시 최종 회귀·CI 기록 — 역사 표
 
-아래 최종 항목이 채워지기 전에는 이 문서를 근거로 PR 병합 또는 CI 통과를 완료 처리하지 않는다. 이 표는 인수 담당자가 최종 실행 결과로 갱신한다.
+아래는 PR36 인계 시점의 대기 표다. 당시에는 최종 결과가 기록되기 전 PR 병합·CI 통과를 완료 처리하지 않았다는 뜻이며, 이 역사 표를 현재 대기 목록으로 사용하지 않는다. 후속 로컬/CI 결과와 현재 PR39·사람 인수 상태는 문서 상단과 [전체 대조표](week3-completion-status.md)를 따른다.
 
 | 검증 | 최종 상태 | 증빙 |
 | --- | --- | --- |
@@ -59,7 +89,7 @@ B의 완료 기준은 재현 가능한 실행·기록·분석 기능과 그 검�
 
 회귀 테스트의 fixture 주입은 명시적으로 `allow_fixture=True`를 요구한다. 실제 `.env`가 있는 로컬 환경에서도 비용이 드는 모델로 전환하지 않도록 새 실행기 테스트는 설정과 가격표를 직접 주입한다. 공유 변수 subprocess 검증은 모델·D2·가격/평가/공통 정책 설정을 제거하고 `demo`, `MVP_LOAD_DOTENV=0`으로 분리한다.
 
-## A·C와 공동 인수에 남은 항목
+## 당시 A·C 공동 인수의 남은 항목 — 역사 표
 
 | 담당/범위 | 남은 인수 |
 | --- | --- |

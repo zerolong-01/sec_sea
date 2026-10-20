@@ -399,6 +399,54 @@
           ],
           "default": null,
           "title": "Execution Kind"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "evaluator_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluator Version"
+        },
+        "evaluation_policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluation Policy Version"
+        },
+        "pricing_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pricing Version"
         }
       },
       "title": "BatchFilters",
@@ -472,6 +520,22 @@
           "additionalProperties": true,
           "title": "Decisions",
           "type": "object"
+        },
+        "tradeoff_points": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Tradeoff Points",
+          "type": "array"
+        },
+        "recommendation_cohorts": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Recommendation Cohorts",
+          "type": "array"
         }
       },
       "required": [
@@ -842,6 +906,19 @@
     "CaseMetadata": {
       "additionalProperties": false,
       "properties": {
+        "comparison_pair_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comparison Pair Id"
+        },
         "family_id": {
           "pattern": "^[a-zA-Z0-9_-]{1,100}$",
           "title": "Family Id",

@@ -155,6 +155,7 @@ python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs  
 ```
 
 실제 모델 배치를 보려면 그 배치가 저장된 runs 폴더를 `--runs-dir`로 지정합니다.
+`week3_pipeline`으로 실행한 배치는 `python -m scripts.mvp serve --pipeline-output runs/week3-live-2026-10-20`으로 고정 입력과 평가·가격·정책 설정을 함께 연결할 수 있습니다 ([통합 실행 안내](../docs/week3-live-pipeline.md)).
 
 ### 화면 구성
 
@@ -162,12 +163,12 @@ python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs  
 | --- | --- | --- |
 | 배치 목록 | 저장된 배치, 실행 범위(데모·샘플·실제), 상태, 계획/시도 수, 총비용 | `GET /api/v1/batches` |
 | 배치 정보 | 예산·사용량, 6개 방어 조건, 데이터 출처, 고정 해시 | `GET /api/v1/batches/{batch_id}` |
-| 필터 | 출처·앱·언어·데이터 구분·조건·비교 종류·라벨·공격 유형·family·목표·심각도·실행 종류 | 아래 리포트 요청의 본문 |
+| 필터 | 출처·앱·언어·데이터 구분·조건·비교 종류·라벨·공격 유형·family·목표·심각도·실행 종류·모델·평가/정책/가격 버전 | 아래 리포트 요청의 본문 |
 | 지표 요약 | 그룹 하나의 KPI 카드 + 조건별 비교표 | `POST .../report` → `groups[].metrics` |
-| Trade-off | x 정상 태스크 성공률, y 1 − ASR, 크기 요청당 비용, 색 추천 판단 | `groups[].metrics`, `decisions.records` |
-| 추천 근거 | 전체 판단, 모든 그룹 공통 보류 사유, 그룹별 추가 사유·열세 관계 | `decisions` |
+| Trade-off | x 정상 태스크 성공률, y 1 − ASR, 색 방어 구성·검사 위치, 채운 점 크기 요청당 비용, 빈 점 비용 미확인 | `groups[].metrics`, `decisions.records` |
+| 추천 근거 | 정책 기준값·우선순위·검토 상태, 전체 판단, 공통 보류 사유, 그룹별 추가 사유·열세 관계 | `decisions.evaluation_policy`, `decisions.records` |
 | 무방어 대비 변화 | 짝지은 %p 변화와 지연·비용 증가율 | `groups[].baseline_changes_pp`, `baseline_resource_changes` |
-| D2 탐지·payload | 탐지기 대상별 FNR/FPR, payload 짝 비교 | `detector_report`, `payload_comparisons` |
+| D2 탐지·payload | 탐지기 대상별 FNR/FPR·오류·모순, family별 공격/대조 노출률·짝 차이·CI | `detector_report`, `payload_comparisons[].family_details` |
 | 실행 trace | 그룹 → 실행 번호(케이스·반복·시도) → 마스킹된 trace | `plan[].attempts[].run_id`, `GET /api/v1/runs/{run_id}` |
 | 내보내기 | 화면과 같은 필터의 리포트 JSON, 지표 CSV | 리포트 응답 그대로, `POST .../export.csv` |
 
@@ -196,7 +197,20 @@ python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs  
 - CI가 null: **CI 없음**, 그리고 **표본 부족** 표시. 산점도에서는 흐린 점
 - 비용 합계가 null: **미확인 (확인된 소계 …)**
 - ASR이나 정상 성공률이 없는 그룹: 산점도에 찍지 않고 "점을 못 찍은 그룹"에 이유와 함께 표시
+- 비용을 아는 점과 모르는 점이 섞여도 모두 표시. 미확인 비용은 고정 크기 빈 점이며 0원으로 계산하지 않음
 - 같은 자리에 겹친 점: 점 위 도움말과 아래 표의 "같은 자리 그룹"에 표시
+
+점의 도움말과 아래 표에서 ASR·정상 성공률의 95% CI, 평가 수·family 수, 데이터 출처·split과 서버 추천 판단을 확인합니다.
+점을 선택한 뒤 **선택한 점의 대표 trace 조회**를 누르면 **실행 trace** 탭에 같은 그룹의 저장 실행을 GET으로 불러옵니다.
+KPI 아래 **선택 그룹의 표본·평가 수와 모든 지표의 불확실성**에는 전체 11개 지표와 고유 케이스·반복·평가 대기 수가 나옵니다.
+공격 목표가 다른 marker 출력과 보호값 유출은 서버의 별도 그룹을 사용합니다.
+산점도는 서버의 `tradeoff_points`를 사용합니다. 각 공격 목표의 ASR에 연결한 정상 기준의 ID·공유 범위·실행 번호와 평가 수를 표시합니다.
+일반 집계 그룹의 분모를 화면에서 합치지 않습니다. 비용 범위는 각 공격 목표 그룹이며 정상 기준 전체의 비용과 혼동하지 않습니다.
+정상 기준의 평가/계획 수·제외 수·평가 완료 여부도 표시합니다. 일부 차단 결과만 평가되고 나머지가 검토 대기라면 점은 일부 관측값이며,
+CI가 계산되었다고 모든 평가가 끝난 것으로 해석하지 않습니다.
+
+**배치 정보**의 가격표는 저장된 스냅샷을 표시합니다. **추천 근거**의 정책값이 비어 있으면 기록 없음으로 두며,
+정책 검토자나 기준값을 화면에서 만들어 채우지 않습니다. 과거 리포트에 없는 새 필드도 기록 없음으로 표시합니다.
 
 화면 전용 한글 이름(지표 이름, 추천 판단 상태, 사유, 제외 사유)은 아직 통합 변수 파일에 없어서 `batch_core.py` 위쪽에 모아 두었습니다.
 팀에서 정하면 통합 변수 파일로 옮깁니다.
@@ -211,7 +225,7 @@ python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs  
 ### 확인한 것
 
 ```text
-python -m unittest tests.test_batch_dashboard tests.test_batch_dashboard_state tests.test_batch_export_snapshot tests.test_batch_payload_uncertainty -v
+python -m unittest discover -s tests -p "test_batch_*.py" -v
 ```
 
 공개 fixture(`docs/examples/week3`)로 표·산점도·추천 사유·실행 번호 연결·필터·오류 처리를 확인합니다.
@@ -232,13 +246,16 @@ streamlit이 설치된 환경에서는 화면 테스트(정상, 연결 실패, �
 ### 검증 기록과 데모
 
 - 실제 모델 배치로 화면 JSON·CSV를 CLI 리포트·export와 대조한 기록: [verification/week3-ui-verification.md](verification/week3-ui-verification.md)
+- 차트·정책·특수 상태 보완의 오프라인 검증: [verification/week3-dashboard-completion.md](verification/week3-dashboard-completion.md)
 - 3분 시연 순서: [verification/week3-demo-guide.md](verification/week3-demo-guide.md)
 
-## 8. 남은 일
+## 8. 사람의 확인이 필요한 일
 
-- 수동 검토 입력(`PUT .../reviews/{run_id}`) 화면
-- 전부 실패·가격 미확인·동률 상태를 실제 배치로 화면 확인 (지금은 테스트로만 확인. 부분 배치는 확인함)
-- 평가 담당 판정이 들어온 뒤 정상 성공률·산점도·추천 상태 표시 재확인
+- 평가 담당의 정상 성공·과도 변환·목표값 노출·D2 정답 검토
+- 팀의 서비스 기준값·우선순위·통계 정책 합의. 동결 전에는 최종 추천을 내리지 않음
+
+수동 검토 입력(`PUT .../reviews/{run_id}`) 전용 화면은 선택 기능입니다. #35 필수 범위의 저장 결과 조회·필터·내보내기와 구분합니다.
+전부 실패·빈/한 결과·부분 완료·비용 미확인·탈락/동률은 공개 fixture·합성 리포트로 검증하며 실제 모델 실험과 혼동하지 않습니다.
 
 ---
 

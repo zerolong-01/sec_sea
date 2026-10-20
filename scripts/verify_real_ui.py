@@ -2,45 +2,206 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import urlsplit
 
 from backend.app.batch import BatchStore
-from backend.app.repository import RepositoryError, RunTraceStore
+from backend.app.repository import RepositoryError
 from backend.app.storage import atomic_json
 from scripts.data_contract import CANARY_PATTERN, ROOT, load_bundle, require
+from scripts.verify_real_api import public_trace_reader, runner_trace
 
 
-def verify(runs_dir: Path, batch_id: str) -> dict:
+def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> dict:
+    """Replay the saved batch dashboard through the real read-only API, offline."""
+    import streamlit as st
+    from fastapi.testclient import TestClient
+    from streamlit.testing.v1 import AppTest
+
+    from backend.app.batch_analysis import aggregate, report_csv
+    from backend.app.batch_models import BatchFilters
+    from backend.app.config import Settings
+    from backend.app.providers import OpenAICompatibleProvider
+
+    sys.path.insert(0, str(ROOT / "frontend"))
+    import batch_core
+    from ui_core import BACKEND_URL
+
+    runs_dir = Path(runs_dir).resolve()
+    batch_store = BatchStore(runs_dir)
+    state = batch_store.get(batch_id)
+    scope = state.execution_settings["execution_scope"]
+    require(scope == "real" or allow_fixture, "Dashboard replay needs real traces")
+    summary = batch_store.summary(state)
+    original = aggregate(runs_dir, batch_id)
+    require(original.groups, "Dashboard replay needs a nonempty report")
+    require(not original.counts["invalid_traces"], "Dashboard report contains invalid traces")
+    manifest = batch_store.folder(batch_id) / "manifest.json"
+    before = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    # API construction needs a repository, but no model credentials or runtime .env.
+    data_dir = batch_store.folder(batch_id) / "inputs" / state.source_snapshots[0]["source_id"]
+    settings = Settings(project_root=ROOT, data_dir=data_dir, runs_dir=runs_dir,
+        model_provider="demo", model_id="demo-rag-v0.1", system_prompt_version="v0.1",
+        retrieval_config_version="lexical-v0.1", model_base_url=None, model_api_key=None)
+    # main creates its default ASGI app during import. Saved-result replay must
+    # also work in a fresh interpreter with missing or invalid model settings.
+    with patch.object(Settings, "from_environment", return_value=settings):
+        from backend.app.main import create_app
+    downloads, api_calls, checked = {}, [], []
+    download_button = st.download_button
+
+    def capture_download(label, data, **kwargs):
+        downloads[kwargs.get("key")] = data
+        return download_button(label, data, **kwargs)
+
+    with TestClient(create_app(settings)) as client:
+        def request(method, url, json=None, **kwargs):
+            path = urlsplit(url).path
+            allowed = ((method == "GET" and path in ("/api/v1/batches", f"/api/v1/batches/{batch_id}")) or
+                       (method == "GET" and path.startswith("/api/v1/runs/")) or
+                       (method == "POST" and path in (f"/api/v1/batches/{batch_id}/report",
+                                                       f"/api/v1/batches/{batch_id}/export.csv")))
+            require(url.startswith(BACKEND_URL + "/") and allowed, "Dashboard attempted a non-read API")
+            api_calls.append({"method": method, "path": path, "filters": json})
+            response = client.request(method, path, json=json)
+            require(response.status_code == 200, "Dashboard saved API request failed")
+            return response
+
+        with patch("requests.request", side_effect=request), \
+                patch("requests.get", side_effect=lambda url, **kw: request("GET", url, **kw)), \
+                patch("requests.post", side_effect=AssertionError("Dashboard attempted model execution")), \
+                patch("requests.sessions.Session.request", side_effect=AssertionError("Dashboard attempted network I/O")), \
+                patch("urllib.request.urlopen", side_effect=AssertionError("Dashboard attempted provider I/O")), \
+                patch.object(OpenAICompatibleProvider, "complete", side_effect=AssertionError("Dashboard called model")) as model, \
+                patch("streamlit.download_button", side_effect=capture_download):
+            app = AppTest.from_file(str(ROOT / "frontend/pages/1_배치_대시보드.py"), default_timeout=60)
+            app.session_state["batch_id"] = batch_id
+            app.run()
+            contexts = [{}] + [{"source_id": source["source_id"]} for source in state.source_snapshots]
+            for filters in contexts:
+                if filters:
+                    app.selectbox(key=f"filter_{batch_id}_source_id").select(filters["source_id"])
+                    next(button for button in app.button if button.label == "필터 적용").click().run()
+                require(not app.exception and not app.error, "Dashboard failed to render saved report")
+                expected = aggregate(runs_dir, batch_id, BatchFilters.model_validate(filters))
+                expected_json = expected.model_dump(mode="json")
+                require(json.loads(downloads["download_json"]) == expected_json,
+                        "Dashboard JSON differs from saved aggregate")
+                expected_rows = [{key: value for key, value in row.items() if key != "group_id"}
+                                 for row in batch_core.comparison_rows(expected_json)]
+                frames = [element.value for element in app.dataframe]
+                tables = [frame for frame in frames if "ASR (공격 성공률)" in frame.columns and "변형" in frame.columns]
+                require(len(tables) == 1 and tables[0].to_dict("records") == expected_rows,
+                        "Dashboard comparison differs from saved aggregate")
+                payload = batch_core.payload_rows(expected_json)
+                if payload:
+                    tables = [frame for frame in frames if "공격 변형 vs 대조" in frame.columns and "family" not in frame.columns]
+                    require(len(tables) == 1 and tables[0].to_dict("records") == payload,
+                            "Dashboard payload uncertainty differs from saved aggregate")
+                family_payload = batch_core.payload_rows(expected_json, by_family=True)
+                if family_payload:
+                    tables = [frame for frame in frames if "공격 변형 vs 대조" in frame.columns and "family" in frame.columns]
+                    require(len(tables) == 1 and tables[0].to_dict("records") == family_payload,
+                            "Dashboard family exposure differs from saved aggregate")
+                tables = [frame for frame in frames if "정책값" in frame.columns and "코드" in frame.columns]
+                require(len(tables) == 1 and tables[0].to_dict("records") == batch_core.policy_rows(expected_json),
+                        "Dashboard policy thresholds differ from saved aggregate")
+                selected_group = next(group for group in expected.groups
+                                      if group["group_id"] == app.selectbox(key="kpi_group").value)
+                tables = [frame for frame in frames if "표본·평가" in frame.columns]
+                require(len(tables) == 1 and tables[0].to_dict("records") == batch_core.sample_rows(selected_group),
+                        "Dashboard sample counts differ from saved aggregate")
+                tables = [frame for frame in frames if "집계·불확실성" in frame.columns]
+                require(len(tables) == 1 and tables[0].to_dict("records") == batch_core.metric_rows(selected_group),
+                        "Dashboard metric uncertainty differs from saved aggregate")
+                app.button(key="prepare_csv").click().run()
+                require(not app.exception and not app.error, "Dashboard CSV preparation failed")
+                require(downloads.get("download_csv") == report_csv(expected).encode("utf-8"),
+                        "Dashboard CSV differs from saved aggregate")
+                downloadable = [element for element in app.get("download_button")
+                                if element.proto.label == "지표 CSV 내려받기"]
+                require(len(downloadable) == 1, "Dashboard did not offer verified CSV")
+
+                trace_id = None
+                available = next((group for group in expected.groups if group["run_ids"]), None)
+                if available:
+                    app.selectbox(key="trace_group").select(available["group_id"]).run()
+                    trace_id = app.selectbox(key="trace_run").value
+                    app.button(key="load_trace").click().run()
+                    require(not app.exception and not app.error, "Dashboard trace lookup failed")
+                    trace = runner_trace(settings, trace_id)
+                    shown = [json.loads(element.value) for element in app.json]
+                    require(trace in shown, "Dashboard trace differs from current public projection")
+                visible = "\n".join(str(element.value) for element in [*app.code, *app.text, *app.caption, *app.json])
+                visible += "\n".join(frame.to_json(force_ascii=False) for frame in frames)
+                visible += "\n".join(str(value) for value in downloads.values())
+                require(not CANARY_PATTERN.search(visible), "Dashboard leaked a protected canary")
+                checked.append({"filters": filters, "group_count": len(expected.groups),
+                    "payload_comparison_count": len(payload), "trace_run_id": trace_id,
+                    "family_comparison_count": len(family_payload),
+                    "evaluation_snapshot_sha256": expected.evaluation_snapshot_sha256})
+            require(model.call_count == 0, "Dashboard called model")
+    require(hashlib.sha256(manifest.read_bytes()).hexdigest() == before, "Dashboard modified saved batch")
+    actual_trace_replayed = any(context["trace_run_id"] for context in checked)
+    real_complete = (scope == "real" and state.status == "completed" and actual_trace_replayed and
+                     not any(summary["status_counts"].get(status) for status in ("failed", "uncertain")) and
+                     not summary["budget"]["unresolved_calls"])
+    result = {"status": "passed", "verification_kind": "saved_batch_dashboard_api_ui_replay",
+        "execution_scope": scope, "real_model_verified": bool(real_complete), "batch_id": batch_id,
+        "batch_status": state.status, "status_counts": summary["status_counts"],
+        "attempt_count": summary["attempt_count"],
+        "report_version": original.report_version,
+        "calculation_implementation_sha256": original.provenance.get("calculation_implementation_sha256"),
+        "additional_model_calls": 0, "network_calls": 0, "saved_batch_unchanged": True,
+        "api_aggregate_ui_json_csv_consistent": True, "canary_masking_verified": True,
+        "public_trace_contract": "RunService.get_trace_read_projection",
+        "privacy_correctness_evidence": "independent_backend_privacy_tests",
+        "projection_consistency_is_not_independent_masking_verification": True,
+        "contexts": checked, "read_api_requests": len(api_calls)}
+    atomic_json(runs_dir.parent / "dashboard-verification-report.json", result)
+    return result
+
+
+def verify(runs_dir: Path, batch_id: str, *, data_dir=None, case_ids=None) -> dict:
     from streamlit.testing.v1 import AppTest
 
     sys.path.insert(0, str(ROOT / "frontend"))
     from ui_core import COMPARE_SAME, compare_verdict, label_of, summary_row
 
     state = BatchStore(runs_dir).get(batch_id)
-    store = RunTraceStore(runs_dir)
-    bundle = load_bundle(ROOT / "data/week2")
+    from backend.app.config import Settings
+    # No .env or current gold is needed: get_trace resolves the frozen batch
+    # rules through actual attempt membership even with evaluation_rules=None.
+    settings = Settings(project_root=ROOT, data_dir=runs_dir, runs_dir=runs_dir,
+        model_provider="demo", model_id="demo-rag-v0.1", system_prompt_version="v0.1",
+        retrieval_config_version="lexical-v0.1", model_base_url=None, model_api_key=None)
+    reader = public_trace_reader(settings)
+    data_dir = Path(data_dir or ROOT / "data/week2").resolve()
+    case_ids = case_ids or ("a006", "b006", "h007")
+    bundle = load_bundle(data_dir)
     selected = {}
     for entry in state.plan:
-        if entry["case_id"] not in ("a006", "b006", "h007"):
+        if entry["case_id"] not in case_ids:
             continue
         for attempt in entry["attempts"]:
             if attempt["status"] not in ("completed", "blocked"):
                 continue
-            trace = store.get(attempt["run_id"]).model_dump(mode="json")
+            trace = runner_trace(settings, attempt["run_id"], reader=reader)
             require(trace["manifest"]["execution_scope"] == "real", "UI replay needs real traces")
             if trace["status"] in ("completed", "blocked"):
                 selected.setdefault((entry["case_id"], entry["condition_id"]), trace)
 
     checked = []
-    with patch.dict(os.environ, {"DATA_DIR": str(ROOT / "data/week2"),
-                                 "MVP_MANIFEST": str(ROOT / "data/week2/mvp-manifest.v0.1.json")}), \
+    with patch.dict(os.environ, {"DATA_DIR": str(data_dir),
+                                 "MVP_MANIFEST": str(data_dir / "mvp-manifest.v0.1.json")}), \
             patch("requests.post", side_effect=AssertionError("UI replay attempted a paid request")), \
             patch("requests.get", side_effect=AssertionError("UI replay attempted a network request")):
-        for case_id in ("a006", "b006", "h007"):
+        for case_id in case_ids:
             modes = [(mode, selected[(case_id, condition)]) for mode, condition in
                      (("none", "none"), ("D1", "D1"), ("D2", "D2-both"), ("D1+D2", "D1-D2"))]
             comparison = [{"title": label_of("defense_modes", mode), "trace": trace, "error": None}
@@ -73,7 +234,7 @@ def verify(runs_dir: Path, batch_id: str) -> dict:
     report = {"status": "passed", "execution_scope": "real", "batch_id": batch_id,
               "verification_kind": "saved_real_trace_ui_replay", "additional_model_calls": 0,
               "comparison_metrics_match_saved_traces": True, "canary_masking_verified": True,
-              "cases": checked}
+              "cases": checked, "dashboard": verify_dashboard(runs_dir, batch_id)}
     atomic_json(runs_dir.parent / "ui-verification-report.json", report)
     return report
 
@@ -82,9 +243,14 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs-dir", type=Path, required=True)
     parser.add_argument("--batch-id", required=True)
+    parser.add_argument("--data-dir", type=Path)
+    parser.add_argument("--case-ids", nargs="+")
+    parser.add_argument("--dashboard-only", action="store_true", help="저장 배치 대시보드/API/CSV/trace만 오프라인 검증")
     args = parser.parse_args(argv)
     try:
-        print(json.dumps(verify(args.runs_dir.resolve(), args.batch_id), ensure_ascii=False))
+        report = (verify_dashboard(args.runs_dir.resolve(), args.batch_id) if args.dashboard_only else
+                  verify(args.runs_dir.resolve(), args.batch_id, data_dir=args.data_dir, case_ids=args.case_ids))
+        print(json.dumps(report, ensure_ascii=False))
         return 0
     except (ValueError, AssertionError, OSError, KeyError, RepositoryError):
         print(json.dumps({"status": "failed", "message": "UI replay verification failed; inspect saved results."}))

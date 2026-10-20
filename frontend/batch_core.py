@@ -69,6 +69,9 @@ EXCLUDED_LABELS = {
     "missing_baseline_pair": "무방어 짝 없음",
     "missing_baseline_or_resource_pair": "무방어 짝·사용량 없음",
     "missing_review_or_pair": "검토·짝 없음",
+    "missing_review_or_variant": "검토·변형 없음",
+    "missing_comparison_pair_identity": "비교 짝 식별자가 없어 짝을 확정할 수 없음",
+    "ambiguous_payload_pairing": "같은 비교 짝·변형·반복에 여러 케이스가 있음",
 }
 
 INFERENCE_LABELS = {
@@ -112,6 +115,13 @@ REASON_LABELS = {
     "batch_not_completed": "배치에 아직 끝나지 않은 실행이 있음",
     "trace_integrity_failure": "계획과 맞지 않는 trace가 있음",
     "batch_resource_coverage_incomplete": "정산되지 않았거나 비용을 모르는 호출이 있음",
+    "protected_value_exposure_observed": "보호값 노출이 관측되어 추천 대상에서 제외",
+    "asr_unavailable": "공격 성공률을 계산할 평가값이 없음",
+    "detector_only_not_tradeoff": "탐지 전용 실행은 Trade-off 대상이 아님",
+    "normal_benchmark_missing": "같은 비교 조건의 정상 기준이 없음",
+    "normal_task_evaluation_pending": "정상 태스크 평가가 끝나지 않음",
+    "missing_comparison_pair_identity": "비교 짝 식별자가 없어 짝을 확정할 수 없음",
+    "ambiguous_payload_pairing": "같은 비교 짝·변형·반복에 여러 케이스가 있음",
 }
 
 ANALYSIS_FILTERS = [
@@ -128,6 +138,10 @@ ANALYSIS_FILTERS = [
     ("goal_kind", "공격 목표", None),
     ("severity", "심각도", None),
     ("execution_kind", "실행 종류", "execution_kinds"),
+    ("model_id", "모델", None),
+    ("evaluator_version", "평가기 버전", None),
+    ("evaluation_policy_version", "평가 정책 버전", None),
+    ("pricing_version", "가격 버전", None),
 ]
 
 # payload 변형 (docs/week3-live-pipeline.md 기준). 모르는 이름은 코드 그대로 보여 준다.
@@ -360,6 +374,10 @@ def metric_detail(metric, kind):
     else:
         lines.append(f"집계한 실행 수: {metric.get('denominator', NO_VALUE)}")
     lines.append(f"family 수: {metric.get('family_count', NO_VALUE)}")
+    if metric.get("unique_case_count") is not None:
+        lines.append(f"고유 케이스: {metric['unique_case_count']}")
+    if metric.get("repeat_count") is not None:
+        lines.append(f"반복 수: {metric['repeat_count']}")
     lines.append(fmt_ci(metric.get("ci95"), kind))
     status = metric.get("inference_status")
     if status:
@@ -375,7 +393,7 @@ def reason_text(code):
     head, _, tail = code.partition(":")
     text = REASON_LABELS.get(head, head)
     if tail:
-        names = [METRICS.get(part, (part,))[0] for part in tail.split(",")]
+        names = [METRICS.get(part, POLICY_THRESHOLDS.get(part, (part,)))[0] for part in tail.split(",")]
         text += ": " + ", ".join(names)
     return text
 
@@ -446,12 +464,16 @@ def group_title(group, with_source=True):
     """그룹 하나의 이름: 'RAG 챗봇 · 한국어 · D2 · 사용자 입력'."""
     parts = []
     if with_source:
+        if group.get("source_id"):
+            parts.append(str(group["source_id"]))
         parts.append(label_of("scenarios", group.get("scenario")))
         parts.append(label_of("languages", group.get("language")))
     parts.append(condition_text(group.get("condition") or {"condition_id": group.get("condition_id")}))
     variant = group.get("ablation_variant")
     if variant and variant != "original":
         parts.append(f"변형 {variant_text(variant)}")
+    if group.get("goal_kind"):
+        parts.append(goal_text(group["goal_kind"]))
     return " · ".join(p for p in parts if p)
 
 
@@ -496,7 +518,9 @@ def budget_rows(summary):
         ("결과 미확정 호출", budget.get("unresolved_calls")),
         ("걸린 시간(초)", None if budget.get("elapsed_seconds") is None else round(budget["elapsed_seconds"], 1)),
     ]
-    return [{"항목": k, "값": NO_VALUE if v is None else v} for k, v in items]
+    # This is a heterogeneous display column (counts, currency, seconds).
+    # Keep its cells textual; the API budget retains its numeric values.
+    return [{"항목": k, "값": NO_VALUE if v is None else str(v)} for k, v in items]
 
 
 def condition_rows(summary):
@@ -511,7 +535,7 @@ def condition_rows(summary):
     return rows
 
 
-def filter_options(summary):
+def filter_options(summary, report=None):
     """배치 계획에서 고를 수 있는 필터 값들을 모은다."""
     plan = summary.get("plan") or []
     conditions = summary.get("conditions") or []
@@ -528,6 +552,10 @@ def filter_options(summary):
         options["condition_id"].add(c.get("condition_id"))
         options["execution_kind"].add(c.get("execution_kind"))
         options["comparison"].update(c.get("comparisons") or [])
+    extra = (report or {}).get("provenance", {}).get("filter_options") or summary.get("filter_options") or {}
+    for key, values in extra.items():
+        if key in options:
+            options[key].update(value for value in values if value is not None)
     return {key: sorted(v for v in values if v is not None) for key, values in options.items()}
 
 
@@ -554,10 +582,12 @@ def comparison_rows(report):
     for g in report.get("groups") or []:
         metrics = g.get("metrics") or {}
         row = {
+            "데이터 출처": g.get("source_id", NO_VALUE),
             "앱": label_of("scenarios", g.get("scenario")),
             "언어": label_of("languages", g.get("language")),
             "방어 조건": condition_text(g.get("condition")),
             "변형": variant_text(g.get("ablation_variant")),
+            "공격 목표": goal_text(g.get("goal_kind")),
             "계획 / 시도": f"{g.get('planned_count', NO_VALUE)} / {g.get('attempt_count', NO_VALUE)}",
             "실행 결과": status_counts_text(g.get("status_counts")),
         }
@@ -570,6 +600,51 @@ def comparison_rows(report):
         row["group_id"] = g.get("group_id")
         rows.append(row)
     return rows
+
+
+def metric_rows(group):
+    """모든 지표의 서버 분모·CI·제외 내역을 한 표로 제공한다."""
+    return [{"지표": title, "값": metric_cell((group.get("metrics") or {}).get(key), kind),
+             "집계·불확실성": metric_detail((group.get("metrics") or {}).get(key), kind)}
+            for key, (title, kind, _) in METRICS.items()]
+
+
+def sample_rows(group):
+    sample = group.get("sample_counts") or {}
+    evaluation = sample.get("evaluation_status_counts") or {}
+    items = [("계획 요청", sample.get("planned_requests", group.get("planned_count"))),
+             ("고유 케이스", sample.get("unique_case_count", group.get("unique_case_count"))),
+             ("family", sample.get("family_count", group.get("family_count"))),
+             ("반복 수", sample.get("repeat_count"))]
+    for axis, statuses in evaluation.items():
+        name = {"attack_success": "공격 성공 평가", "normal_task_success": "정상 태스크 평가",
+                "target_exposure": "목표값 노출 검토"}.get(axis, axis)
+        status_labels = {"exposed": "노출", "not_exposed": "미노출", "review_pending": "검토 대기",
+                         "execution_unavailable": "유효 실행 없음"}
+        items.extend((f"{name} · {status_labels.get(status, label_of('evaluation_statuses', status))}", count)
+                     for status, count in statuses.items())
+    return [{"표본·평가": name, "수": value, "기록 상태": "기록됨" if value is not None else NO_VALUE}
+            for name, value in items]
+
+
+POLICY_THRESHOLDS = {
+    "ASR_MAX": ("ASR 최대", "rate", "≤"),
+    "FPR_BENIGN_MAX": ("정상 FPR 최대", "rate", "≤"),
+    "FPR_HARD_NEGATIVE_MAX": ("하드 네거티브 FPR 최대", "rate", "≤"),
+    "TASK_SUCCESS_MIN": ("정상 성공률 최소", "rate", "≥"),
+    "TASK_SUCCESS_DROP_MAX_PP": ("정상 성공률 감소 최대", "pp", "≤"),
+    "P95_LATENCY_MAX": ("지연 p95 최대", "ms", "≤"),
+    "COST_PER_REQUEST_MAX": ("요청당 비용 최대", "usd", "≤"),
+    "RUN_FAILURE_RATE_MAX": ("실행 실패율 최대", "rate", "≤"),
+}
+
+
+def policy_rows(report):
+    policy = (report.get("decisions") or {}).get("evaluation_policy") or {}
+    thresholds = policy.get("thresholds") or {}
+    return [{"기준": title, "방향": direction,
+             "정책값": fmt_value(thresholds.get(key), kind), "코드": key}
+            for key, (title, kind, direction) in POLICY_THRESHOLDS.items()]
 
 
 def kpi_cards(group):
@@ -625,12 +700,15 @@ def scatter_points(report):
     """
     decisions = decision_by_group(report)
     points, skipped = [], []
-    for g in report.get("groups") or []:
+    candidates = report.get("tradeoff_points") if "tradeoff_points" in report else report.get("groups")
+    for g in candidates or []:
         title = group_title(g)
         if g.get("execution_kind") not in (None, "full_pipeline"):
             skipped.append({"그룹": title, "이유": "탐지 전용 실행은 산점도에서 제외"})
             continue
         metrics = g.get("metrics") or {}
+        reference = g.get("utility_reference") or {}
+        coverage = reference.get("evaluation_coverage") or {}
         task = (metrics.get("task_success") or {}).get("value")
         asr = (metrics.get("asr") or {}).get("value")
         missing = [k for k, v in (("task_success", task), ("asr", asr)) if v is None]
@@ -640,9 +718,13 @@ def scatter_points(report):
             for key in missing:
                 why = fmt_excluded((metrics.get(key) or {}).get("excluded"))
                 parts.append(METRICS[key][0] + (f" ({why})" if why else ""))
-            skipped.append({"그룹": title, "이유": "값 없음: " + ", ".join(parts)})
+            skipped.append({"그룹": title, "이유": "값 없음: " + ", ".join(parts),
+                            "정상 기준": reference.get("benchmark_id") or NO_VALUE})
             continue
         cost = (metrics.get("cost_per_request_usd") or {}).get("value")
+        attack = metrics.get("asr") or {}
+        normal = metrics.get("task_success") or {}
+        block = metrics.get("attack_block_rate")
         status = (decisions.get(g.get("group_id")) or {}).get("status")
         enough = all((metrics.get(k) or {}).get("inference_status") == "available" for k in ("task_success", "asr"))
         points.append({
@@ -650,11 +732,35 @@ def scatter_points(report):
             "앱": label_of("scenarios", g.get("scenario")),
             "방어 조건": condition_text(g.get("condition")),
             "정상 태스크 성공률": task,
-            "공격 차단율 (1-ASR)": 1 - asr,
+            "공격 차단율 (1-ASR)": block.get("value") if isinstance(block, dict) else 1 - asr,
             "요청당 비용": cost,
             "비용 표시": fmt_value(cost, "usd") if cost is not None else "미확인",
+            "비용 상태": "확인됨" if cost is not None else "미확인",
+            "ASR 95% CI": fmt_ci(attack.get("ci95"), "rate"),
+            "정상 성공률 95% CI": fmt_ci(normal.get("ci95"), "rate"),
+            "공격 차단율 95% CI": fmt_ci((block or {}).get("ci95"), "rate"),
+            "공격 평가 수": attack.get("denominator"),
+            "정상 평가 수": normal.get("denominator"),
+            "공격 family 수": attack.get("family_count"),
+            "정상 family 수": normal.get("family_count"),
+            "공격 평가 제외": fmt_excluded(attack.get("excluded")) or "없음",
+            "정상 평가 제외": fmt_excluded(normal.get("excluded")) or "없음",
+            "평가 상태": "일부 평가 제외" if any((attack.get("excluded") or {}).values()) or
+                        any((normal.get("excluded") or {}).values()) else "선택 범위 평가됨",
+            "데이터 출처": g.get("source_id", NO_VALUE),
+            "데이터 구분": label_of("splits", g.get("split")),
+            "대표 실행 번호": next(iter(g.get("run_ids") or []), NO_VALUE),
+            "정상 기준": reference.get("benchmark_id") or NO_VALUE,
+            "정상 기준 평가 완료": "완료" if g.get("normal_evaluation_complete") is True else
+                                   "일부 평가" if g.get("normal_evaluation_complete") is False else NO_VALUE,
+            "정상 기준 평가/계획": f"{coverage['evaluated_requests']}/{coverage['planned_requests']}" if
+                                     coverage.get("evaluated_requests") is not None and coverage.get("planned_requests") is not None else NO_VALUE,
+            "정상 기준 제외 수": coverage.get("excluded_requests") if coverage.get("excluded_requests") is not None else NO_VALUE,
+            "정상 기준 공유 범위": str(reference.get("shared_scope") or NO_VALUE),
+            "정상 기준 실행 번호": ", ".join(reference.get("run_ids") or []) or NO_VALUE,
+            "비용 범위": "공격 목표 그룹의 요청" if g.get("cost_scope") == "security_goal_group_only" else NO_VALUE,
             "추천 판단": decision_status_text(status),
-            "표본": "충분" if enough else "표본 부족",
+            "표본": "CI 계산됨" if enough else "표본 부족",
             "group_id": g.get("group_id"),
         })
     # 같은 자리에 찍히는 점은 겹쳐서 하나로 보이므로 몇 개가 겹쳤는지 적어 둔다
@@ -713,6 +819,7 @@ def detector_rows(report):
             "검사 대상 수": d.get("inspected_target_count"),
             "정답 있는 대상": d.get("eligible_target_count"),
             "탐지 오류": d.get("detector_error_count"),
+            "탐지 모순": d.get("contradiction_count") if d.get("contradiction_count") is not None else NO_VALUE,
             "검토 필요": d.get("review_needed_count"),
             "정답 미등록": d.get("not_evaluated_count"),
             "FNR (놓친 공격)": rate("fnr"),
@@ -721,10 +828,14 @@ def detector_rows(report):
     return rows
 
 
-def payload_rows(report):
+def payload_rows(report, *, by_family=False):
     """payload 짝 비교 (목표값 노출 차이). ASR·FPR과 다른 값이다."""
     rows = []
-    for p in report.get("payload_comparisons") or []:
+    comparisons = report.get("payload_comparisons") or []
+    if by_family:
+        comparisons = [{**comparison, **family} for comparison in comparisons
+                       for family in comparison.get("family_details") or []]
+    for p in comparisons:
         delta = p.get("target_exposure_delta") or {}
         interval = delta.get("ci95")
         interval_text = NO_CI
@@ -737,7 +848,14 @@ def payload_rows(report):
             "조건": p.get("condition_id"),
             "언어": label_of("languages", p.get("language")),
             "공격 목표": goal_text(p.get("goal_kind")),
+            **({"family": p.get("family_id", NO_VALUE)} if by_family else {}),
             "공격 변형 vs 대조": f"{variant_text(p.get('attack_variant'))} vs {variant_text(p.get('control_variant'))}",
+            "공격 변형 노출률": metric_cell(p.get("attack_exposure"), "rate"),
+            "대조 변형 노출률": metric_cell(p.get("control_exposure"), "rate"),
+            "공격 노출률 95% CI": fmt_ci((p.get("attack_exposure") or {}).get("ci95"), "rate"),
+            "대조 노출률 95% CI": fmt_ci((p.get("control_exposure") or {}).get("ci95"), "rate"),
+            "공격 제외": fmt_excluded((p.get("attack_exposure") or {}).get("excluded")),
+            "대조 제외": fmt_excluded((p.get("control_exposure") or {}).get("excluded")),
             "노출 차이": metric_cell(delta, "rate") if delta.get("value") is None else
                         f"{delta['value'] * 100:+.1f}%p (n={delta.get('denominator')})",
             "비교 짝 수": delta.get("denominator") if delta.get("denominator") is not None else NO_VALUE,
@@ -759,6 +877,10 @@ def plan_rows_for_runs(summary, run_ids):
                 rows.append({
                     "실행 번호": attempt.get("run_id"),
                     "케이스": entry.get("case_id"),
+                    "원본 케이스": (entry.get("metadata") or {}).get("parent_case_id") or NO_VALUE,
+                    "변형": variant_text((entry.get("metadata") or {}).get("ablation_variant")),
+                    "family": (entry.get("metadata") or {}).get("family_id") or NO_VALUE,
+                    "공격 목표": goal_text((entry.get("metadata") or {}).get("goal_kind")),
                     "라벨": label_of("case_labels", entry.get("label")),
                     "반복": entry.get("repeat"),
                     "시도 상태": label_of("run_statuses", attempt.get("status")),

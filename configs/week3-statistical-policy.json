@@ -1,0 +1,101 @@
+{
+  "schema_version": "0.2",
+  "version": "week3-statistical-policy-v0.2-research",
+  "decision_status": "adopted_for_dev",
+  "authority": {
+    "kind": "user_delegated_research_decision",
+    "decision_date": "2026-10-20",
+    "external_review_status": "pending",
+    "human_reviewers": [],
+    "statement": "사용자 위임에 따라 1차 문헌을 검토하여 채택한 프로젝트 통계 결정이며 사람 2인의 검수나 외부 인증을 뜻하지 않는다."
+  },
+  "runtime_statistics": {
+    "version": "family-cluster-percentile-bootstrap-v0.2-research",
+    "status": "draft",
+    "reviewed_by": [],
+    "bootstrap_samples": 10000,
+    "seed": 2026,
+    "minimum_families": 20,
+    "minimum_evaluated_runs": 60
+  },
+  "runtime_status_meaning": "수치와 방법은 dev 연구용으로 결정되었다. draft는 현재 서버 schema에서 외부 검토·holdout 승인과 구분하는 호환 지위이며 수치 미결정을 뜻하지 않는다.",
+  "execution_plan": {
+    "split": "dev",
+    "repeats_per_case_condition": 3,
+    "condition_ids": ["none", "D1", "D2-both", "D1-D2", "D2-input", "D2-retrieval"],
+    "repeat_interpretation": "같은 케이스의 생성 변동 관측이며 독립 케이스나 family 수를 늘리지 않는다.",
+    "order_seed": 2026,
+    "provider_seed_guaranteed": false,
+    "holdout_execution_authorized": false,
+    "preserve_existing_manifest_statistics": true,
+    "application": "차기 준비·배치에만 runtime_statistics를 명시적으로 복사한다. 완료·진행 배치의 고정 통계를 소급 변경하지 않는다."
+  },
+  "sampling": {
+    "unit": "source_id:reviewed_original_parent_family_id",
+    "keep_together": ["case_variants", "translations", "within_case_repeats", "paired_conditions"],
+    "cohorts_separate": ["source", "scenario", "language", "split", "ablation_variant", "model", "evaluation_version", "pricing_version"],
+    "estimand": "eligible_run_weighted_metric_within_exact_cohort",
+    "population_claim": "합성 벤치마크와 명시된 입력 노출 조건에 제한한다. 모든 공격자·모델·실서비스의 위험 확률로 일반화하지 않는다.",
+    "family_identity_requires_evidence": true
+  },
+  "confidence_intervals": {
+    "method": "family_cluster_percentile_bootstrap",
+    "confidence_level": 0.95,
+    "percentiles": [0.025, 0.975],
+    "bootstrap_samples": 10000,
+    "resample": "G개 독립 원본 family를 복원추출로 G번 선택하고 선택된 family의 모든 관측을 보존한다.",
+    "paired_binary_metrics": "동일 source/case/repeat의 유효 양측 차이를 먼저 만들고 family 단위로 재표집한다.",
+    "paired_resource_metrics": "양측 관측을 함께 재표집한 각 draw에서 mean/p50/p95를 다시 계산해 절대 차이를 얻는다.",
+    "resource_interval_unit": "absolute_metric_units",
+    "relative_resource_change_interval_available": false,
+    "coverage_guaranteed_by_sample_floor": false,
+    "interpretation": "개별 지표의 근사적·기술적 95% CI이며 동시 95% 보장이나 다중 검정의 유의성 판정이 아니다.",
+    "detector_target_rates": "현재 detector_report의 대상별 비율은 분자/분모만 기술하며 이 CI가 구현된 것으로 표시하지 않는다."
+  },
+  "sample_floor": {
+    "minimum_independent_families": 20,
+    "minimum_evaluated_runs_or_pairs": 60,
+    "minimum_planned_repeats_per_case_condition": 3,
+    "below_floor": "점추정·분자/분모·제외 수는 보존하고 ci95=null, inference_status=insufficient_sample로 표시한다.",
+    "rationale": "20/60/3은 작은 단일 원본 파일럿의 과신을 막기 위한 프로젝트 표시 하한이다. 문헌의 보편적 충분 표본 정리나 검정력 보장은 아니다. family 독립성·평가 커버리지와 희소사건은 별도로 점검한다."
+  },
+  "multiplicity": {
+    "mode": "descriptive_no_confirmatory_tests",
+    "confirmatory_tests_enabled": false,
+    "statistical_superiority_claims_allowed": false,
+    "simultaneous_coverage_claims_allowed": false,
+    "ci_overlap_implies_equivalence": false,
+    "nonoverlapping_individual_cis_establish_global_winner": false,
+    "future_confirmatory_requirement": {
+      "method": "holm_step_down",
+      "familywise_alpha": 0.05,
+      "requires_new_policy_version": true,
+      "requirements": ["사전에 비교·지표·하위 그룹의 hypothesis family를 고정", "family 의존성을 반영한 유효한 개별 p-value 구현·검증", "전체 family에 Holm 보정을 적용"],
+      "currently_implemented_or_applied": false
+    }
+  },
+  "abstention": {
+    "runtime_enforced": ["independent_family_count_below_floor", "evaluated_run_or_pair_count_below_floor"],
+    "additional_publication_checks": ["original_parent_family_identity", "planned_repeats_and_evaluation_coverage", "valid_comparable_frozen_inputs", "paired_missingness_counts", "degenerate_or_extreme_bootstrap_distribution", "manual_or_research_review_provenance", "unknown_usage_or_price"],
+    "zero_events_prove_zero_risk": false,
+    "zero_width_interval_proves_certainty": false,
+    "missing_or_review_needed_is_failure": false,
+    "point_estimate_policy_candidate_is_significance_claim": false
+  },
+  "parameter_rationale": {
+    "bootstrap_samples": {"value": 10000, "source_ids": ["hesterberg2015"], "choice_kind": "project_choice_supported_by_routine_resampling_guidance", "note": "Monte Carlo 흔들림을 줄이는 비용 없는 재집계 선택이다. 데이터 부족·편향·CI coverage 문제를 고치지 않는다."},
+    "minimum_families": {"value": 20, "source_ids": ["cameron_miller2015", "hesterberg2015"], "choice_kind": "project_conservative_display_floor_not_universal_theorem"},
+    "minimum_evaluated_runs": {"value": 60, "source_ids": ["cameron_miller2015"], "choice_kind": "project_balanced_design_floor_20_families_times_3_repeats"},
+    "repeats": {"value": 3, "source_ids": ["dror2018"], "choice_kind": "project_budget_and_existing_issue12_32_design_choice_not_paper_mandate"},
+    "confidence_level": {"value": 0.95, "source_ids": ["koehn2004"], "choice_kind": "project_reporting_convention_not_safety_guarantee"},
+    "seed": {"value": 2026, "source_ids": ["cameron_miller2015"], "choice_kind": "project_reproducibility_choice_not_provider_determinism"}
+  },
+  "sources": [
+    {"id": "koehn2004", "url": "https://aclanthology.org/W04-3250.pdf", "locator": "sections 5-6", "supports": "복원추출 bootstrap과 동일 표본의 두 시스템을 함께 비교하는 paired 설계", "does_not_supply": "LLM 보안의 표본 하한·서비스 허용 위험값"},
+    {"id": "dror2018", "url": "https://aclanthology.org/P18-1128.pdf", "locator": "sections 2-4", "supports": "실험 설계·평가지표·가정에 맞는 검정과 paired 비교", "does_not_supply": "이 프로젝트의 반복 3회나 독립 family 20개 규칙"},
+    {"id": "cameron_miller2015", "url": "https://www.econ.ucdavis.edu/faculty/cameron/research/Cameron_Miller_JHR_2014_July_09.pdf", "locator": "sections III and VI, especially pairs cluster bootstrap and few clusters", "supports": "cluster 단위 재표집·재현 seed·적은 cluster의 추론 위험", "does_not_supply": "20개면 percentile CI가 정확하다는 보장; 회귀 모형의 결과를 보안 ASR에 그대로 적용하는 보장"},
+    {"id": "hesterberg2015", "url": "https://arxiv.org/pdf/1411.5279", "locator": "section 3 resample count, small-sample percentile interval discussion", "supports": "통상 10000 재표집 권고·Monte Carlo 변동과 작은 표본의 percentile CI 한계", "does_not_supply": "10000회 재표집이 새로운 독립 데이터가 된다는 주장"},
+    {"id": "holm1979", "url": "https://www.ime.usp.br/~abe/lista/pdf4R8xPVzCnX.pdf", "locator": "section 2 and theorem 1", "supports": "유효한 개별 검정에 대한 sequentially rejective family-wise error 통제", "does_not_supply": "현재 개별 95% bootstrap CI가 Holm 보정됐다는 주장"},
+    {"id": "hanley_lippman_hand1983", "url": "https://jamanetwork.com/journals/jama/article-abstract/385438", "locator": "publisher abstract; full article not used", "supports": "0건 사건 연구의 위험 추론에는 별도 주의가 필요함", "does_not_supply": "상관된 반복에 독립 시행용 rule-of-three를 적용하는 근거"}
+  ]
+}

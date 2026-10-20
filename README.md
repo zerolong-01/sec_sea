@@ -375,5 +375,27 @@ python -m scripts.verify_week3 --output runs/week3-handoff
 ```
 
 RAG·이메일의 대표 3종×6개 고유 구성×3회, 총 108건을 로컬 HTTP fixture로 검증합니다.
-실제 모델 성능이나 최종 추천의 증빙이 아니며, 통계·서비스 정책은 팀 검토 전 draft입니다.
+fixture 통과만으로 실제 모델 성능이나 최종 추천을 주장하지 않습니다.
+사용자 위임으로 통계·서비스 기준을 dev용으로 채택했으며, 실제 사람의 독립 검토와 최종 추천 gate는 유지합니다.
 실행/예산/재개·집계/API와 남은 인수 항목은 [3주차 백엔드 안내](docs/week3-backend.md)를 따릅니다.
+
+PR #38의 ablation·보호값 초안은 [3주차 실제 실행 파이프라인](docs/week3-live-pipeline.md)에서
+버전을 분리해 준비하고 두 앱 324건의 예산 제한 실행·재개·원시 출력 관측·저장 조회로 연결합니다.
+2026-10-20 실제 실행 324건·557호출, 추정 비용 $0.1022296과 마스킹된 노출 사례는
+[갱신 데이터 실제 API 검증 기록](docs/examples/week3-live/README.md)에 정리했습니다.
+
+이후 인용 대조 108회와 D2 공격·정상 인용 216회를 추가 실행했습니다.
+논문·공식 기업 자료를 근거로 결정한 [평가·서비스 기준](docs/week3-research-decisions.md),
+[통계 정책](docs/week3-statistical-policy.md), [실제 실행·AI 검토·재생 요약](docs/examples/week3-completion/README.md),
+[이슈별 완료 대조표](docs/week3-completion-status.md)를 함께 확인하세요.
+holdout은 보존했으며, AI 검토를 사람의 독립 검토로 표시하지 않습니다.
+
+후속 완료 감사에서 [앱·언어·공격 유형·심각도별 실패 구간](docs/week3-failure-slices.md),
+[D2 조작 문구 제거의 유효 미탐 비교](docs/week3-derived-detector-review.md),
+[실제 검사 621대상의 AI gold 연결](docs/week3-target-gold-registration.md)을 추가했습니다.
+[마스킹된 대표 사례 13건](docs/week3-case-handoff.md)과 [4주차 재현·시연 안내](docs/week4-handoff-demo.md)를 인계합니다.
+이는 저장 결과의 후속 검토이며 원래 자동 평가·raw 로그를 덮어쓰거나 모델을 추가 호출하지 않습니다.
+
+실제 사람 검토 기록이 별도로 없다는 사용자 답변에 따라 [새 AI 두 검토·제3 조정과 dev 기술 인수](docs/week3-ai-dev-acceptance.md)도 완료했습니다.
+출력648건·탐지대상621건을 고유283종에 연결해 두 AI가 각각 검토하고 불일치65종을 모두 조정했습니다.
+[판정·소속·근거·해시](docs/examples/week3-completion/ai-dev-review.v0.1.json)는 별도 버전이며, 사람의 독립 검토·실제 팀 서명이나 최종 안전 구성 추천으로 표시하지 않습니다.

@@ -1,7 +1,9 @@
 """Bounded, resumable dev pilot against the configured real OpenAI API.
 
 Raw traces stay in the ignored output directory. Public samples and exports use
-the existing masked trace contract. This is integration evidence, not approval
+the current RunService.get_trace read projection, including frozen batch privacy
+rules. Matching the HTTP endpoint to that reader checks projection consistency;
+independent backend privacy tests establish masking correctness. This is integration evidence, not approval
 of draft gold, service criteria, statistical policy or a holdout experiment.
 """
 from __future__ import annotations
@@ -149,11 +151,13 @@ def _execute(runner, state, max_items):
     return state
 
 
-def _inspect(runner, state, credentials):
+def _inspect(runner, state, credentials, *, output=None):
     validator = Draft202012Validator(json.loads(
         (ROOT / "contracts/execution-v0.3.schema.json").read_text(encoding="utf-8")))
-    samples = runner.settings.runs_dir.parent / "public-samples"
-    samples.mkdir(exist_ok=True)
+    samples = Path(output or runner.settings.runs_dir.parent) / "public-samples"
+    samples.mkdir(parents=True, exist_ok=True)
+    reader = public_trace_reader(runner.settings)
+    projection_hashes = []
     http_statuses, errors = Counter(), Counter()
     observed_calls = 0
     reconciled_attempts, untraced_attempts, known_attempts = set(), set(), set()
@@ -171,13 +175,14 @@ def _inspect(runner, state, credentials):
                 untraced_attempts.add(attempt["attempt_id"])
                 continue
             trace = runner.traces.get(attempt["run_id"])
-            public = trace.model_dump(mode="json")
+            stored = trace.model_dump(mode="json", by_alias=True)
+            public = runner_trace(runner.settings, trace.run_id, reader=reader)
             require(not list(validator.iter_errors(public)), "TRACE_SCHEMA_MISMATCH")
             require(trace.manifest.execution_scope == state.execution_settings["execution_scope"],
                     "TRACE_SCOPE_MISMATCH")
             assert_safe(public, credentials)
             raw = runner.traces.get_raw(trace.run_id)
-            require(raw.get("run_id") == trace.run_id and raw.get("request") == public["request"],
+            require(raw.get("run_id") == trace.run_id and raw.get("request") == stored["request"],
                     "RAW_TRACE_MISMATCH")
             assert_safe(raw, credentials, allow_canary=True)
             calls = raw.get("model_calls", [])
@@ -208,6 +213,9 @@ def _inspect(runner, state, credentials):
                                      trace.metrics.known_cost_usd, abs_tol=1e-12), "TRACE_TOTAL_COST_MISMATCH")
             if trace.error:
                 errors[trace.error.code] += 1
+            projection_hashes.append({"run_id": trace.run_id,
+                "stored_trace_model_sha256": digest(stored), "public_projection_sha256": digest(public),
+                "projection_changed": stored != public})
             # One sample per condition/case; repeated evidence stays in runs/.
             atomic_json(samples / f"{entry['source_id']}-{entry['case_id']}-{entry['condition_id']}.json",
                         {"request": public["request"], "trace": public})
@@ -222,7 +230,12 @@ def _inspect(runner, state, credentials):
             "unreconciled_known_cost_usd": sum(call["known_cost_usd"] or 0 for call in untraced_calls),
             "unreconciled_committed_usd": sum(committed) if all(value is not None for value in committed) else None,
             "http_status_counts": dict(http_statuses),
-            "error_counts": dict(errors), "public_canary_leak": False, "credential_leak": False}
+            "error_counts": dict(errors), "public_canary_leak": False, "credential_leak": False,
+            "public_trace_contract": "RunService.get_trace_read_projection",
+            "privacy_correctness_evidence": "independent_backend_privacy_tests",
+            "projection_consistency_is_not_independent_masking_verification": True,
+            "public_projection_changed_count": sum(row["projection_changed"] for row in projection_hashes),
+            "trace_projection_hashes": projection_hashes}
 
 
 def _read_api(settings, state, summary, report):
@@ -231,6 +244,7 @@ def _read_api(settings, state, summary, report):
 
     # An attempted generation or detector call turns a refresh into a failure.
     with patch.object(OpenAICompatibleProvider, "complete", side_effect=VerificationError("READ_CALLED_MODEL")) as calls:
+        reader = public_trace_reader(settings)
         with TestClient(create_app(settings)) as client:
             got = client.get(f"/api/v1/batches/{state.batch_id}")
             require(got.status_code == 200 and got.json() == summary, "HTTP_SUMMARY_MISMATCH")
@@ -249,13 +263,20 @@ def _read_api(settings, state, summary, report):
                         continue
                     got = client.get(f"/api/v1/runs/{attempt['run_id']}")
                     require(got.status_code == 200 and got.json() ==
-                            runner_trace(settings, attempt["run_id"]), "HTTP_TRACE_MISMATCH")
+                            runner_trace(settings, attempt["run_id"], reader=reader), "HTTP_TRACE_MISMATCH")
         require(calls.call_count == 0, "READ_CALLED_MODEL")
 
 
-def runner_trace(settings, run_id):
-    from backend.app.repository import RunTraceStore
-    return RunTraceStore(settings.runs_dir).get(run_id).model_dump(mode="json")
+def public_trace_reader(settings):
+    """Build the API's read service; get_trace never executes the inert provider."""
+    from backend.app.repository import ExperimentRepository, RunTraceStore
+    from backend.app.service import RunService
+    return RunService(settings, ExperimentRepository(settings.data_dir), RunTraceStore(settings.runs_dir), provider=None)
+
+
+def runner_trace(settings, run_id, *, reader=None):
+    """Current safe projection, which may differ from immutable legacy storage."""
+    return (reader or public_trace_reader(settings)).get_trace(run_id).model_dump(mode="json", by_alias=True)
 
 
 def verify(output: Path, *, settings: Settings | None = None, max_items: int | None = None,
@@ -266,7 +287,13 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
     credentials = tuple({secret for secret in (settings.model_api_key, settings.d2_api_key) if secret})
     runner = BatchRunner(settings)
     state = _execute(runner, _state(output, runner), max_items)
-    checks = _inspect(runner, state, credentials)
+    return verify_saved(runner, state, credentials, output)
+
+
+def verify_saved(runner, state, credentials, output, *, version=PILOT_VERSION, extra=None, save_result=True):
+    """Shared saved-run/schema/ledger/API/export checks; never sends a model call."""
+    settings = runner.settings
+    checks = _inspect(runner, state, credentials, output=output)
     summary = runner.store.summary(state)
     report = aggregate(settings.runs_dir, state.batch_id)
     require(not report.counts["invalid_traces"], "REPORT_TRACE_INTEGRITY_FAILURE")
@@ -288,7 +315,7 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
     statuses = Counter(e["status"] for e in state.plan)
     failed = bool(statuses["failed"] or statuses["uncertain"] or summary["budget"]["unresolved_calls"])
     complete = state.status == "completed"
-    result = {"version": PILOT_VERSION,
+    result = {"version": version,
         "status": "failed" if failed else "passed" if complete else "paused",
         "execution_scope": state.execution_settings["execution_scope"],
         "real_model_verified": complete and not failed and state.execution_settings["execution_scope"] == "real",
@@ -302,9 +329,10 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
         "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
         "holdout_executed": False, "evaluation_scope": "draft_rubric_manual_semantic_review_pending",
         "code_commit": state.code_commit, "implementation_sha256": state.configuration_hashes["implementation"],
-        "export_path": str(export.relative_to(output)), **checks}
+        "export_path": str(export.relative_to(output)), **checks, **(extra or {})}
     assert_safe(result, credentials)
-    atomic_json(output / "verification-report.json", result)
+    if save_result:
+        atomic_json(output / "verification-report.json", result)
     return result
 
 

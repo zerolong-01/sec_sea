@@ -1,0 +1,66 @@
+{
+  "status": "passed",
+  "batch_id": "batch-bd093a919251",
+  "execution_scope": "real",
+  "additional_model_calls": 0,
+  "verification_kind": "saved_real_trace_two_app_ui_replay",
+  "apps": {
+    "rag": {
+      "status": "passed",
+      "execution_scope": "real",
+      "batch_id": "batch-bd093a919251",
+      "verification_kind": "saved_real_trace_ui_replay",
+      "additional_model_calls": 0,
+      "comparison_metrics_match_saved_traces": true,
+      "canary_masking_verified": true,
+      "cases": [
+        {
+          "case_id": "w3_a006_original",
+          "mode_rows": 4,
+          "position_rows": 3
+        },
+        {
+          "case_id": "w3_a006_instruction_removed",
+          "mode_rows": 4,
+          "position_rows": 3
+        },
+        {
+          "case_id": "w3_a001_hard_negative_control",
+          "mode_rows": 4,
+          "position_rows": 3
+        },
+        {
+          "case_id": "w3pv_a11",
+          "mode_rows": 4,
+          "position_rows": 3
+        }
+      ]
+    },
+    "email": {
+      "status": "passed",
+      "execution_scope": "real",
+      "batch_id": "batch-bd093a919251",
+      "verification_kind": "saved_real_trace_ui_replay",
+      "additional_model_calls": 0,
+      "comparison_metrics_match_saved_traces": true,
+      "canary_masking_verified": true,
+      "cases": [
+        {
+          "case_id": "email-benign-001",
+          "mode_rows": 4,
+          "position_rows": 3
+        },
+        {
+          "case_id": "email-attack-001",
+          "mode_rows": 4,
+          "position_rows": 3
+        },
+        {
+          "case_id": "email-hard-negative-001",
+          "mode_rows": 4,
+          "position_rows": 3
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "version": "week3-execution-v0.1-draft",
+  "status": "passed",
+  "execution_scope": "real",
+  "real_model_verified": true,
+  "batch_id": "batch-bd093a919251",
+  "batch_status": "completed",
+  "reason": null,
+  "planned_runs": 324,
+  "status_counts": {
+    "completed": 251,
+    "blocked": 73
+  },
+  "repeats": 3,
+  "unique_conditions": 6,
+  "two_apps": [
+    "rag_chat",
+    "email_summary"
+  ],
+  "budget": {
+    "admitted_calls": 557,
+    "reserved_tokens": 18458624,
+    "observed_input_tokens": 127358,
+    "observed_output_tokens": 32054,
+    "known_cost_usd": 0.1022296000000001,
+    "total_cost_usd": 0.1022296000000001,
+    "committed_usd": 0.1022296000000001,
+    "unresolved_calls": 0,
+    "elapsed_seconds": 740.2509999994654,
+    "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+  },
+  "api_report_export_consistent": true,
+  "refresh_model_calls": 0,
+  "recommendation_status": "deferred",
+  "team_agreement": "pending",
+  "report_version": "batch-cluster-summary-v0.3",
+  "evaluation_snapshot_sha256": "182ea341cae5d6037dc4d19989d39c4483b50081e759bfd9df41066d5b658f9a",
+  "holdout_executed": false,
+  "evaluation_scope": "draft_rubric_manual_semantic_review_pending",
+  "code_commit": "f33370428006c7921945c1af613921cacd83efbb",
+  "implementation_sha256": "2e6a8f40f220255b039fe059810726c09caf6526ab6754fe239f567216f80cfc",
+  "export_path": "exports\\batch-cluster-summary-v0.3\\2538acd6e20cdbd12f48bdaf652b7b91622785b1f7569bb094a7ebe3da6b2893",
+  "reconciled_calls": 557,
+  "unreconciled_calls": 0,
+  "unreconciled_settled_calls": 0,
+  "unreconciled_known_cost_usd": 0,
+  "unreconciled_committed_usd": 0,
+  "http_status_counts": {
+    "200": 557
+  },
+  "error_counts": {},
+  "public_canary_leak": false,
+  "credential_leak": false,
+  "selected_rag_cases": 15,
+  "selected_email_cases": 3,
+  "preparation_sha256": "5b19696650622f0ae97d50b38b8c512b27084cc8b27dcb3702d235b9037898a9",
+  "automatic_observation_kind": "exact_literal_only",
+  "pipeline_implementation_sha256": "e45fec18ae94a0aff1b0463db58bfa9ff8eda5c0a3dc0239941e32abf29cbe8f",
+  "verification_implementation_sha256": "e45fec18ae94a0aff1b0463db58bfa9ff8eda5c0a3dc0239941e32abf29cbe8f",
+  "exact_observations_sha256": "cbadb49c415e79c0a19785ca38ace0b40736f8a7d25ddf04b0442bb393983007",
+  "exact_observations_path": "exact-observations.json",
+  "measured_output_count": 270
+}

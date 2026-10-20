@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "version": "week3-input-audit-v0.1",
+  "batch_id": "batch-bd093a919251",
+  "execution_scope": "real",
+  "additional_model_calls": 0,
+  "verified": {
+    "detector_inputs": 306,
+    "generation_inputs": 251,
+    "traces": 324
+  },
+  "wire_payload_sha256": "8ae08c0a3aa1c523fc4d2bd6c4f70e2b7dbaea05334b6247b3be36e587ab24d1",
+  "generation_matches_frozen_inputs": true,
+  "detector_matches_frozen_inputs": true,
+  "gold_or_condition_metadata_added": false,
+  "one_attempt_per_item": true,
+  "frozen_source_sha256": {
+    "week3": {
+      "cases_sha256": "fa11a06b90b0b417ec0101643dd25c6845a06787c8812b240eb93323e2710a32",
+      "corpus_sha256": "1fa99dfc28f2f42d605176de685a52abe9e6da1bff953d04bf2d59b4d7a457d9",
+      "manifest_sha256": "d6fe8c7813262956d8a02f0ea518ee25c000499a56d1ce64929eb27b044bd38a"
+    },
+    "email": {
+      "cases_sha256": "0bf598c1d640c6a7b1c4bcc7191fcb93abe1d65d3131fdef867b07d41d5d64da",
+      "corpus_sha256": "f34d50a9f01abd9fb727cf948dacc7f5535ba515b725891a78f0d8b1246ca6f9",
+      "manifest_sha256": "645c177d6798d075173e323c1b7d6790a5f96dd825603aa62065bbc609db2048"
+    }
+  }
+}

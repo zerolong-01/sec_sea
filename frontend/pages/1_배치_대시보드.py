@@ -6,7 +6,6 @@
 import sys
 from pathlib import Path
 
-import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -17,9 +16,11 @@ from batch_core import (  # noqa: E402
     csv_report_error, decision_rows, decision_status_text, detector_rows, filter_options, get_batch, get_csv, get_report,
     group_title, kpi_cards, md_safe, list_batches, option_text, payload_rows, plan_rows_for_runs, reason_text,
     report_json_bytes, baseline_rows, scatter_points, scope_text, batch_status_text, status_counts_text,
+    metric_rows, sample_rows, policy_rows,
     summary_rows, warnings_for,
 )
 from ui_core import label_of, load_run  # noqa: E402
+from batch_chart import SELECTION, selected_group, tradeoff_chart  # noqa: E402
 
 st.set_page_config(page_title="배치 대시보드", layout="wide")
 st.title("배치 대시보드")
@@ -35,9 +36,12 @@ def show_error(error):
         st.text(error["message"])
 
 
-def table(rows, **kwargs):
+def table(rows, *, integer_columns=(), **kwargs):
     if rows:
-        st.dataframe(pd.DataFrame(rows), hide_index=True, **kwargs)
+        frame = pd.DataFrame(rows)
+        for column in integer_columns:
+            frame[column] = frame[column].astype("Int64")
+        st.dataframe(frame, hide_index=True, **kwargs)
     else:
         st.info("표시할 항목이 없습니다.")
 
@@ -120,9 +124,15 @@ with st.expander("배치 정보 (예산·조건·데이터 출처·고정 해시
            for s in summary.get("sources") or []])
     st.markdown("**고정 해시 (재현성 확인용)**")
     st.json(summary.get("configuration_hashes") or {}, expanded=False)
+    st.markdown("**적용 가격표 (버전·단가 출처·적용일)**")
+    price = (report or {}).get("provenance", {}).get("pricing_snapshot")
+    if price:
+        st.json(price, expanded=False)
+    else:
+        st.caption("이 리포트에는 가격표 스냅샷이 기록되어 있지 않습니다. 비용 미확인을 0으로 바꾸지 않습니다.")
 
 # 필터
-options = filter_options(summary)
+options = filter_options(summary, report)
 with st.form("filters_form"):
     st.markdown("**필터** — 바꾸면 서버가 같은 저장 결과로 다시 집계합니다 (모델 호출 없음)")
     chosen = {}
@@ -180,6 +190,9 @@ with tab_kpi:
             col.metric(label, value, help=md_safe(detail))
             col.caption(md_safe(detail))
     st.caption("값이 '기록 없음'이면 분모가 0이거나 평가가 끝나지 않은 것입니다. 0%나 실패로 바꾸지 않았습니다.")
+    with st.expander("선택 그룹의 표본·평가 수와 모든 지표의 불확실성"):
+        table(sample_rows(group_by_id[selected]), integer_columns=("수",))
+        table(metric_rows(group_by_id[selected]))
 
     st.subheader("조건별 비교표")
     rows = comparison_rows(report)
@@ -189,29 +202,28 @@ with tab_kpi:
 # ---------------------------------------------------------------------------
 # 4. Trade-off 산점도
 # ---------------------------------------------------------------------------
+chart_trace_target = None
 with tab_tradeoff:
     st.caption("x축: 정상 태스크 성공률 (오른쪽일수록 좋음) · y축: 공격 차단율 = 1 − ASR (위쪽일수록 좋음) · "
-               "점 크기: 요청당 비용. 점 색은 서버의 추천 판단입니다. Pareto는 화면에서 다시 계산하지 않습니다.")
+               "색: 방어 구성·검사 위치. 채운 점 크기: 요청당 비용, 빈 점: 비용 미확인. Pareto는 서버 판단입니다.")
     points, skipped = scatter_points(report)
     if points:
-        data = pd.DataFrame(points)
-        has_cost = data["요청당 비용"].notna().any()
-        base = alt.Chart(data).encode(
-            x=alt.X("정상 태스크 성공률:Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format="%")),
-            y=alt.Y("공격 차단율 (1-ASR):Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format="%")),
-            color=alt.Color("추천 판단:N"),
-            shape=alt.Shape("앱:N"),
-            opacity=alt.Opacity("표본:N", scale=alt.Scale(domain=["충분", "표본 부족"], range=[0.9, 0.35])),
-            tooltip=["그룹", "추천 판단", "표본", alt.Tooltip("정상 태스크 성공률:Q", format=".1%"),
-                     alt.Tooltip("공격 차단율 (1-ASR):Q", format=".1%"), "비용 표시", "같은 자리 그룹"],
-        )
-        if has_cost:
-            chart = base.mark_point(filled=True).encode(size=alt.Size("요청당 비용:Q", title="요청당 비용"))
-        else:
-            chart = base.mark_point(filled=True, size=140)
-            st.caption("비용이 모두 미확인이라 점 크기를 같게 그렸습니다.")
-        st.altair_chart(chart)
+        event = st.altair_chart(tradeoff_chart(points), on_select="rerun", selection_mode=SELECTION,
+                               key=f"tradeoff_{batch_id}_{str(report.get('evaluation_snapshot_sha256'))[:12]}")
+        chart_group = selected_group(event, group_ids)
+        if chart_group:
+            st.caption(f"선택 그룹: {group_title(group_by_id[chart_group])}")
+            if st.button("선택한 점의 대표 trace 조회", key="chart_trace",
+                         disabled=not bool(group_by_id[chart_group].get("run_ids"))):
+                st.session_state["trace_group"] = chart_group
+                st.session_state.pop("trace_run", None)
+                st.session_state.pop("batch_trace", None)
+                chart_trace_target = chart_group
+                st.info("실행 trace 탭에 선택한 그룹의 대표 실행을 조회했습니다.")
         st.caption("흐린 점은 표본이 부족해 CI가 없는 값입니다. 점에 마우스를 올리면 같은 자리에 겹친 그룹도 보입니다.")
+        st.caption("도움말·아래 표에 95% CI, 공격/정상 평가 수와 family 수, 추천 판단을 함께 표시합니다. 빈 점은 비용 0을 뜻하지 않습니다.")
+        st.caption("정상 성공률은 서버가 명시한 동일 조건의 정상 기준을 사용합니다. 기준 ID·공유 범위와 실행 번호를 함께 표시하며, 비용은 각 공격 목표 그룹의 범위입니다.")
+        st.caption("평가 제외가 있는 점은 평가된 일부 결과의 관측값입니다. CI가 계산되어도 미평가·검토 대기가 끝났다는 뜻은 아닙니다.")
         table([{k: v for k, v in p.items() if k not in ("group_id", "요청당 비용")} for p in points])
     else:
         st.info("산점도에 찍을 수 있는 그룹이 없습니다. 정상 성공률과 ASR이 둘 다 있어야 점을 찍습니다.")
@@ -229,6 +241,16 @@ with tab_decision:
     cols[1].metric("추천 후보", "없음" if decisions.get("no_candidate") else "있음")
     cols[2].metric("평가 정책", decisions.get("evaluation_policy_version") or NO_VALUE)
     st.caption("판단 순서 (서버): 합격 기준으로 탈락 → 남은 구성끼리 전체 지표 Pareto → 미리 정한 우선순위.")
+    with st.expander("적용한 서비스 정책·기준값·우선순위"):
+        policy = decisions.get("evaluation_policy") or {}
+        allowed = policy.get("final_recommendation_allowed")
+        permission = "허용" if allowed is True else "불허" if allowed is False else NO_VALUE
+        st.caption(f"정책 상태: {policy.get('status') or NO_VALUE} · 최종 추천: {permission}")
+        table(policy_rows(report))
+        st.caption("우선순위: " + (" → ".join(METRICS.get(value, (value,))[0] for value in policy.get("priority") or []) or NO_VALUE))
+        st.caption("정책 검토자: " + (", ".join(policy.get("reviewed_by") or []) or NO_VALUE))
+        if policy.get("rationale"):
+            st.text(policy["rationale"])
 
     shared = common_reasons(report)
     if shared:
@@ -266,6 +288,12 @@ with tab_detector:
     rows = payload_rows(report)
     if rows:
         table(rows)
+        family_rows = payload_rows(report, by_family=True)
+        if family_rows:
+            with st.expander("family별 공격·대조 노출률과 차이·불확실성"):
+                table(family_rows)
+        else:
+            st.caption("family별 노출률은 이 집계 버전에 기록되어 있지 않습니다.")
     else:
         st.info("이 배치에는 payload 비교 데이터가 없습니다.")
 
@@ -278,12 +306,14 @@ with tab_trace:
     table(runs)
     run_ids = [r["실행 번호"] for r in runs]
     if run_ids:
+        if chart_trace_target == selected:
+            st.session_state["trace_run"] = run_ids[0]
         run_id = st.selectbox("자세히 볼 실행 번호", run_ids, key="trace_run")
         trace_key = (report_key, selected, run_id)
         loaded = st.session_state.get("batch_trace")
         if loaded and loaded[0] != trace_key:
             st.session_state.pop("batch_trace", None)
-        if st.button("trace 조회", key="load_trace"):
+        if st.button("trace 조회", key="load_trace") or chart_trace_target == selected:
             with st.spinner("저장 trace 조회 중"):
                 st.session_state["batch_trace"] = (trace_key, *load_run(run_id))
         loaded = st.session_state.get("batch_trace")
@@ -302,11 +332,25 @@ with tab_trace:
                 cols[3].metric("정상 태스크", label_of("evaluation_statuses", evaluation.get("normal_task_success")))
                 st.caption(f"실행 번호 {trace.get('run_id')} · 케이스 {(trace.get('request') or {}).get('case_id')} · "
                            f"지연 {metrics.get('latency_ms', NO_VALUE)} ms")
+                with st.expander("평가·문서 포함·비용 출처"):
+                    table([{"평가기 버전": evaluation.get("evaluator_version") or NO_VALUE,
+                            "평가 정책": evaluation.get("policy_version") or NO_VALUE,
+                            "검토자": evaluation.get("reviewer") or NO_VALUE,
+                            "평가 시각": evaluation.get("evaluated_at") or NO_VALUE,
+                            "가격 버전": (trace.get("manifest") or {}).get("pricing_version") or NO_VALUE,
+                            "사용량 출처": label_of("usage_sources", metrics.get("usage_source")) or NO_VALUE}])
+                    table([{"문서 ID": document.get("document_id"),
+                            "프롬프트 포함": NO_VALUE if document.get("included_in_prompt") is None else
+                            "포함" if document["included_in_prompt"] else "미포함"}
+                           for document in trace.get("retrieval") or []])
                 events = trace.get("defense_events") or []
                 if events:
                     table([{"단계": label_of("trace_stages", e.get("stage")),
                             "판정": label_of("defense_decisions", e.get("decision")),
                             "방어": e.get("defense_id") or e.get("defense_mode") or NO_VALUE,
+                            "근거": e.get("reason") or NO_VALUE,
+                            "점수": str(e["score"]) if e.get("score") is not None else NO_VALUE,
+                            "모순": e.get("consistency_issue") or "없음",
                             "오류": e.get("error") or ""} for e in events])
                 st.markdown("**출력 (마스킹된 공개 trace)**")
                 st.code(output.get("display_text") or NO_VALUE, language=None, wrap_lines=True)

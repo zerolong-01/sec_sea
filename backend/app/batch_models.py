@@ -15,6 +15,7 @@ class BatchModel(StrictModel):
 
 class CaseMetadata(BatchModel):
     family_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
+    comparison_pair_id: str | None = Field(default=None, pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     parent_case_id: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{2,63}$")
     ablation_variant: str = Field(default="original", pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     removed_components: list[str] = Field(default_factory=list)
@@ -178,6 +179,10 @@ class BatchFilters(BatchModel):
     goal_kind: str | None = None
     severity: str | None = None
     execution_kind: str | None = None
+    model_id: str | None = None
+    evaluator_version: str | None = None
+    evaluation_policy_version: str | None = None
+    pricing_version: str | None = None
 
 
 class BatchReview(BatchModel):
@@ -219,6 +224,8 @@ class BatchReport(BatchModel):
     payload_comparisons: list[dict]
     detector_report: dict
     decisions: dict
+    tradeoff_points: list[dict] = Field(default_factory=list)
+    recommendation_cohorts: list[dict] = Field(default_factory=list)
 
 
 class BatchSummary(BatchModel):
