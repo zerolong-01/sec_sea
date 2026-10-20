@@ -2,6 +2,8 @@
 
 작업 이슈: #34 / 공통 계획: #32 / 데이터·평가 담당: #33 / 화면 담당: #35.
 
+요구사항별 구현·회귀·실제 실행 근거와 외부 인수 범위는 [B 인수 기록](week3-backend-acceptance.md)에 정리했다.
+
 기존 인계는 구현과 로컬 HTTP fixture 검증이며, 2026-10-20 [실제 모델 dev 파일럿과 탐지 검증](examples/real-api/README.md)을 추가했다. 팀의 gold/번역 검수·통계/서비스 정책 확정·holdout 성능 실험은 후속 작업이다. 기본 통계와 서비스 정책은 draft이며 최종 추천은 보류한다.
 
 ## 빠른 검증
@@ -63,6 +65,8 @@ python -m scripts.week3_batch --runs-dir runs/week3 report batch-012345abcdef
 - 중단 직전 호출 기록이 있지만 trace가 없으면 `uncertain`으로 남긴다. 기본 재개는 해당 항목을 재호출하지 않는다. `--retry-uncertain`은 이미 과금된 호출을 중복할 수 있는 명시적 재시도이며 이전 예약 비용은 유지한다.
 - 저장 trace가 먼저 완성된 경우 재개 시 이를 회수한다. 호출 전 중단으로 예약도 없으면 미실행 상태로 복구한다.
 
+호출 전 중단된 attempt는 `cancelled_before_transport`로 이력에 남기고 entry를 pending으로 되돌린다. 다음 재개는 새 attempt로 실행한다. 전송하지 않은 시도는 실패/지연/사용량 분모에서 제외하며, 취소 이력만 있는 미실행 항목의 비용을 관측값 0으로 취급하지 않는다. 전체 attempt 수와 `cancelled_before_transport_count`는 별도로 반환한다. 새 snapshot은 D1 버전도 고정한다. 이전 완료 배치는 저장 결과 조회·재생성에 사용할 수 있고, 구현이 바뀐 미완료 배치의 신규 호출은 허용하지 않는다.
+
 배치 `completed`는 모든 계획 항목의 실행이 완료 또는 정상 방어 차단됐다는 뜻이다. 공격/정상 성공 판정 완료나 실험 인수를 뜻하지 않는다. pending이 있으면 paused, 실패가 남으면 partial, 결과 불확실 항목은 uncertain이다. `run` 종료 코드는 completed=0, 부분/중단/불확실=2, 입력/실행 오류=1이다.
 
 ## 예산
@@ -90,6 +94,8 @@ source의 `metadata`는 case_id별로 family_id, parent_case_id, ablation_varian
 ## 집계·수동 검토·통계
 
 집계는 공개 trace와 배치 ledger/검토 기록을 읽는다. 실제 trace의 케이스·모델·기본 정책·방어 위치·설정이 계획과 맞지 않으면 제외 사유를 기록하고 추천을 보류한다. 앱/source·언어·split·variant·실행 종류·조건·평가/가격 버전을 구분해 집계한다.
+
+`batch-cluster-summary-v0.2`는 D1/system 버전·전체 D2 설정·호출 상한·정규화된 가격 snapshot까지 고정 설정과 대조한다. 사람이 갱신할 수 있는 evaluator/평가 버전은 별도로 분리한다. 미완료 배치나 미확인 비용이 있으면 평가/가격별로 나뉜 완료 그룹만 골라 추천하지 않는다. 실제 검증기의 export 경로는 `exports/<report_version>/<전체 report hash>/`로 고정해 계산 버전이나 필터 변경 시 이전 CSV를 재사용하지 않는다.
 
 | 지표 | 분모/단위 |
 | --- | --- |

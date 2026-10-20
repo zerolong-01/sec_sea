@@ -11,6 +11,7 @@ private raw·공개 trace·호출 예약 ledger 사이에서 대조했다.
 | [pilot-verification.json](pilot-verification.json) | 두 앱 × 대표 3건 × 6개 고유 구성 × 3회, 108건 |
 | [detector-verification.json](detector-verification.json) | 탐지 전용 18건, 입력·문서 36개 대상, 생성 호출 0회 |
 | [ui-verification.json](ui-verification.json) | 실제 저장 결과의 대표 3건·4개 모드·D2 세 위치 화면 표시와 마스킹, 추가 모델 호출 0회 |
+| [pilot-reaggregation-v0.2.json](pilot-reaggregation-v0.2.json) | 최종 백엔드의 설정 무결성 검사·집계 v0.2·API/export 재생성, 추가 모델 호출 0회 |
 
 파일럿은 완료 90건·방어 차단 18건·실행 오류 0건이며 198회 호출했다.
 탐지 진단은 18건·36회 호출을 완료했다. 두 검증의 추정 비용은 합계
