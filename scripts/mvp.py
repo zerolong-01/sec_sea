@@ -102,7 +102,7 @@ class ManagedProcess:
 
 
 @contextmanager
-def services(bundle, runs_dir: Path, api_port: int, ui_port: int, demo: bool):
+def services(bundle, runs_dir: Path, api_port: int, ui_port: int, demo: bool, *, environment_overrides=None):
     api_port, ui_port = available_port(api_port), available_port(ui_port)
     if api_port == ui_port:
         raise RuntimeError("API and UI ports must be different.")
@@ -112,6 +112,7 @@ def services(bundle, runs_dir: Path, api_port: int, ui_port: int, demo: bool):
     backend_url = f"http://127.0.0.1:{api_port}"
     frontend_url = f"http://127.0.0.1:{ui_port}"
     env = dict(os.environ, DATA_DIR=str(bundle.data_dir), MVP_MANIFEST=str(bundle.manifest_path), RUNS_DIR=str(runs_dir), BACKEND_URL=backend_url, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
+    env.update(environment_overrides or {})
     env["MVP_LOAD_DOTENV"] = "0"
     if demo:
         env.update(MODEL_PROVIDER="demo", MODEL_ID="demo-rag-v0.1")
@@ -220,6 +221,35 @@ def verify_ui(bundle, env: dict[str, str]) -> None:
                 require("[MASKED_CANARY]" in displayed, f"{item.case_id}: UI did not render the masked trace")
 
 
+def pipeline_environment(output: Path):
+    """기존 pipeline의 데이터와 고정 설정을 서비스에 연결한다. 실행·생성은 하지 않는다."""
+    from backend.app.batch import BatchStore, verify_frozen_artifacts
+    from backend.app.batch_models import BatchSpec
+    from scripts.week3_prepare import VERSION, validate
+
+    output = output.resolve()
+    ownership = json.loads((output / "pipeline.json").read_text(encoding="utf-8"))
+    checkpoint = json.loads((output / "checkpoint.json").read_text(encoding="utf-8"))
+    if ownership.get("version") != VERSION or checkpoint.get("version") != VERSION:
+        raise ValueError("Pipeline/checkpoint version mismatch")
+    store = BatchStore(output / "runs")
+    state = store.get(checkpoint["batch_id"])
+    verify_frozen_artifacts(store, state)
+    prepared = output / "prepared"
+    validate(prepared)
+    spec = BatchSpec.model_validate_json((prepared / "batch-spec.json").read_text(encoding="utf-8"))
+    if spec != state.spec:
+        raise ValueError("Prepared pipeline and saved batch differ")
+    env = {"DATA_DIR": str(prepared / "rag"),
+           "MVP_MANIFEST": str(prepared / "rag/mvp-manifest.v0.1.json"),
+           "RUNS_DIR": str(output / "runs")}
+    for variable, snapshot in (("PRICING_FILE", "pricing"), ("COMMON_POLICY_FILE", "common_policy"),
+                               ("EVALUATION_RULES_FILE", "evaluation_rules")):
+        env[variable] = (str(store.folder(state.batch_id) / f"{snapshot}.snapshot")
+                         if state.configuration_hashes[snapshot] != "not_configured" else "")
+    return env, state.batch_id
+
+
 def parse_args(argv: list[str] | None = None):
     parser = argparse.ArgumentParser(description="Run and verify the integrated RAG MVP.")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -234,6 +264,7 @@ def parse_args(argv: list[str] | None = None):
             command.add_argument("--ui-port", type=int, default=8501 if name == "serve" else 0)
         if name == "serve":
             command.add_argument("--fixture-model", action="store_true", help="Local HTTP fixtures for all four defense modes; no actual LLM.")
+            command.add_argument("--pipeline-output", type=Path, help="Open an existing week3 pipeline's data, runs and frozen rules/pricing/policy.")
     return parser.parse_args(argv)
 
 
@@ -257,22 +288,28 @@ def main(argv: list[str] | None = None) -> int:
         from backend.app.environment import load_project_environment, resolve_project_path
         load_project_environment(ROOT)
         from scripts.data_contract import load_bundle
-        data_dir = args.data_dir or resolve_project_path(os.getenv("DATA_DIR") or "data", ROOT)
-        manifest = args.manifest or (resolve_project_path(os.environ["MVP_MANIFEST"], ROOT)
+        profile, selected_batch = {}, None
+        if getattr(args, "pipeline_output", None):
+            if args.data_dir or args.manifest or args.runs_dir or args.fixture_model:
+                raise ValueError("--pipeline-output cannot be combined with data/manifest/runs overrides or --fixture-model")
+            profile, selected_batch = pipeline_environment(args.pipeline_output)
+        data_dir = (Path(profile["DATA_DIR"]) if profile else
+                    args.data_dir or resolve_project_path(os.getenv("DATA_DIR") or "data", ROOT))
+        manifest = Path(profile["MVP_MANIFEST"]) if profile else args.manifest or (resolve_project_path(os.environ["MVP_MANIFEST"], ROOT)
                                     if os.getenv("MVP_MANIFEST") else None)
         bundle = load_bundle(data_dir, manifest)
         print(f"Data validated: {len(bundle.cases)} cases, {len(bundle.documents)} documents; {bundle.manifest.dataset_version}", flush=True)
         if args.command == "check":
             return 0
         default_runs = ROOT / "runs" if args.command == "serve" else ROOT / "runs" / f"verification-{uuid.uuid4().hex[:8]}"
-        runs_dir = (args.runs_dir or (resolve_project_path(os.environ["RUNS_DIR"], ROOT)
-                                     if os.getenv("RUNS_DIR") else default_runs)).resolve()
+        runs_dir = (Path(profile["RUNS_DIR"]) if profile else args.runs_dir or
+                    (resolve_project_path(os.environ["RUNS_DIR"], ROOT) if os.getenv("RUNS_DIR") else default_runs)).resolve()
         report = None
         from scripts.verify_week2 import fixture_environment, verify as verify_week2
         fixture_context = (fixture_environment(bundle.data_dir)
                            if args.command == "verify-week2" or getattr(args, "fixture_model", False) else nullcontext(None))
         with fixture_context as fixture:
-            with services(bundle, runs_dir, args.api_port, args.ui_port, demo=args.command == "verify") as (backend_url, frontend_url, env, children):
+            with services(bundle, runs_dir, args.api_port, args.ui_port, demo=args.command == "verify", environment_overrides=profile) as (backend_url, frontend_url, env, children):
                 if args.command == "verify":
                     results = verify_http(bundle, backend_url, runs_dir)
                     verify_ui(bundle, env)
@@ -281,6 +318,8 @@ def main(argv: list[str] | None = None) -> int:
                     report = verify_week2(bundle, backend_url, env, runs_dir, fixture)
                 else:
                     print(f"API: {backend_url}/docs\nUI:  {frontend_url}\nStop: Ctrl+C (all services will stop).", flush=True)
+                    if selected_batch:
+                        print(f"Saved pipeline batch: {selected_batch}. Open the batch dashboard to inspect saved results.", flush=True)
                     if fixture:
                         print("Model scope: fixture (predetermined responses, not actual model results).", flush=True)
                     while True:
