@@ -17,7 +17,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       MODEL_PROVIDER: demo
       PYTHONIOENCODING: utf-8
@@ -37,6 +37,7 @@ jobs:
         run: |
           python -m scripts.mvp check
           python -m scripts.week2_data check
+          python -m scripts.week3_data check
       - name: Pipeline regression tests
         run: python -m unittest discover -s tests -v
       - name: Backend regression tests
@@ -48,3 +49,5 @@ jobs:
         run: python -m scripts.mvp verify-week2
       - name: Week-two data, evaluator and target-gold handoff
         run: python -m scripts.week2_data verify-handoff --output runs/week2-data-ci
+      - name: Week-three two-app batch, resume and report handoff
+        run: python -m scripts.verify_week3 --output runs/week3-batch-ci

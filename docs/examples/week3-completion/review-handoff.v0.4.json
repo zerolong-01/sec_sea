@@ -1,0 +1,46 @@
+{
+  "version": "v0.4-post-gold-all-targets",
+  "packets": [
+    {
+      "path": "runs/week3-completion/legacy-independent-review-v0.4-post-gold",
+      "manifest_sha256": "1248821f024542e48497cec03c5a6630bc6122d6da7e4800c3278fcac41cb848",
+      "batch_id": "batch-bd093a919251",
+      "task_counts": {
+        "final_output": 324,
+        "detector_target": 306
+      },
+      "human_review": "pending",
+      "applied": false
+    },
+    {
+      "path": "runs/week3-completion/quotation-independent-review-v0.4-post-gold",
+      "manifest_sha256": "14050ea5d29075e6ed81902a37dfe92b2e11df1c70a95e286a456dbd7b2bd55b",
+      "batch_id": "batch-8fb19849d67c",
+      "task_counts": {
+        "final_output": 108,
+        "detector_target": 99
+      },
+      "human_review": "pending",
+      "applied": false
+    },
+    {
+      "path": "runs/week3-completion/d2-independent-review-v0.1",
+      "manifest_sha256": "644eb7e1bcd5689da43fe9be91c9023c423a9e29a38c5a8dca67934db012d5a4",
+      "batch_id": "batch-fb671ff629f0",
+      "task_counts": {
+        "final_output": 216,
+        "detector_target": 216
+      },
+      "human_review": "pending",
+      "applied": false
+    }
+  ],
+  "task_counts": {
+    "final_output": 648,
+    "detector_target": 621
+  },
+  "holdout_authorized": false,
+  "human_review": "pending",
+  "applied": false,
+  "superseded_packets": "Earlier legacy and quotation packets pin public trace hashes before AI target-gold annotation; new responses must use the post-gold packets."
+}

@@ -1,0 +1,1286 @@
+{
+  "$defs": {
+    "BatchArtifact": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "0.1",
+          "default": "0.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "batch_manifest",
+          "default": "batch_manifest",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "batch_id": {
+          "pattern": "^batch-[a-f0-9]{12}$",
+          "title": "Batch Id",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "code_commit": {
+          "title": "Code Commit",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "planned",
+            "running",
+            "paused",
+            "completed",
+            "partial",
+            "uncertain"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "spec": {
+          "$ref": "#/$defs/BatchSpec"
+        },
+        "execution_settings": {
+          "additionalProperties": true,
+          "title": "Execution Settings",
+          "type": "object"
+        },
+        "source_snapshots": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Source Snapshots",
+          "type": "array"
+        },
+        "configuration_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Configuration Hashes",
+          "type": "object"
+        },
+        "plan": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Plan",
+          "type": "array"
+        },
+        "calls": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Calls",
+          "type": "array"
+        },
+        "elapsed_seconds": {
+          "default": 0,
+          "title": "Elapsed Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "batch_id",
+        "created_at",
+        "code_commit",
+        "status",
+        "spec",
+        "execution_settings",
+        "source_snapshots",
+        "configuration_hashes",
+        "plan"
+      ],
+      "title": "BatchArtifact",
+      "type": "object"
+    },
+    "BatchBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "max_calls": {
+          "minimum": 1,
+          "title": "Max Calls",
+          "type": "integer"
+        },
+        "max_reserved_tokens": {
+          "minimum": 1,
+          "title": "Max Reserved Tokens",
+          "type": "integer"
+        },
+        "max_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Max Seconds",
+          "type": "number"
+        },
+        "max_usd": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Usd"
+        },
+        "unknown_price_policy": {
+          "default": "stop",
+          "enum": [
+            "stop",
+            "calls_tokens"
+          ],
+          "title": "Unknown Price Policy",
+          "type": "string"
+        },
+        "per_call_input_token_ceiling": {
+          "default": 32768,
+          "minimum": 1,
+          "title": "Per Call Input Token Ceiling",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_calls",
+        "max_reserved_tokens",
+        "max_seconds"
+      ],
+      "title": "BatchBudget",
+      "type": "object"
+    },
+    "BatchCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "condition_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+          "title": "Condition Id",
+          "type": "string"
+        },
+        "defense_mode": {
+          "$ref": "#/$defs/DefenseMode"
+        },
+        "defense_position": {
+          "$ref": "#/$defs/DefensePosition",
+          "default": "input_retrieval"
+        },
+        "execution_kind": {
+          "$ref": "#/$defs/ExecutionKind",
+          "default": "full_pipeline"
+        },
+        "d2_threshold": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "D2 Threshold"
+        },
+        "consistency_policy": {
+          "anyOf": [
+            {
+              "enum": [
+                "threshold_only",
+                "review_on_contradiction"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Consistency Policy"
+        },
+        "comparisons": {
+          "items": {
+            "enum": [
+              "technique",
+              "position",
+              "payload",
+              "detector"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Comparisons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "condition_id",
+        "defense_mode",
+        "comparisons"
+      ],
+      "title": "BatchCondition",
+      "type": "object"
+    },
+    "BatchFilters": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Id"
+        },
+        "scenario": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scenario"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "split": {
+          "anyOf": [
+            {
+              "enum": [
+                "dev",
+                "holdout"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Split"
+        },
+        "condition_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition Id"
+        },
+        "comparison": {
+          "anyOf": [
+            {
+              "enum": [
+                "technique",
+                "position",
+                "payload",
+                "detector"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comparison"
+        },
+        "family_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Family Id"
+        },
+        "attack_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attack Type"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "enum": [
+                "attack",
+                "benign",
+                "hard_negative"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "goal_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Goal Kind"
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Severity"
+        },
+        "execution_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Execution Kind"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "evaluator_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluator Version"
+        },
+        "evaluation_policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluation Policy Version"
+        },
+        "pricing_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pricing Version"
+        }
+      },
+      "title": "BatchFilters",
+      "type": "object"
+    },
+    "BatchReport": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "0.1",
+          "default": "0.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "batch_report",
+          "default": "batch_report",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "batch_id": {
+          "title": "Batch Id",
+          "type": "string"
+        },
+        "report_version": {
+          "title": "Report Version",
+          "type": "string"
+        },
+        "evaluation_snapshot_sha256": {
+          "title": "Evaluation Snapshot Sha256",
+          "type": "string"
+        },
+        "filters": {
+          "$ref": "#/$defs/BatchFilters"
+        },
+        "statistics": {
+          "$ref": "#/$defs/StatisticsPolicy"
+        },
+        "provenance": {
+          "additionalProperties": true,
+          "title": "Provenance",
+          "type": "object"
+        },
+        "counts": {
+          "additionalProperties": true,
+          "title": "Counts",
+          "type": "object"
+        },
+        "groups": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Groups",
+          "type": "array"
+        },
+        "payload_comparisons": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Payload Comparisons",
+          "type": "array"
+        },
+        "detector_report": {
+          "additionalProperties": true,
+          "title": "Detector Report",
+          "type": "object"
+        },
+        "decisions": {
+          "additionalProperties": true,
+          "title": "Decisions",
+          "type": "object"
+        },
+        "tradeoff_points": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Tradeoff Points",
+          "type": "array"
+        },
+        "recommendation_cohorts": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Recommendation Cohorts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "batch_id",
+        "report_version",
+        "evaluation_snapshot_sha256",
+        "filters",
+        "statistics",
+        "provenance",
+        "counts",
+        "groups",
+        "payload_comparisons",
+        "detector_report",
+        "decisions"
+      ],
+      "title": "BatchReport",
+      "type": "object"
+    },
+    "BatchReview": {
+      "additionalProperties": false,
+      "properties": {
+        "reviewer": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "policy_version": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "excessive_transformation": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Excessive Transformation"
+        },
+        "target_exposed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Exposed"
+        }
+      },
+      "required": [
+        "reviewer",
+        "reason",
+        "policy_version"
+      ],
+      "title": "BatchReview",
+      "type": "object"
+    },
+    "BatchSource": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "pattern": "^[a-z0-9_-]{1,50}$",
+          "title": "Source Id",
+          "type": "string"
+        },
+        "data_dir": {
+          "minLength": 1,
+          "title": "Data Dir",
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "dev",
+            "holdout"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "case_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Case Ids",
+          "type": "array"
+        },
+        "languages": {
+          "items": {
+            "enum": [
+              "ko",
+              "en"
+            ],
+            "type": "string"
+          },
+          "title": "Languages",
+          "type": "array"
+        },
+        "metadata": {
+          "additionalProperties": {
+            "$ref": "#/$defs/CaseMetadata"
+          },
+          "title": "Metadata",
+          "type": "object"
+        }
+      },
+      "required": [
+        "source_id",
+        "data_dir",
+        "split"
+      ],
+      "title": "BatchSource",
+      "type": "object"
+    },
+    "BatchSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "0.1",
+          "default": "0.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "batch_spec",
+          "default": "batch_spec",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/BatchSource"
+          },
+          "minItems": 1,
+          "title": "Sources",
+          "type": "array"
+        },
+        "conditions": {
+          "items": {
+            "$ref": "#/$defs/BatchCondition"
+          },
+          "minItems": 1,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "repeats": {
+          "default": 3,
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Repeats",
+          "type": "integer"
+        },
+        "random_seed": {
+          "default": 2026,
+          "title": "Random Seed",
+          "type": "integer"
+        },
+        "budget": {
+          "$ref": "#/$defs/BatchBudget"
+        },
+        "statistics": {
+          "$ref": "#/$defs/StatisticsPolicy"
+        },
+        "evaluation_policy_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluation Policy File"
+        },
+        "common_policy_file": {
+          "default": "configs/week3-common-policy.txt",
+          "title": "Common Policy File",
+          "type": "string"
+        },
+        "freeze_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Freeze Hashes",
+          "type": "object"
+        },
+        "holdout_reviewers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Holdout Reviewers",
+          "type": "array"
+        },
+        "warmup": {
+          "const": "none",
+          "default": "none",
+          "title": "Warmup",
+          "type": "string"
+        },
+        "cache": {
+          "const": "disabled_by_runner_provider_cache_unknown",
+          "default": "disabled_by_runner_provider_cache_unknown",
+          "title": "Cache",
+          "type": "string"
+        },
+        "concurrency": {
+          "const": 1,
+          "default": 1,
+          "title": "Concurrency",
+          "type": "integer"
+        },
+        "seed_support": {
+          "const": "order_only_provider_seed_not_requested",
+          "default": "order_only_provider_seed_not_requested",
+          "title": "Seed Support",
+          "type": "string"
+        },
+        "min_call_interval_seconds": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Min Call Interval Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "sources",
+        "budget"
+      ],
+      "title": "BatchSpec",
+      "type": "object"
+    },
+    "BatchSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "0.1",
+          "default": "0.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "batch_summary",
+          "default": "batch_summary",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "batch_id": {
+          "title": "Batch Id",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "code_commit": {
+          "title": "Code Commit",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "planned_count": {
+          "minimum": 0,
+          "title": "Planned Count",
+          "type": "integer"
+        },
+        "status_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Status Counts",
+          "type": "object"
+        },
+        "attempt_count": {
+          "minimum": 0,
+          "title": "Attempt Count",
+          "type": "integer"
+        },
+        "budget": {
+          "additionalProperties": true,
+          "title": "Budget",
+          "type": "object"
+        },
+        "configuration_hashes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Configuration Hashes",
+          "type": "object"
+        },
+        "execution_scope": {
+          "title": "Execution Scope",
+          "type": "string"
+        },
+        "statistics": {
+          "$ref": "#/$defs/StatisticsPolicy"
+        },
+        "sources": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "conditions": {
+          "items": {
+            "$ref": "#/$defs/BatchCondition"
+          },
+          "title": "Conditions",
+          "type": "array"
+        },
+        "plan": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Plan",
+          "type": "array"
+        }
+      },
+      "required": [
+        "batch_id",
+        "created_at",
+        "code_commit",
+        "status",
+        "reason",
+        "planned_count",
+        "status_counts",
+        "attempt_count",
+        "budget",
+        "configuration_hashes",
+        "execution_scope",
+        "statistics",
+        "sources",
+        "conditions",
+        "plan"
+      ],
+      "title": "BatchSummary",
+      "type": "object"
+    },
+    "CaseMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "comparison_pair_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comparison Pair Id"
+        },
+        "family_id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+          "title": "Family Id",
+          "type": "string"
+        },
+        "parent_case_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_-]{2,63}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Case Id"
+        },
+        "ablation_variant": {
+          "default": "original",
+          "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+          "title": "Ablation Variant",
+          "type": "string"
+        },
+        "removed_components": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Removed Components",
+          "type": "array"
+        },
+        "information_available": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Information Available"
+        },
+        "goal_kind": {
+          "default": "unspecified",
+          "enum": [
+            "marker",
+            "secret_leak",
+            "task_hijack",
+            "detector_bypass",
+            "normal",
+            "unspecified"
+          ],
+          "title": "Goal Kind",
+          "type": "string"
+        },
+        "severity": {
+          "default": "unspecified",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical",
+            "unspecified"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "family_id"
+      ],
+      "title": "CaseMetadata",
+      "type": "object"
+    },
+    "DefenseMode": {
+      "enum": [
+        "none",
+        "D1",
+        "D2",
+        "D1+D2"
+      ],
+      "title": "DefenseMode",
+      "type": "string"
+    },
+    "DefensePosition": {
+      "enum": [
+        "input",
+        "retrieval",
+        "input_retrieval"
+      ],
+      "title": "DefensePosition",
+      "type": "string"
+    },
+    "ExecutionKind": {
+      "enum": [
+        "full_pipeline",
+        "detector_only"
+      ],
+      "title": "ExecutionKind",
+      "type": "string"
+    },
+    "RecommendationPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "status": {
+          "default": "draft",
+          "enum": [
+            "draft",
+            "frozen"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "final_recommendation_allowed": {
+          "default": false,
+          "title": "Final Recommendation Allowed",
+          "type": "boolean"
+        },
+        "reviewed_by": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reviewed By",
+          "type": "array"
+        },
+        "thresholds": {
+          "$ref": "#/$defs/ServiceThresholds"
+        },
+        "priority": {
+          "items": {
+            "enum": [
+              "asr",
+              "benign_fpr",
+              "hard_negative_fpr",
+              "task_success",
+              "latency_p95_ms",
+              "cost_per_request_usd"
+            ],
+            "type": "string"
+          },
+          "title": "Priority",
+          "type": "array"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "critical_goal_success_max": {
+          "const": 0,
+          "default": 0,
+          "title": "Critical Goal Success Max",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version",
+        "rationale"
+      ],
+      "title": "RecommendationPolicy",
+      "type": "object"
+    },
+    "ServiceThresholds": {
+      "additionalProperties": false,
+      "properties": {
+        "ASR_MAX": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Asr Max"
+        },
+        "FPR_BENIGN_MAX": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fpr Benign Max"
+        },
+        "FPR_HARD_NEGATIVE_MAX": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fpr Hard Negative Max"
+        },
+        "TASK_SUCCESS_MIN": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Task Success Min"
+        },
+        "TASK_SUCCESS_DROP_MAX_PP": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Task Success Drop Max Pp"
+        },
+        "P95_LATENCY_MAX": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "P95 Latency Max"
+        },
+        "COST_PER_REQUEST_MAX": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Per Request Max"
+        },
+        "RUN_FAILURE_RATE_MAX": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Failure Rate Max"
+        }
+      },
+      "title": "ServiceThresholds",
+      "type": "object"
+    },
+    "StatisticsPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "default": "cluster-bootstrap-v0.1-draft",
+          "title": "Version",
+          "type": "string"
+        },
+        "status": {
+          "default": "draft",
+          "enum": [
+            "draft",
+            "frozen"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reviewed_by": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reviewed By",
+          "type": "array"
+        },
+        "bootstrap_samples": {
+          "default": 1000,
+          "maximum": 10000,
+          "minimum": 100,
+          "title": "Bootstrap Samples",
+          "type": "integer"
+        },
+        "seed": {
+          "default": 2026,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "minimum_families": {
+          "default": 2,
+          "minimum": 2,
+          "title": "Minimum Families",
+          "type": "integer"
+        },
+        "minimum_evaluated_runs": {
+          "default": 3,
+          "minimum": 1,
+          "title": "Minimum Evaluated Runs",
+          "type": "integer"
+        }
+      },
+      "title": "StatisticsPolicy",
+      "type": "object"
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/BatchSpec"
+    },
+    {
+      "$ref": "#/$defs/BatchArtifact"
+    },
+    {
+      "$ref": "#/$defs/BatchSummary"
+    },
+    {
+      "$ref": "#/$defs/BatchReport"
+    },
+    {
+      "$ref": "#/$defs/BatchFilters"
+    },
+    {
+      "$ref": "#/$defs/BatchReview"
+    },
+    {
+      "$ref": "#/$defs/RecommendationPolicy"
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerolong-01/sec_sea/contracts/batch-v0.1.schema.json",
+  "title": "Batch plan, progress, review, report and recommendation policy v0.1"
+}

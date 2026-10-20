@@ -126,9 +126,61 @@ def verify(bundle, backend_url: str, env: dict, runs_dir: Path, fixture) -> dict
             require(not CANARY_PATTERN.search(shown), "UI leaked a canary")
             require("HTTP 샘플 검증" in shown, "UI must show fixture scope")
 
+        # 비교 버튼이 만든 실제 표를 API/저장 trace와 대조한다.
+        import sys
+        sys.path.insert(0, str(ROOT / "frontend"))
+        from ui_core import COMPARE_SAME, compare_verdict, summary_row
+
+        def check_comparison(state_key, experiment, column):
+            items = app.session_state[state_key]["results"]
+            require(compare_verdict(items, experiment)[0] == COMPARE_SAME, "UI comparison conditions differ")
+            frames = [frame.value for frame in app.dataframe if column in frame.value.columns and "실행 번호" in frame.value.columns]
+            require(len(frames) == 1, "Comparison summary table missing")
+            shown_rows = frames[0].to_dict(orient="records")
+            for item, row in zip(items, shown_rows):
+                trace = item["trace"]
+                got = request_json(f"{backend_url}/api/v1/runs/{trace['run_id']}")
+                saved = json.loads((runs_dir / f"{trace['run_id']}.trace.json").read_text(encoding="utf-8"))
+                require(trace == got == saved, "Comparison UI/API/store trace mismatch")
+                require(row == summary_row(column, item["title"], saved, None), "Rendered comparison cells differ")
+
+        for case_id in ("a006", "b006", "h007"):
+            app.radio(key="case_selector").set_value(bundle.cases[case_id].model_dump()).run()
+            app.button(key="run_compare").click().run()
+            require(not app.exception and not app.error, f"Mode comparison failed: {case_id}")
+            check_comparison("compare", "modes", "방어 모드")
+
+        app.button(key="run_positions").click().run()
+        require(not app.exception and not app.error, "Position comparison failed")
+        check_comparison("positions", "positions", "D2 적용 위치")
+        wire_count = len(fixture.requests)
+        app.button(key="refresh_compare").click().run()
+        app.button(key="refresh_positions").click().run()
+        require(not app.exception and not app.error, "Comparison refresh failed")
+        require(len(fixture.requests) == wire_count, "Comparison refresh called a model")
+        check_comparison("compare", "modes", "방어 모드")
+        check_comparison("positions", "positions", "D2 적용 위치")
+
+        app.text_input(key="stored_run_id").set_value(pending["run_id"])
+        app.button(key="load_run").click().run()
+        app.button(key="refresh_run").click().run()
+        require(not app.exception and not app.error, "Saved run lookup/refresh failed")
+        require(app.session_state["result"]["trace"] == updated, "Saved evaluation update missing from UI")
+        require("미평가" in [element.value for element in app.text], "Pending evaluation not rendered")
+        require(len(fixture.requests) == wire_count, "Saved lookup/refresh called a model")
+
+        import subprocess
+        completed = subprocess.run([sys.executable, str(ROOT / "frontend/verify_ui.py"),
+                                    "--data-dir", str(bundle.data_dir), "--runs-dir", str(runs_dir),
+                                    "--out", str(runs_dir / "frontend-ui-verification.md")],
+                                   env=dict(os.environ), cwd=ROOT, timeout=120, capture_output=True, text=True, encoding="utf-8")
+        require(completed.returncode == 0, f"Frontend handoff verifier failed: {completed.stdout}\n{completed.stderr}")
+
     from scripts.verify_detector_security import verify as verify_detector_security
     security = verify_detector_security(execute, backend_url, env, runs_dir, fixture)
     return {"status": "passed", "execution_scope": "fixture", "real_model_verified": False,
             "detector_security": security,
             "evaluation_scope": "backend_starter_draft", "representative_run_count": 12,
-            "ui_verified": True, "wire_prompt_verified": True, "public_samples": str(samples), "cases": results}
+            "ui_verified": True, "comparison_ui_verified": True, "saved_lookup_without_model_calls_verified": True,
+            "comparison_ui_run_count": 15, "frontend_handoff_verifier_passed": True,
+            "wire_prompt_verified": True, "public_samples": str(samples), "cases": results}

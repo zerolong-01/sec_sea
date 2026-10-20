@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import hashlib
 import re
 import time
 import threading
@@ -15,7 +16,7 @@ from .accounting import Accounting
 from .config import Settings
 from .defenses import Classifier, LLMInjectionClassifier
 from .detector_evaluation import analysis_status, initial_evaluations, report
-from .evaluation import EvaluationContext, Evaluator, ManualEvaluator, RuleEvaluator
+from .evaluation import EvaluationContext, Evaluator, ManualEvaluator, RuleEvaluator, RuleSet
 from .models import (CaseRecord, DefenseEvent, DetectorEvaluation, DetectorGoldUpdate, EvaluationResult,
                      EvaluationUpdate, Manifest, ModelCall,
                      OutputRecord, PromptComponent, RunRequest, RunTrace, StageMetric)
@@ -41,7 +42,7 @@ def mask_display_text(text: str) -> tuple[str, bool]:
 
 class TraceableRunError(Exception):
     def __init__(self, trace: RunTrace, error_code: str, http_status: int, cause: Exception):
-        super().__init__(mask_display_text(str(cause))[0])
+        super().__init__(trace.error.message if trace.error else mask_display_text(str(cause))[0])
         self.trace, self.error_code, self.http_status = trace, error_code, http_status
 
 
@@ -69,7 +70,17 @@ class RunService:
         self._classifier = classifier or build_classifier(settings)
         self._evaluator = evaluator or (RuleEvaluator(settings.evaluation_rules_path)
                                        if settings.evaluation_rules_path else ManualEvaluator())
+        # Privacy rules are independent of an injected/custom scoring engine.
+        self._redaction_rules = (RuleSet.model_validate_json(settings.evaluation_rules_path.read_text(encoding="utf-8"))
+                                 if settings.evaluation_rules_path else None)
         self._accounting = Accounting(settings.pricing_path)
+        self._common_policy = (settings.common_policy_path.read_text(encoding="utf-8").strip()
+                               if settings.common_policy_path else None)
+        if settings.common_policy_path and not self._common_policy:
+            raise ValueError("COMMON_POLICY_FILE must contain a nonempty common application policy")
+        self._base_prompt_version = settings.system_prompt_version + (
+            "+policy-sha256:" + hashlib.sha256(self._common_policy.encode()).hexdigest()
+            if self._common_policy else "")
         # The local single-worker API may receive concurrent review updates.
         self._review_lock = threading.RLock()
 
@@ -115,7 +126,7 @@ class RunService:
             return decision
         except ProviderError as exc:
             self._record(execution, exc.call)
-            budget_exceeded = exc.code == "MODEL_CALL_BUDGET_EXCEEDED"
+            budget_exceeded = exc.code == "MODEL_CALL_BUDGET_EXCEEDED" or exc.code.startswith("BATCH_")
             closed = budget_exceeded or self._settings.d2_error_policy == DetectorErrorPolicy.FAIL_CLOSED
             execution.events.append(DefenseEvent(
                 defense_id=DefenseMode.D2, defense_version=self._settings.d2_version, stage=stage,
@@ -130,8 +141,12 @@ class RunService:
                 raise ProviderError(str(exc), exc.code) from exc
             return DefenseDecision.ALLOW
 
-    def execute(self, request: RunRequest) -> RunTrace:
+    def execute(self, request: RunRequest, *, run_id: str | None = None) -> RunTrace:
         execution = Execution(request, self._build_manifest(request))
+        if run_id is not None:
+            if not re.fullmatch(r"run-[a-z0-9_-]{1,60}", run_id):
+                raise ValueError("Invalid run ID")
+            execution.run_id = run_id
         d1 = request.defense_mode in (DefenseMode.D1, DefenseMode.D1_D2)
         d2 = request.defense_mode in (DefenseMode.D2, DefenseMode.D1_D2)
         diagnostic = request.execution_kind == ExecutionKind.DETECTOR_ONLY
@@ -199,7 +214,8 @@ class RunService:
                 execution.skipped = "all_documents_quarantined"
                 return self._finish(execution, RunStatus.BLOCKED, OutputOutcome.BLOCKED)
             with self._stage(execution, TraceStage.PROMPT_ASSEMBLY):
-                prompt = prepare_prompt(case.user_input, included, request.scenario, d1, self._settings.system_prompt_version)
+                prompt = prepare_prompt(case.user_input, included, request.scenario, d1,
+                                        self._base_prompt_version, self._common_policy)
                 execution.components = prompt.components
                 if d1:
                     execution.events.append(DefenseEvent(
@@ -228,24 +244,122 @@ class RunService:
             trace = self._finish(execution, RunStatus.FAILED, OutputOutcome.ERROR, code, str(exc))
             raise TraceableRunError(trace, code, 404 if isinstance(exc, ArtifactNotFound) else 422, exc) from exc
 
-    def _safe(self, value, canaries=()):
+    @staticmethod
+    def _protected_values(rules: RuleSet | None, case_id: str) -> set[str]:
+        rule = next((item for item in rules.rules if item.case_id == case_id), None) if rules else None
+        return (set(rule.protected_values) | ({rule.canary} if rule.canary else set())) if rule else set()
+
+    @staticmethod
+    def _mask_value(text: str, value: str, replacement: str) -> str:
+        # A URL can encode only some characters. Match the UTF-8 percent bytes
+        # per character, so mixed encodings also work for non-ASCII targets.
+        def token(character):
+            encoded = "".join(f"%{byte:02x}" for byte in character.encode("utf-8"))
+            return f"(?:{re.escape(character)}|(?i:{encoded}))"
+
+        # Encoding a whole sentence changes the target's Base64 alignment.
+        # Inspect complete contiguous containers too, including URL-safe and
+        # unpadded forms; redact the container rather than exposing its payload.
+        target_pattern = re.compile(r"\s*".join(token(character) for character in value))
+
+        def mask_container(match):
+            candidate = match.group(0)
+            try:
+                decoded = base64.b64decode(candidate + "=" * (-len(candidate) % 4),
+                                           altchars=b"-_", validate=True).decode("utf-8")
+            except (ValueError, UnicodeDecodeError):
+                return candidate
+            return replacement if target_pattern.search(decoded) else candidate
+
+        text = re.sub(r"(?<![A-Za-z0-9+/_=-])[A-Za-z0-9+/_-]{8,}={0,2}(?![A-Za-z0-9+/_=-])",
+                      mask_container, text)
+        encoded = base64.b64encode(value.encode()).decode()
+        urlsafe = base64.urlsafe_b64encode(value.encode()).decode()
+        for variant in sorted({value, encoded, urlsafe, encoded.rstrip("="), urlsafe.rstrip("=")},
+                              key=len, reverse=True):
+            text = re.sub(r"\s*".join(token(character) for character in variant), replacement, text)
+        return text
+
+    def _safe(self, value, canaries=(), protected_values=()):
         if isinstance(value, str):
             masked = value
-            for canary in canaries:
-                masked = masked.replace(base64.b64encode(canary.encode()).decode(), "[MASKED_CANARY]")
-                encoded = "".join(f"(?:{re.escape(character)}|%{ord(character):02X})" for character in canary)
-                masked = re.sub(encoded, "[MASKED_CANARY]", masked, flags=re.IGNORECASE)
-                masked = re.sub(r"\s*".join(re.escape(character) for character in canary), "[MASKED_CANARY]", masked)
+            for target in sorted(set(canaries) | set(protected_values), key=len, reverse=True):
+                masked = self._mask_value(masked, target,
+                    "[MASKED_CANARY]" if CANARY_PATTERN.fullmatch(target) else "[MASKED_PROTECTED]")
             masked = mask_display_text(masked)[0]
             for secret in (self._settings.model_api_key, self._settings.d2_api_key):
                 if secret:
                     masked = masked.replace(secret, "[MASKED_CREDENTIAL]")
             return masked
         if isinstance(value, dict):
-            return {key: self._safe(item, canaries) for key, item in value.items()}
+            return {self._safe(key, canaries, protected_values): self._safe(item, canaries, protected_values)
+                    for key, item in value.items()}
         if isinstance(value, list):
-            return [self._safe(item, canaries) for item in value]
+            return [self._safe(item, canaries, protected_values) for item in value]
         return value
+
+    def _rules_for_trace(self, trace: RunTrace) -> RuleSet | None:
+        # Batch execution and API readers can use different current settings.
+        # Resolve actual attempt membership before trusting frozen privacy rules.
+        from .batch import BatchStore, file_hash, plan_hash
+        store = BatchStore(self._settings.runs_dir)
+        hinted = []
+        match = re.match(r"run-([a-f0-9]{12})-", trace.run_id)
+        if match:
+            hinted.append("batch-" + match[1])
+        if re.fullmatch(r"batch-[a-f0-9]{12}", trace.request.requested_by or ""):
+            hinted.append(trace.request.requested_by)
+        paths = [store.folder(batch_id) / "manifest.json" for batch_id in dict.fromkeys(hinted)]
+        paths += [path for path in sorted(store.root.glob("batch-*/manifest.json")) if path not in paths]
+        for path in paths:
+            if not path.exists():
+                if path.parent.name in hinted:
+                    raise ArtifactValidationError("Frozen batch privacy manifest is missing")
+                continue
+            try:
+                state = store.get(path.parent.name)
+            except (ValueError, OSError) as exc:
+                raise ArtifactValidationError("Frozen batch privacy manifest is invalid") from exc
+            entries = [entry for entry in state.plan
+                       if any(attempt.get("run_id") == trace.run_id for attempt in entry.get("attempts", []))]
+            if not entries:
+                if state.batch_id in hinted:
+                    raise ArtifactValidationError("Run does not match frozen batch membership")
+                continue
+            if state.configuration_hashes.get("plan") != plan_hash(state.plan):
+                raise ArtifactValidationError("Frozen batch privacy plan hash mismatch")
+            if len(entries) != 1 or entries[0]["case_id"] != trace.request.case_id:
+                raise ArtifactValidationError("Run does not match frozen batch case")
+            expected = state.configuration_hashes.get("evaluation_rules")
+            if expected == "not_configured":
+                return None
+            snapshot = path.parent / "evaluation_rules.snapshot"
+            if not expected or not snapshot.exists() or file_hash(snapshot) != expected:
+                raise ArtifactValidationError("Frozen batch privacy rules hash mismatch")
+            try:
+                return RuleSet.model_validate_json(snapshot.read_text(encoding="utf-8"))
+            except (ValueError, OSError) as exc:
+                raise ArtifactValidationError("Frozen batch privacy rules are invalid") from exc
+        return self._redaction_rules
+
+    def safe_for_trace(self, trace: RunTrace, value):
+        protected = self._protected_values(self._rules_for_trace(trace), trace.request.case_id)
+        raw = self._trace_store.get_raw(trace.run_id)
+        canaries = set(CANARY_PATTERN.findall(json.dumps(raw)))
+        canaries.update(CANARY_PATTERN.findall(json.dumps(trace.model_dump(mode="json"))))
+        return self._safe(value, canaries, protected)
+
+    def _public_trace(self, trace: RunTrace, *, rules: RuleSet | None) -> RunTrace:
+        payload = trace.model_dump(mode="json", by_alias=True)
+        raw = self._trace_store.get_raw(trace.run_id)
+        canaries = set(CANARY_PATTERN.findall(json.dumps(raw)))
+        canaries.update(CANARY_PATTERN.findall(json.dumps(payload)))
+        safe = self._safe(payload, canaries, self._protected_values(rules, trace.request.case_id))
+        safe["output"]["is_masked"] = (trace.output.is_masked or
+                                       safe["output"]["display_text"] != trace.output.display_text)
+        for original, component in zip(trace.prompt_assembly, safe["prompt_assembly"]):
+            component["is_masked"] = original.is_masked or component["display_text"] != original.display_text
+        return RunTrace.model_validate(safe)
 
     def _finish(self, execution: Execution, status: RunStatus, outcome: OutputOutcome,
                 error_code: str | None = None, error_message: str | None = None) -> RunTrace:
@@ -277,26 +391,18 @@ class RunService:
             "defense_events": [event.model_dump(mode="json") for event in execution.events],
         }
         self._trace_store.save_raw(execution.run_id, raw)
-        canaries = set(CANARY_PATTERN.findall(json.dumps(raw)))
-        components = []
-        for component in execution.components:
-            safe = self._safe(component.display_text, canaries)
-            components.append(component.model_copy(update={"display_text": safe, "is_masked": safe != component.display_text}))
         metrics = self._accounting.metrics(execution.calls, execution.stages,
                                            round((time.perf_counter()-execution.started)*1000), execution.skipped)
-        output = self._safe(execution.raw_output, canaries) if execution.raw_output is not None else None
         trace = RunTrace(
             run_id=execution.run_id, status=status, created_at=raw["created_at"], request=execution.request,
-            manifest=Manifest.model_validate(self._safe(execution.manifest.model_dump(mode="json"), canaries)),
-            input=self._safe(raw_input, canaries), retrieval=execution.retrieval,
-            prompt_assembly=components, defense_events=[DefenseEvent.model_validate(self._safe(event.model_dump(mode="json"), canaries))
-                                                       for event in execution.events],
-            output=OutputRecord(outcome=outcome, display_text=output,
-                                is_masked=output != execution.raw_output),
-            evaluation=type(evaluation).model_validate(self._safe(evaluation.model_dump(mode="json"), canaries)), metrics=metrics,
-            error={"code": error_code, "message": self._safe(error_message, canaries)} if error_code else None,
-            model_calls=[ModelCall.model_validate(self._safe(call.model_dump(mode="json"), canaries)) for call in execution.calls],
+            manifest=execution.manifest, input=raw_input, retrieval=execution.retrieval,
+            prompt_assembly=execution.components, defense_events=execution.events,
+            output=OutputRecord(outcome=outcome, display_text=execution.raw_output, is_masked=False),
+            evaluation=evaluation, metrics=metrics,
+            error={"code": error_code, "message": error_message} if error_code else None,
+            model_calls=execution.calls,
             detector_evaluation=initial_evaluations(execution.events))
+        trace = self._public_trace(trace, rules=self._redaction_rules)
         self._trace_store.save(trace)
         return trace
 
@@ -313,9 +419,9 @@ class RunService:
         return Manifest(
             execution_kind=request.execution_kind,
             model_id=self._settings.model_id, provider=self._settings.model_provider, execution_scope=scope,
-            base_system_prompt_version=self._settings.system_prompt_version,
-            system_prompt_version=(self._settings.system_prompt_version+"+"+D1_VERSION if d1
-                                   else self._settings.system_prompt_version),
+            base_system_prompt_version=self._base_prompt_version,
+            system_prompt_version=(self._base_prompt_version+"+"+D1_VERSION if d1
+                                   else self._base_prompt_version),
             generation_parameters={"temperature": self._settings.temperature, "max_tokens": self._settings.max_tokens},
             retrieval_config_version=self._settings.retrieval_config_version, defense_config_versions=versions,
             defense_position=request.defense_position, evaluator_version=("detector-only-v0.1"
@@ -342,7 +448,8 @@ class RunService:
             raise ValueError("요청 dataset_version과 case source_version이 다릅니다.")
 
     def get_trace(self, run_id: str) -> RunTrace:
-        return self._trace_store.get(run_id)
+        trace = self._trace_store.get(run_id)
+        return self._public_trace(trace, rules=self._rules_for_trace(trace))
 
     def update_evaluation(self, run_id: str, update: EvaluationUpdate) -> RunTrace:
         with self._review_lock:
@@ -356,7 +463,7 @@ class RunService:
         evaluation = update.model_dump(mode="json")
         evaluation["evaluated_at"] = datetime.now(timezone.utc).isoformat()
         self._trace_store.save_evaluation(run_id, evaluation)
-        trace.evaluation = EvaluationResult.model_validate(self._safe(evaluation))
+        trace.evaluation = EvaluationResult.model_validate(self.safe_for_trace(trace, evaluation))
         trace.manifest.evaluator_version = trace.evaluation.evaluator_version
         self._trace_store.save(trace)
         return trace
@@ -374,9 +481,7 @@ class RunService:
         payload = {**update.model_dump(mode="json"), "evaluated_at": datetime.now(timezone.utc).isoformat(),
                    "analysis_status": analysis_status(event, update.gold_label)}
         self._trace_store.save_detector_gold(run_id, payload)
-        raw = self._trace_store.get_raw(run_id)
-        canaries = set(CANARY_PATTERN.findall(json.dumps(raw)))
-        evaluation = DetectorEvaluation.model_validate(self._safe(payload, canaries))
+        evaluation = DetectorEvaluation.model_validate(self.safe_for_trace(trace, payload))
         # Older traces may have no evaluation rows; preserve every inspected target.
         existing = {(item.stage, item.target_ref): item for item in trace.detector_evaluation}
         existing[(evaluation.stage, evaluation.target_ref)] = evaluation

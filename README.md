@@ -310,7 +310,7 @@ MVP 프런트엔드는 Streamlit으로 진행합니다. 기존에 검토했던 N
 
 ## 개발 현황 및 관련 이슈
 
-1주차 RAG·API·trace·통합 실행을 구현했고, 2주차 D1/D2·적용 위치·평가·계측 경로를 확장했습니다. 실제 모델과 최종 평가 기준은 설정·인계 후 검증합니다.
+1주차 RAG·API·trace·통합 실행을 구현했고, 2주차 D1/D2·적용 위치·평가·계측 경로를 확장했습니다. 2026-10-20 실제 OpenAI API로 두 앱의 dev 파일럿 108건과 탐지 전용 18건을 검증했습니다. [실제 API 실행·비용·화면 인계 기록](docs/examples/real-api/README.md)에 재개 명령과 결과를 정리했습니다. 최종 평가 기준과 팀 판정은 검토 대기입니다.
 
 - [전체 개발 로드맵](https://github.com/zerolong-01/sec_sea/issues/1)
 - [유사 플랫폼 비교 및 차별화 전략](https://github.com/zerolong-01/sec_sea/issues/2)
@@ -364,3 +364,38 @@ python -m scripts.mvp serve --data-dir data/week2 --fixture-model
 단일 정적 검수 초안 48개와 검사 후 gold API 인계 검증을 추가했습니다.
 이메일/영어 실행 준비, evaluator 설정과 실제 모델·팀 합의에 남은 작업은
 [2주차 데이터 인계 안내](docs/week2-data.md)를 참고하세요.
+
+### 3주차 배치·집계 백엔드
+
+고정 입력의 반복 배치, 호출/토큰/금액 예산과 중단·재개, 저장 결과 기반 집계·CSV/JSON·추천 근거 API를 추가했습니다.
+실행 계약 v0.3과 별도로 [배치 계약 v0.1](contracts/batch-v0.1.schema.json)을 사용합니다.
+
+```text
+python -m scripts.verify_week3 --output runs/week3-handoff
+```
+
+RAG·이메일의 대표 3종×6개 고유 구성×3회, 총 108건을 로컬 HTTP fixture로 검증합니다.
+fixture 통과만으로 실제 모델 성능이나 최종 추천을 주장하지 않습니다.
+사용자 위임으로 통계·서비스 기준을 dev용으로 채택했으며, 실제 사람의 독립 검토와 최종 추천 gate는 유지합니다.
+실행/예산/재개·집계/API와 남은 인수 항목은 [3주차 백엔드 안내](docs/week3-backend.md)를 따릅니다.
+
+PR #38의 ablation·보호값 초안은 [3주차 실제 실행 파이프라인](docs/week3-live-pipeline.md)에서
+버전을 분리해 준비하고 두 앱 324건의 예산 제한 실행·재개·원시 출력 관측·저장 조회로 연결합니다.
+2026-10-20 실제 실행 324건·557호출, 추정 비용 $0.1022296과 마스킹된 노출 사례는
+[갱신 데이터 실제 API 검증 기록](docs/examples/week3-live/README.md)에 정리했습니다.
+
+이후 인용 대조 108회와 D2 공격·정상 인용 216회를 추가 실행했습니다.
+논문·공식 기업 자료를 근거로 결정한 [평가·서비스 기준](docs/week3-research-decisions.md),
+[통계 정책](docs/week3-statistical-policy.md), [실제 실행·AI 검토·재생 요약](docs/examples/week3-completion/README.md),
+[이슈별 완료 대조표](docs/week3-completion-status.md)를 함께 확인하세요.
+holdout은 보존했으며, AI 검토를 사람의 독립 검토로 표시하지 않습니다.
+
+후속 완료 감사에서 [앱·언어·공격 유형·심각도별 실패 구간](docs/week3-failure-slices.md),
+[D2 조작 문구 제거의 유효 미탐 비교](docs/week3-derived-detector-review.md),
+[실제 검사 621대상의 AI gold 연결](docs/week3-target-gold-registration.md)을 추가했습니다.
+[마스킹된 대표 사례 13건](docs/week3-case-handoff.md)과 [4주차 재현·시연 안내](docs/week4-handoff-demo.md)를 인계합니다.
+이는 저장 결과의 후속 검토이며 원래 자동 평가·raw 로그를 덮어쓰거나 모델을 추가 호출하지 않습니다.
+
+실제 사람 검토 기록이 별도로 없다는 사용자 답변에 따라 [새 AI 두 검토·제3 조정과 dev 기술 인수](docs/week3-ai-dev-acceptance.md)도 완료했습니다.
+출력648건·탐지대상621건을 고유283종에 연결해 두 AI가 각각 검토하고 불일치65종을 모두 조정했습니다.
+[판정·소속·근거·해시](docs/examples/week3-completion/ai-dev-review.v0.1.json)는 별도 버전이며, 사람의 독립 검토·실제 팀 서명이나 최종 안전 구성 추천으로 표시하지 않습니다.
