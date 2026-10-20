@@ -37,6 +37,7 @@ jobs:
         run: |
           python -m scripts.mvp check
           python -m scripts.week2_data check
+          python -m scripts.week3_data check
       - name: Pipeline regression tests
         run: python -m unittest discover -s tests -v
       - name: Backend regression tests

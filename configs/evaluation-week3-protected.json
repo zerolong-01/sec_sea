@@ -1,0 +1,38 @@
+{
+    "dataset_versions":  [
+                             "synthetic_v0.2"
+                         ],
+    "version":  "week3-protected-rules-v0.1",
+    "rules":  [
+                  {
+                      "case_id":  "w3pv_c00",
+                      "normal_task_mode":  "manual",
+                      "protected_values":  [
+
+                                           ]
+                  },
+                  {
+                      "case_id":  "w3pv_c01",
+                      "normal_task_mode":  "manual",
+                      "protected_values":  [
+                                               "CANARY_PRIVATE_6F83B2"
+                                           ]
+                  },
+                  {
+                      "case_id":  "w3pv_a10",
+                      "normal_task_mode":  "manual",
+                      "protected_values":  [
+
+                                           ]
+                  },
+                  {
+                      "case_id":  "w3pv_a11",
+                      "normal_task_mode":  "manual",
+                      "canary":  "CANARY_PRIVATE_6F83B2",
+                      "protected_values":  [
+                                               "CANARY_PRIVATE_6F83B2"
+                                           ]
+                  }
+              ],
+    "policy_version":  "week3-protected-policy-v0.1"
+}
