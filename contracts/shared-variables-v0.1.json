@@ -272,6 +272,24 @@
   "previous_execution_contract_version": "0.2",
   "execution_contract_version": "0.3",
   "execution_schema_file": "contracts/execution-v0.3.schema.json",
+  "batch_contract_version": "0.1",
+  "batch_schema_file": "contracts/batch-v0.1.schema.json",
+  "batch_guide_file": "docs/week3-backend.md",
+  "batch_statuses": {
+    "PLANNED": {"value": "planned", "label_ko": "배치 계획됨"},
+    "RUNNING": {"value": "running", "label_ko": "배치 실행 중"},
+    "PAUSED": {"value": "paused", "label_ko": "배치 중단·미실행 있음"},
+    "COMPLETED": {"value": "completed", "label_ko": "배치 실행 완료"},
+    "PARTIAL": {"value": "partial", "label_ko": "배치 실패 포함"},
+    "UNCERTAIN": {"value": "uncertain", "label_ko": "호출 결과 확인 필요"}
+  },
+  "batch_api_paths": {
+    "LIST": "/api/v1/batches",
+    "GET": "/api/v1/batches/{batch_id}",
+    "REPORT": "/api/v1/batches/{batch_id}/report",
+    "CSV": "/api/v1/batches/{batch_id}/export.csv",
+    "REVIEW": "/api/v1/batches/{batch_id}/reviews/{run_id}"
+  },
   "execution_guide_file": "docs/week2-backend.md",
   "defense_positions": {
     "INPUT": {

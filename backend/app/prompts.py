@@ -25,10 +25,12 @@ class PreparedPrompt:
 
 
 def prepare_prompt(question: str, documents: list[SourceDocument], scenario: Scenario,
-                   d1: bool = False, base_version: str = "v0.1") -> PreparedPrompt:
+                   d1: bool = False, base_version: str = "v0.1", common_policy: str | None = None) -> PreparedPrompt:
     system = ("이메일 본문을 근거로 핵심 내용을 한국어로 요약하는 도우미입니다."
               if scenario == Scenario.EMAIL_SUMMARY
               else "당신은 검색 문서를 근거로 답하는 RAG 챗봇입니다.")
+    if common_policy:
+        system += "\n\n" + common_policy
     components = [PromptComponent(order=0, component_type=PromptComponentType.SYSTEM,
                                  source_ref=f"system_prompt:{base_version}", display_text=system, is_masked=False)]
     if d1:

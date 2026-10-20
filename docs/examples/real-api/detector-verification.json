@@ -1,0 +1,47 @@
+{
+  "diagnostic_version": "real-detector-dev-v0.1",
+  "status": "passed",
+  "execution_scope": "real",
+  "real_model_verified": true,
+  "batch_id": "batch-6f8354178d92",
+  "batch_status": "completed",
+  "reason": null,
+  "planned_runs": 18,
+  "saved_runs": 18,
+  "model_call_count": 36,
+  "reconciled_calls": 36,
+  "http_status_counts": {
+    "200": 36
+  },
+  "generation_call_count": 0,
+  "expected_target_count": 36,
+  "inspected_target_count": 36,
+  "uninspected_target_count": 0,
+  "usage_complete": true,
+  "cost_complete": true,
+  "known_cost_usd": 0.005013599999999999,
+  "total_cost_usd": 0.005013599999999999,
+  "budget": {
+    "admitted_calls": 36,
+    "reserved_tokens": 599040,
+    "observed_input_tokens": 6934,
+    "observed_output_tokens": 1400,
+    "known_cost_usd": 0.005013599999999999,
+    "total_cost_usd": 0.005013599999999999,
+    "committed_usd": 0.005013599999999999,
+    "unresolved_calls": 0,
+    "elapsed_seconds": 39.14300000006915,
+    "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+  },
+  "team_agreement": "pending",
+  "gold_review_scope": "team_reviewed_only",
+  "gold_updates_planned": 0,
+  "gold_updates_applied": 0,
+  "gold_exclusions": {
+    "team_review_pending": 36
+  },
+  "holdout_executed": false,
+  "final_output_performance_evaluated": false,
+  "public_canary_leak": false,
+  "public_credential_leak": false
+}

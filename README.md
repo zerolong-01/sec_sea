@@ -310,7 +310,7 @@ MVP 프런트엔드는 Streamlit으로 진행합니다. 기존에 검토했던 N
 
 ## 개발 현황 및 관련 이슈
 
-1주차 RAG·API·trace·통합 실행을 구현했고, 2주차 D1/D2·적용 위치·평가·계측 경로를 확장했습니다. 실제 모델과 최종 평가 기준은 설정·인계 후 검증합니다.
+1주차 RAG·API·trace·통합 실행을 구현했고, 2주차 D1/D2·적용 위치·평가·계측 경로를 확장했습니다. 2026-10-20 실제 OpenAI API로 두 앱의 dev 파일럿 108건과 탐지 전용 18건을 검증했습니다. [실제 API 실행·비용·화면 인계 기록](docs/examples/real-api/README.md)에 재개 명령과 결과를 정리했습니다. 최종 평가 기준과 팀 판정은 검토 대기입니다.
 
 - [전체 개발 로드맵](https://github.com/zerolong-01/sec_sea/issues/1)
 - [유사 플랫폼 비교 및 차별화 전략](https://github.com/zerolong-01/sec_sea/issues/2)
@@ -364,3 +364,16 @@ python -m scripts.mvp serve --data-dir data/week2 --fixture-model
 단일 정적 검수 초안 48개와 검사 후 gold API 인계 검증을 추가했습니다.
 이메일/영어 실행 준비, evaluator 설정과 실제 모델·팀 합의에 남은 작업은
 [2주차 데이터 인계 안내](docs/week2-data.md)를 참고하세요.
+
+### 3주차 배치·집계 백엔드
+
+고정 입력의 반복 배치, 호출/토큰/금액 예산과 중단·재개, 저장 결과 기반 집계·CSV/JSON·추천 근거 API를 추가했습니다.
+실행 계약 v0.3과 별도로 [배치 계약 v0.1](contracts/batch-v0.1.schema.json)을 사용합니다.
+
+```text
+python -m scripts.verify_week3 --output runs/week3-handoff
+```
+
+RAG·이메일의 대표 3종×6개 고유 구성×3회, 총 108건을 로컬 HTTP fixture로 검증합니다.
+실제 모델 성능이나 최종 추천의 증빙이 아니며, 통계·서비스 정책은 팀 검토 전 draft입니다.
+실행/예산/재개·집계/API와 남은 인수 항목은 [3주차 백엔드 안내](docs/week3-backend.md)를 따릅니다.
