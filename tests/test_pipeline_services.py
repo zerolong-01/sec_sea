@@ -2,6 +2,7 @@
 import io
 import json
 import os
+import shutil
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -32,6 +33,7 @@ class PipelineServiceTests(unittest.TestCase):
         self.runner = BatchRunner(settings)
         self.state = self.runner.create(BatchSpec.model_validate_json(
             (self.prepared / "batch-spec.json").read_text(encoding="utf-8")))
+        self.frozen_data = self.runner.store.folder(self.state.batch_id) / "inputs/week3"
         (self.output / "pipeline.json").write_text(json.dumps({"version": VERSION}), encoding="utf-8")
         (self.output / "checkpoint.json").write_text(json.dumps({
             "version": VERSION, "batch_id": self.state.batch_id}), encoding="utf-8")
@@ -39,7 +41,7 @@ class PipelineServiceTests(unittest.TestCase):
     def test_paths_come_from_validated_pipeline_and_immutable_snapshots(self):
         env, batch_id = mvp.pipeline_environment(self.output)
         self.assertEqual(batch_id, self.state.batch_id)
-        self.assertEqual(Path(env["DATA_DIR"]), self.prepared / "rag")
+        self.assertEqual(Path(env["DATA_DIR"]), self.frozen_data)
         self.assertEqual(Path(env["RUNS_DIR"]), self.output / "runs")
         folder = self.runner.store.folder(batch_id)
         for key, filename in (("PRICING_FILE", "pricing"), ("EVALUATION_RULES_FILE", "evaluation_rules"),
@@ -71,7 +73,7 @@ class PipelineServiceTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertEqual([name for name, _ in captured], ["backend", "frontend"])
         for _, env in captured:
-            self.assertEqual(env["DATA_DIR"], str(self.prepared / "rag"))
+            self.assertEqual(env["DATA_DIR"], str(self.frozen_data))
             self.assertEqual(env["MVP_LOAD_DOTENV"], "0")
             with patch.dict(os.environ, env, clear=True):
                 settings = Settings.from_environment(ROOT)
@@ -91,6 +93,18 @@ class PipelineServiceTests(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             mvp.pipeline_environment(self.output)
         self.assertFalse(checkpoint.exists())
+
+    def test_saved_view_does_not_require_original_preparation_files(self):
+        shutil.rmtree(self.prepared)
+        env, batch_id = mvp.pipeline_environment(self.output)
+        self.assertEqual(batch_id, self.state.batch_id)
+        self.assertEqual(Path(env["DATA_DIR"]), self.frozen_data)
+        self.assertTrue(Path(env["MVP_MANIFEST"]).is_file())
+
+    def test_frozen_data_tampering_is_rejected(self):
+        (self.frozen_data / "cases.v0.1.jsonl").write_text("changed", encoding="utf-8")
+        with self.assertRaises(ValueError):
+            mvp.pipeline_environment(self.output)
 
     def test_explicit_pipeline_cannot_be_mixed_with_independent_runs(self):
         with patch.dict(os.environ, {"MVP_LOAD_DOTENV": "0"}, clear=True), \

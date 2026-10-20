@@ -224,8 +224,7 @@ def verify_ui(bundle, env: dict[str, str]) -> None:
 def pipeline_environment(output: Path):
     """기존 pipeline의 데이터와 고정 설정을 서비스에 연결한다. 실행·생성은 하지 않는다."""
     from backend.app.batch import BatchStore, verify_frozen_artifacts
-    from backend.app.batch_models import BatchSpec
-    from scripts.week3_prepare import VERSION, validate
+    from scripts.week3_prepare import VERSION
 
     output = output.resolve()
     ownership = json.loads((output / "pipeline.json").read_text(encoding="utf-8"))
@@ -235,13 +234,12 @@ def pipeline_environment(output: Path):
     store = BatchStore(output / "runs")
     state = store.get(checkpoint["batch_id"])
     verify_frozen_artifacts(store, state)
-    prepared = output / "prepared"
-    validate(prepared)
-    spec = BatchSpec.model_validate_json((prepared / "batch-spec.json").read_text(encoding="utf-8"))
-    if spec != state.spec:
-        raise ValueError("Prepared pipeline and saved batch differ")
-    env = {"DATA_DIR": str(prepared / "rag"),
-           "MVP_MANIFEST": str(prepared / "rag/mvp-manifest.v0.1.json"),
+    if not any(source["source_id"] == "week3" and source["scenario"] == "rag_chat"
+               for source in state.source_snapshots):
+        raise ValueError("Saved pipeline has no week3 RAG source")
+    data_dir = store.folder(state.batch_id) / "inputs/week3"
+    env = {"DATA_DIR": str(data_dir),
+           "MVP_MANIFEST": str(data_dir / "mvp-manifest.v0.1.json"),
            "RUNS_DIR": str(output / "runs")}
     for variable, snapshot in (("PRICING_FILE", "pricing"), ("COMMON_POLICY_FILE", "common_policy"),
                                ("EVALUATION_RULES_FILE", "evaluation_rules")):
