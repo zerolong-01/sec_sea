@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # frontend 폴�
 
 from batch_core import (  # noqa: E402
     ANALYSIS_FILTERS, METRICS, NO_VALUE, budget_rows, common_reasons, comparison_rows, condition_rows,
-    decision_rows, decision_status_text, detector_rows, filter_options, get_batch, get_csv, get_report,
+    csv_report_error, decision_rows, decision_status_text, detector_rows, filter_options, get_batch, get_csv, get_report,
     group_title, kpi_cards, md_safe, list_batches, option_text, payload_rows, plan_rows_for_runs, reason_text,
     report_json_bytes, baseline_rows, scatter_points, scope_text, batch_status_text, status_counts_text,
     summary_rows, warnings_for,
@@ -49,6 +49,8 @@ if st.button("배치 목록 새로고침", key="reload_batches") or "batches" no
     with st.spinner("배치 목록 조회 중"):
         st.session_state["batches"] = list_batches()
     st.session_state.pop("report_cache", None)
+    st.session_state.pop("batch_csv", None)
+    st.session_state.pop("batch_trace", None)
 
 batches, list_error = st.session_state["batches"]
 if list_error:
@@ -138,6 +140,8 @@ with st.form("filters_form"):
     applied = st.form_submit_button("필터 적용")
 if applied:
     st.session_state["filters"][batch_id] = {k: v for k, v in chosen.items() if v is not None}
+    st.session_state.pop("batch_csv", None)
+    st.session_state.pop("batch_trace", None)
     st.rerun()
 if filters:
     st.caption("적용 중인 필터: " + " · ".join(f"{dict((f[0], f[1]) for f in ANALYSIS_FILTERS)[k]}={option_text(k, v, summary)}"
@@ -149,6 +153,9 @@ if report_error:
 if not report.get("groups"):
     st.info("이 필터에 맞는 실행이 없습니다. 필터를 넓혀 보세요.")
     st.stop()
+
+report_key = (cache_key, report.get("report_version"), report.get("evaluation_snapshot_sha256"),
+              (report.get("provenance") or {}).get("calculation_implementation_sha256"))
 
 st.caption(f"리포트 버전 {report.get('report_version')} · 평가 스냅샷 {str(report.get('evaluation_snapshot_sha256'))[:12]}… · "
            f"통계 {report.get('statistics', {}).get('version')} ({report.get('statistics', {}).get('status')})")
@@ -272,12 +279,16 @@ with tab_trace:
     run_ids = [r["실행 번호"] for r in runs]
     if run_ids:
         run_id = st.selectbox("자세히 볼 실행 번호", run_ids, key="trace_run")
+        trace_key = (report_key, selected, run_id)
+        loaded = st.session_state.get("batch_trace")
+        if loaded and loaded[0] != trace_key:
+            st.session_state.pop("batch_trace", None)
         if st.button("trace 조회", key="load_trace"):
             with st.spinner("저장 trace 조회 중"):
-                st.session_state["batch_trace"] = load_run(run_id)
+                st.session_state["batch_trace"] = (trace_key, *load_run(run_id))
         loaded = st.session_state.get("batch_trace")
         if loaded:
-            trace, error = loaded
+            _, trace, error = loaded
             if error:
                 show_error(error)
             if trace:
@@ -315,9 +326,12 @@ with tab_export:
                        mime="application/json", key="download_json")
     if st.button("지표 CSV 준비", key="prepare_csv"):
         with st.spinner("CSV 만드는 중"):
-            st.session_state["batch_csv"] = (cache_key, *get_csv(batch_id, filters))
+            content, error = get_csv(batch_id, filters)
+            if not error:
+                error = csv_report_error(content, report)
+            st.session_state["batch_csv"] = (report_key, content if not error else None, error)
     prepared = st.session_state.get("batch_csv")
-    if prepared and prepared[0] == cache_key:
+    if prepared and prepared[0] == report_key:
         _, content, error = prepared
         if error:
             show_error(error)

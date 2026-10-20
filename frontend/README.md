@@ -187,6 +187,7 @@ python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs  
 | 요청당 비용 (USD) | `cost_per_request_usd` | 달러 |
 | 요청당 입력 / 출력 토큰 | `input_tokens` / `output_tokens` | 평균 토큰 수 |
 | KPI 카드 도움말 | 각 지표의 `numerator`, `denominator`, `family_count`, `ci95`, `inference_status`, `excluded` | 분자/분모 · family 수 · 95% CI · 표본 부족 여부 · 제외 사유 |
+| payload 짝 비교 | `payload_comparisons[].target_exposure_delta` | 노출 차이(%p) · 비교 짝 수 · family 수 · 95% CI(%p) · 통계 상태 · 제외 사유 |
 | 추천 판단 | `decisions.records[].status`, `reasons`, `dominated_by` | 한글 사유 (원래 코드도 함께) |
 
 값이 없을 때는 이렇게 보입니다.
@@ -200,10 +201,17 @@ python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs  
 화면 전용 한글 이름(지표 이름, 추천 판단 상태, 사유, 제외 사유)은 아직 통합 변수 파일에 없어서 `batch_core.py` 위쪽에 모아 두었습니다.
 팀에서 정하면 통합 변수 파일로 옮깁니다.
 
+### 조회 결과와 다운로드의 일치
+
+- 배치·필터·그룹·실행 번호가 바뀌면 이전 선택의 trace를 표시하지 않습니다. 새 선택에서 **trace 조회**를 누르세요.
+- **배치 목록 새로고침**은 집계 리포트와 준비된 CSV, 조회한 trace를 함께 갱신합니다.
+- CSV의 모든 행에서 배치 번호·리포트 버전·평가 스냅샷·필터가 현재 화면과 같은지 확인한 뒤 다운로드를 제공합니다. v0.3 리포트가 계산 구현 해시를 제공하면 그 값도 확인합니다.
+- 실행 완료나 평가 변경으로 CSV가 화면보다 최신이면 다운로드를 보류하고 새로고침을 안내합니다. 목록을 새로고침한 뒤 **지표 CSV 준비**를 다시 누르세요.
+
 ### 확인한 것
 
 ```text
-python -m unittest tests.test_batch_dashboard -v
+python -m unittest tests.test_batch_dashboard tests.test_batch_dashboard_state tests.test_batch_export_snapshot tests.test_batch_payload_uncertainty -v
 ```
 
 공개 fixture(`docs/examples/week3`)로 표·산점도·추천 사유·실행 번호 연결·필터·오류 처리를 확인합니다.
