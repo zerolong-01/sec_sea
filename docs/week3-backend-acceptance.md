@@ -1,5 +1,29 @@
 # 3주차 B 백엔드 인수 기록
 
+## 2026-10-20 추가 인계: 현재 확인한 상태
+
+현재 완료 범위는 [전체 요구사항·증빙 대조표](week3-completion-status.md), [위임 연구 결정](week3-research-decisions.md),
+[공개 안전 요약](examples/week3-completion/README.md), [실제 artifact hash·수치](examples/week3-completion/summary.v0.4.json)를 따른다.
+**아래 PR36 당시 표는 역사 기록으로 보존한다.** 당시의 정책 미정·인용 미실행·C 연결/마스킹 대기·로컬 회귀 대기 문구를 현재 상태로 읽지 않는다.
+
+| 이번에 추가 완료한 범위 | 실제 증거 |
+| --- | --- |
+| dev 데이터·gold·정상 rubric·서비스/통계 기준 결정 | 사용자 위임으로 공개 논문·기업 자료를 근거로 adopted_for_dev 채택. runtime draft와 빈 reviewer는 미수행 사람 검수/최종 승인을 숨기지 않는 지위이며 수치 미정이 아님. |
+| 신규 실제 인용 대조108 | batch-8fb19849d67c: 생성85·차단23·오류0·184호출·추정$0.0373288. [별도 AI 의미 검토](week3-quotation-output-review.md), quoted utility54/54·attack 아래18/54. |
+| 신규 실제 D2 6종216 | batch-fb671ff629f0: 생성180·차단36·오류0·396호출·추정$0.0754176. [의미 검토](week3-d2-output-review.md), HN utility60/108·attack 아래6/108. marker102와 비밀 공개를 분리. |
+| 실제 D2 대상 gold·지표 | AI 작성/교차검토를 216 target에 annotation 적용·남음0·immutable true·모델0. 6그룹 각eligible36/오류0/대기0. input3그룹 각benign FPR0/36, retrieval3그룹 각FNR6/18·HN FPR0/18. 최종 생성 ASR과 별도. |
+| legacy pairing·신규 paired 검산 | fbf9120: 명시적 comparison_pair_id와 inherited family cluster 분리·모호한 legacy 짝 사유 공개. 신규 quotation54/D2 108 matched pairs·각3family exact overlay. frozen metadata 재작성 없음. |
+| 공개 privacy·실제 API/UI | 보호값 설정72 trace의 과거54노출→현재GET0노출. frozen 규칙 사용·독립 privacy 회귀. legacy API/schema/CSV/UI passed·원 pipeline845파일 불변·모델0. |
+| 최신 report/export | v0.4 legacy90그룹/CSV990·quotation24/264·D2 12/132. 각각706/225/585파일 검증 전후 불변, 추가모델0·선정 deferred. |
+| 로컬 최종 회귀 | root191 tests/325.060s·backend113/67.179s OK. UI paired focused1 별도pass. runs/week3-completion/{root,backend}-final-tests.log. |
+| 앞으로 확인할 항목 | push 후 새 head의 Ubuntu/Windows CI가 PR Checks에 연결되면 확인. PR39 draft/base dev 유지·자동 merge 없음. 실제 사람2인/세 역할 합의·holdout·운영 최종 선택은 pending. |
+
+기존324·별도942 탐색·신규108/216을 한 ASR로 합치지 않는다. 새로운 AI gold/출력 검토는 사람 검수나 source 서명 인증이 아니다.
+각 신규 세트의3family는 채택 최소20에 미달하며 반복으로 독립 표본을 늘리지 않는다. CI null·최종 deferred를 유지한다.
+
+## PR #36 당시 인수 기록 — 보존
+
+
 대상은 [#34](https://github.com/zerolong-01/sec_sea/issues/34)의 배치 실행·예산·평가 저장·집계·export와 [PR #36](https://github.com/zerolong-01/sec_sea/pull/36)이다. 실행 방법과 API 계약은 [백엔드 안내](week3-backend.md)를 따른다. 작성일은 2026-10-20이다.
 
 B의 완료 기준은 재현 가능한 실행·기록·분석 기능과 그 검증 근거를 제공하는 것이다. A의 최종 데이터·gold·서비스 기준 확정, C의 전체 대시보드 공동 인수, 최종 성능 실험은 각각 별도 인수 항목이다. `completed` 배치나 이 문서의 기능 완료를 연구 결과 확정으로 해석하지 않는다.
