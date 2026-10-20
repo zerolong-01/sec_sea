@@ -6,6 +6,8 @@ Streamlit을 쓰지 않으므로 화면 없이도 불러와 테스트할 수 있
 - 값이 없으면(null) 0이나 실패로 바꾸지 않고 "기록 없음"으로 보여 준다.
 - 여기 있는 요청은 전부 조회(GET)·집계(POST report/export)라서 모델을 호출하지 않는다.
 """
+import csv
+import io
 import json
 import re
 
@@ -261,6 +263,34 @@ def clean_filters(filters):
 def report_json_bytes(report):
     """화면에 보이는 리포트 그대로 JSON 파일로 내려받기 위한 바이트."""
     return json.dumps(report, ensure_ascii=False, indent=2).encode("utf-8")
+
+
+def csv_report_error(content, report):
+    """새로 집계된 CSV가 현재 화면의 리포트와 같은 스냅샷인지 확인한다."""
+    invalid = api_error(code="INVALID_RESPONSE", message="CSV의 평가 정보를 확인할 수 없습니다. 배치 목록을 새로고침한 뒤 다시 준비하세요.")
+    expected = {key: report.get(key) for key in ("batch_id", "report_version", "evaluation_snapshot_sha256")}
+    calculation = (report.get("provenance") or {}).get("calculation_implementation_sha256")
+    if calculation:
+        expected["calculation_implementation_sha256"] = calculation
+    if not all(expected.values()):
+        return invalid
+    try:
+        reader = csv.DictReader(io.StringIO(content.decode("utf-8-sig"), newline=""), strict=True)
+        if not set(expected).union({"filters"}).issubset(reader.fieldnames or []):
+            return invalid
+        found = False
+        for row in reader:
+            found = True
+            filters = json.loads(row["filters"])
+            if not isinstance(filters, dict):
+                return invalid
+            if (any(row[key] != value for key, value in expected.items()) or
+                    clean_filters(filters) != clean_filters(report.get("filters"))):
+                return api_error(code="SNAPSHOT_MISMATCH", message="화면과 CSV의 평가 스냅샷·버전 또는 필터가 다릅니다. 배치 목록을 새로고침한 뒤 CSV를 다시 준비하세요.")
+        # 빈 리포트에는 내보내기를 제공하지 않으므로 헤더만 있는 응답도 유효하지 않다.
+        return None if found else invalid
+    except (UnicodeError, csv.Error, ValueError, TypeError):
+        return invalid
 
 
 # ---------------------------------------------------------------------------
@@ -696,6 +726,12 @@ def payload_rows(report):
     rows = []
     for p in report.get("payload_comparisons") or []:
         delta = p.get("target_exposure_delta") or {}
+        interval = delta.get("ci95")
+        interval_text = NO_CI
+        if interval and len(interval) == 2 and all(bound is not None for bound in interval):
+            # 서버의 차이·CI는 비율 단위이므로 화면에서는 모두 %p로 표시한다.
+            interval_text = fmt_ci([bound * 100 for bound in interval], "pp")
+        status = delta.get("inference_status")
         rows.append({
             "데이터 출처": p.get("source_id"),
             "조건": p.get("condition_id"),
@@ -704,6 +740,10 @@ def payload_rows(report):
             "공격 변형 vs 대조": f"{variant_text(p.get('attack_variant'))} vs {variant_text(p.get('control_variant'))}",
             "노출 차이": metric_cell(delta, "rate") if delta.get("value") is None else
                         f"{delta['value'] * 100:+.1f}%p (n={delta.get('denominator')})",
+            "비교 짝 수": delta.get("denominator") if delta.get("denominator") is not None else NO_VALUE,
+            "family 수": delta.get("family_count") if delta.get("family_count") is not None else NO_VALUE,
+            "95% CI": interval_text,
+            "통계 상태": INFERENCE_LABELS.get(status, status) if status else NO_VALUE,
             "제외": fmt_excluded(delta.get("excluded")),
         })
     return rows
