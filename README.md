@@ -395,3 +395,7 @@ holdout은 보존했으며, AI 검토를 사람의 독립 검토로 표시하지
 [실제 검사 621대상의 AI gold 연결](docs/week3-target-gold-registration.md)을 추가했습니다.
 [마스킹된 대표 사례 13건](docs/week3-case-handoff.md)과 [4주차 재현·시연 안내](docs/week4-handoff-demo.md)를 인계합니다.
 이는 저장 결과의 후속 검토이며 원래 자동 평가·raw 로그를 덮어쓰거나 모델을 추가 호출하지 않습니다.
+
+실제 사람 검토 기록이 별도로 없다는 사용자 답변에 따라 [새 AI 두 검토·제3 조정과 dev 기술 인수](docs/week3-ai-dev-acceptance.md)도 완료했습니다.
+출력648건·탐지대상621건을 고유283종에 연결해 두 AI가 각각 검토하고 불일치65종을 모두 조정했습니다.
+[판정·소속·근거·해시](docs/examples/week3-completion/ai-dev-review.v0.1.json)는 별도 버전이며, 사람의 독립 검토·실제 팀 서명이나 최종 안전 구성 추천으로 표시하지 않습니다.

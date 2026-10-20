@@ -1,0 +1,866 @@
+{
+  "decided_at": "2026-10-20T14:20:19.412152+00:00",
+  "final_reconciliation": {
+    "decision_status": "partially_unresolved",
+    "path": "ai-dev-review.v0.1.json",
+    "review_status": "complete",
+    "unresolved_unit_count": 23
+  },
+  "holdout_authorized": false,
+  "human_review": false,
+  "human_signatures": [],
+  "latest_remote_ci": "verify latest PR head separately; historical check records do not substitute for it",
+  "records": {
+    "A": {
+      "original_record_sha256": "7641923132e766ba4e93b028e5754254897342c546e1db11265e3a0312603f0e",
+      "record": {
+        "checks": [
+          {
+            "check": "package_structure_counts",
+            "result": {
+              "email_cases": 3,
+              "email_documents": 3,
+              "rag_cases": 84,
+              "rag_documents": 52,
+              "rag_labels": {
+                "attack": 28,
+                "benign": 28,
+                "hard_negative": 28
+              },
+              "rag_splits": {
+                "dev": 75,
+                "holdout": 9
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check": "document_references",
+            "result": {
+              "missing": []
+            },
+            "status": "pass"
+          },
+          {
+            "check": "split_hash_metadata",
+            "result": {
+              "identical_cross_split_document_bodies": 0,
+              "identical_cross_split_inputs": 0,
+              "semantic_similarity_not_run": true,
+              "shared_document_ids": 0
+            },
+            "status": "pass"
+          },
+          {
+            "check": "taxonomy_metadata",
+            "result": {
+              "all_techniques": 28,
+              "dev_techniques": 25,
+              "holdout_metadata_only_techniques": 3,
+              "independent_family_count_not_inferred": true,
+              "taxonomy_status": "project_proposal"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "translation_parent_split",
+            "result": {
+              "case_ids": [
+                "a006-en",
+                "b006-en",
+                "h007-en"
+              ],
+              "count": 3,
+              "source_translation_statuses": {
+                "single_review": 3
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check": "family_map_structure",
+            "result": {
+              "coarse_family_ids": [
+                "F001",
+                "F002",
+                "F003",
+                "F004",
+                "F005",
+                "F006"
+              ],
+              "dev_rows": 25,
+              "rows": 28,
+              "status": "pending_original_family_independence_review"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "target_gold_structure_hashes",
+            "result": {
+              "all_rows": 48,
+              "dev_labels": {
+                "benign": 19,
+                "hard_negative": 11,
+                "malicious": 6
+              },
+              "dev_rows": 36,
+              "dev_unique_target_text_hashes": 30,
+              "email_dev_target_rows": 6,
+              "existing_AI_reviewed_rag_dev_target_rows": 30,
+              "hash_mismatches": [],
+              "holdout_hash_metadata_only": 12,
+              "rag_dev_target_rows": 30,
+              "source_review_statuses": {
+                "single_review": 48
+              }
+            },
+            "status": "pass"
+          },
+          {
+            "check": "existing_review_AI_provenance",
+            "result": {
+              "human_review": "pending",
+              "independent_human_requirement_satisfied": false,
+              "record_kinds": {
+                "attack_family_review": 25,
+                "target_gold_review": 30,
+                "translation_review": 3
+              },
+              "reviewers": [
+                "Codex"
+              ]
+            },
+            "status": "pass"
+          },
+          {
+            "check": "all_58_existing_review_source_hash_bindings",
+            "result": {
+              "checked": 58,
+              "mismatches": []
+            },
+            "status": "pass"
+          },
+          {
+            "check": "documented_original_hashes",
+            "result": {
+              "checked": 6,
+              "mismatches": []
+            },
+            "status": "pass"
+          },
+          {
+            "check": "ablation_parent_dev_scope",
+            "result": {
+              "parent_sources": [
+                "a001",
+                "a006",
+                "a021"
+              ],
+              "rows": 11,
+              "week3_data_check": "37 checks passed; model calls 0"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "policy_scope_and_human_gate",
+            "result": {
+              "dev_only": true,
+              "holdout_authorized": false,
+              "human_requirement_satisfied": false,
+              "min_evaluated": 60,
+              "min_families": 20,
+              "planned_repeats": 3,
+              "production_authorized": false,
+              "semantic_consensus": "pending_adjudication"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "source_immutability_during_role_a",
+            "result": {
+              "files": 29,
+              "mutated": []
+            },
+            "status": "pass"
+          },
+          {
+            "check": "root_documentation_scope_correction",
+            "result": [
+              {
+                "changed_by": "root",
+                "observed_corrected_sha256": "44f38e1e994f097914b4a9bf077f282b668c9d8494b72b8b33a3110ad822fea3",
+                "path": "docs/week3-gold-review.md",
+                "verification": "Current text explicitly separates RAG holdout12 and historical out-of-scope email dev6. Pre-correction file hash was not separately retained by this role."
+              },
+              {
+                "changed_by": "root",
+                "observed_corrected_sha256": "40470b7fd238762afae877dd8dfd0a5130761f05ef0004b2c35849172c25a9be",
+                "path": "docs/week3-completion-status.md",
+                "verification": "Current text explicitly separates RAG holdout12 and historical out-of-scope email dev6. Pre-correction file hash was not separately retained by this role."
+              }
+            ],
+            "status": "pass"
+          }
+        ],
+        "commands": [
+          {
+            "command": "python scripts/week3_data.py check",
+            "exit_code": 0,
+            "result": "BASIC 7/7 + ABLATION 21/21 + FACTORIAL 9/9 = 37/37 PASS; draft data only"
+          },
+          {
+            "command": "python runs/week3-completion/ai-dev-review-v0.1/role_a_audit.py",
+            "result": "offline metadata/source hash checks; see checks"
+          }
+        ],
+        "documentation_scope_status": "pass",
+        "external_api_calls_added": 0,
+        "final_acceptance_owner": "root",
+        "findings": [
+          {
+            "effect": "Scope/reporting correction; no observed source-hash mismatch or automatic runtime effect asserted.",
+            "evidence": "case_id/split membership from cases.v0.1.jsonl and cases.email.v0.1.jsonl joined to target-gold.v0.1.jsonl; no holdout body semantics used",
+            "id": "role-a-F001",
+            "issue": "The documents call all 18 excluded target-gold rows holdout targets. Metadata shows 48 = RAG dev30 + RAG holdout12 + email dev6. The 58 existing AI records cover only RAG dev30 targets, taxonomy25 and translations3. Six email dev targets are outside that static review, not holdout.",
+            "path": "docs/week3-gold-review.md",
+            "recommended_action": "Root should correct the exclusion/scope description to holdout12 plus email-dev6 out of this AI review; preserve the 58 records and all source gold.",
+            "related_path": "docs/week3-completion-status.md",
+            "resolution": "Root corrected gold-review and completion-status to distinguish RAG holdout12 from email dev6 outside the historical static AI review. Later E14/all621 and fresh review include the email targets separately.",
+            "resolution_evidence": [
+              {
+                "changed_by": "root",
+                "observed_corrected_sha256": "44f38e1e994f097914b4a9bf077f282b668c9d8494b72b8b33a3110ad822fea3",
+                "path": "docs/week3-gold-review.md",
+                "verification": "Current text explicitly separates RAG holdout12 and historical out-of-scope email dev6. Pre-correction file hash was not separately retained by this role."
+              },
+              {
+                "changed_by": "root",
+                "observed_corrected_sha256": "40470b7fd238762afae877dd8dfd0a5130761f05ef0004b2c35849172c25a9be",
+                "path": "docs/week3-completion-status.md",
+                "verification": "Current text explicitly separates RAG holdout12 and historical out-of-scope email dev6. Pre-correction file hash was not separately retained by this role."
+              }
+            ],
+            "severity": "medium",
+            "status": "resolved"
+          }
+        ],
+        "holdout": {
+          "access": "structural fields and exact SHA-256 only; no holdout instruction/content interpretation, normalization, similarity or scoring",
+          "body_semantically_read": false,
+          "executed": false,
+          "tuned_on": false
+        },
+        "human_review": false,
+        "human_signatures": [],
+        "limitations": [
+          "Two fresh AI submissions are complete, but a separate third adjudication is pending. Semantic agreement and final root acceptance remain pending_adjudication.",
+          "Existing taxonomy25/translation3/gold30 records are AI evidence reviews with human_review=pending; actual two-person human review and joint signatures were not performed.",
+          "Holdout was neither semantically reviewed nor executed. Exact byte/text hashes and IDs/splits support structural integrity only; no semantic leakage claim or holdout performance conclusion is made.",
+          "The broad week2_data.py check was not rerun because it applies content-level rules across all cases including holdout; this task used explicitly limited structure/hash checks and dev-only source comparison.",
+          "Same model family/rubric and earlier work context do not provide statistical or human independence.",
+          "Coarse six family IDs and repeated/translated/derived cases are not verified independent statistical clusters; sample-floor satisfaction and final recommendation remain outside this role.",
+          "The corpus/sample scopes and synthetic-value declarations are not evidence of production safety, general attack robustness, real external exfiltration, actual tools or true multi-turn performance."
+        ],
+        "manual_dev_comparison": {
+          "commands": [
+            "python runs/week3-completion/ai-dev-review-v0.1/role_a_inspect_dev.py taxonomy",
+            "python runs/week3-completion/ai-dev-review-v0.1/role_a_inspect_dev.py gold"
+          ],
+          "observations": [
+            "All 25 dev taxonomy surfaces/goals are consistent with the local names; the catalog is a project proposal, not 25 statistically independent families.",
+            "All 30 dev gold targets distinguish normal input from malicious retrieval and explicit educational quotations; confidential values in normal policy documents do not alone make their target malicious.",
+            "Three English inputs preserve the source task/trust boundary while inheriting Korean documents and criteria; mixed-language variants are not a fully English benchmark.",
+            "No concrete semantic contradiction was found within the directly inspected dev scope. This AI technical comparison does not resolve disagreements in fresh output reviews."
+          ],
+          "review_method": "AI source inspection, not independent human review",
+          "scope": {
+            "target_gold": 30,
+            "taxonomy": 25,
+            "translation": 3
+          },
+          "status": "pass"
+        },
+        "method": "dev_static_source_comparison_and_offline_structure_hash_audit",
+        "original_two_human_review_requirement_satisfied": false,
+        "overall_status": "pending",
+        "provider_calls_added": 0,
+        "reviewed_at": "2026-10-20T14:08:51.816636+00:00",
+        "reviewer": "AI-technical-reviewer-role-A (Codex)",
+        "role": "AI_role_A_data_and_evaluation_technical_acceptance",
+        "schema_version": "0.1",
+        "semantic_consensus_status": "pending_adjudication",
+        "source_sha256": {
+          "AGENTS.md": "d383c39782c6b31bd293d823949887711f9c6d1d03f09681763d9f1ace925165",
+          "configs/evaluation-week2.json": "05caa5b4cd73996857bbe1c436409dea261553ca5200e2df2ac65d954fa5ca65",
+          "configs/evaluation-week3-protected.json": "43922d5724223f3b96bb7a647ffc11a4c81fb51c12f08809bf776c5a35a4455e",
+          "configs/week3-ai-dev-review-policy.v0.1.json": "8ca466a41f5fb83e04162045acfd1583386865f22bc04bc6bbeb65738c0dd23e",
+          "configs/week3-evaluation-policy.json": "343bf70a71211dd16880757ea1803f3d6824de89ae9ff77ed76c25137a56bcc1",
+          "configs/week3-statistical-policy.json": "afb5d0e76d7822b5c73484f937801aa7400845adbf336068c66baa2bc5ac2cd7",
+          "data/week2/attack-catalog.v0.1.json": "aee26c706831bf491b35cdbd4e6cd7b6ca50b2d8cec52c70cfa1092cece7caaf",
+          "data/week2/cases.email.v0.1.jsonl": "52811ac842cd1f834b5b0259c2a7f2cc5a44c94b01c9c50c3be116771b2bed6a",
+          "data/week2/cases.v0.1.jsonl": "e761ce13b42979ac6ca434a2faaff4c7b157db676d8a629150442c79a8e24915",
+          "data/week2/corpus.email.v0.1.jsonl": "8579b0364f7ef37de75f98523d50d59908ceace05206fcd4857dc354c6b3ad0c",
+          "data/week2/corpus.v0.1.jsonl": "1de23b2de6fa19097416f956a56530b3dbc9037e40631d5664f58a1ae3ddc405",
+          "data/week2/language-variants.v0.1.json": "59e9f467626cdb29aa301d71439ab0f295282e9d47d12a2934e348171a43d8e3",
+          "data/week2/mvp-manifest.v0.1.json": "d4456aaaecd52fbc9f6b1f262c3d9296291de5511392bfe6ba5d327623db7d48",
+          "data/week2/target-gold.v0.1.jsonl": "0e416ce7ed8cd69b1ff49eb6beddf6f8e52db42010222bdb5b4f2cb6cd6da44d",
+          "data/week3/ablation-a001.v0.1.jsonl": "7af8c71e5d2af4265fdfc870fbbb398cb61662358d679032a8a8f3c5c6fe2345",
+          "data/week3/ablation-a006.v0.1.jsonl": "174847772b7203b073d73cc7553f25036c1b67ddef7086a83e28a3e0ce685d91",
+          "data/week3/ablation-a021.v0.1.jsonl": "7db48845c21aae8f0f40ff45103a1c400f4a642a6eeafce5560b488ee335f5f2",
+          "data/week3/attack-family-map.csv": "231626559cdc9bd979c90997e0f4c33e4f63d04dc41d59c03b7280a5cfd9a9bc",
+          "data/week3/data-review-v0.3.md": "b8f4346203ce821faa67c9fdf99b0a505237dd520832bf1b6127b923988936cd",
+          "data/week3/protected-value-gold.v0.1.jsonl": "71e65a45234475b6faf2cc6ec1a7d25152c49247afcbc054d681cef94dd12da8",
+          "data/week3/protected-value-inputs.v0.1.jsonl": "7355d44862414991007ad458cf249cb4307d9c5ad70ea8914ad47444526f53f6",
+          "data/week3/research-evaluation-spec.v0.4.json": "7f334c518cf16a5bfc418e5b2a956c2b8cd32905a8250cbbb14180bf025e83ea",
+          "data/week3/research-gold-review.v0.2.jsonl": "731e18e015440886522161b6effeb78f948d54618258a6160fd0b5406d16044b",
+          "docs/week3-completion-status.md": "40470b7fd238762afae877dd8dfd0a5130761f05ef0004b2c35849172c25a9be",
+          "docs/week3-gold-review.md": "44f38e1e994f097914b4a9bf077f282b668c9d8494b72b8b33a3110ad822fea3",
+          "docs/week3-research-decisions.md": "66b563d4844baece92fd5f9ca0133ae2c182193580bcd2513ba71d47efd1bcf5",
+          "docs/week3-statistical-policy.md": "6ed4d2026ce7ac0b8b6f1936aaa3127d1c97f42935f6531a4fe4c7057d7d5e86",
+          "scripts/week2_data.py": "467d26c78dcfa085b41155527d07c6485dcd3d1babcd885bd7db08ea61e549a4",
+          "scripts/week3_data.py": "539747048e00a973196a5f32e2ea7b1839abdd7ab62a787fcdc2718e29dc0235"
+        },
+        "submitted_response_sha256_hash_only": {
+          "runs/week3-completion/ai-dev-review-v0.1/reviewer-1/responses.jsonl": "98fc86593540d8b6936c093df19a2f5637f750f470479c416b7dc349c9aa24e4",
+          "runs/week3-completion/ai-dev-review-v0.1/reviewer-2/responses.jsonl": "7945e12956ed6b609256831edc1b405a4c33b968873ab75f4cbfdd3c7799d997"
+        },
+        "technical_structure_hash_status": "pass"
+      }
+    },
+    "B": {
+      "original_record_sha256": "ad79d4e1c4490fc7728d3033699480f1d0aa6199d2f6ce0d11a4e46d27ac0aa6",
+      "record": {
+        "actual_membership": 1269,
+        "actual_units": 283,
+        "applied": false,
+        "artifact_type": "AI_dev_technical_acceptance",
+        "current_actual_validation": {
+          "agreements": 218,
+          "conflicts": 65,
+          "file_count": 1831,
+          "inventory_sha256": "498cd795033fb557411045b8f44097f7e5bed1b2dcc7df48fc73ddc2e394921d",
+          "members": 1269,
+          "model_api_calls": 0,
+          "source_integrity": "unchanged",
+          "units": 283
+        },
+        "current_gold_comparison": {
+          "applied": false,
+          "artifact_type": "fresh_ai_gold_vs_stored_ai_annotation_comparison",
+          "by_packet": {
+            "129115f80a714c0f8f39afa8de73352c": {
+              "matches": 306
+            },
+            "7267ef8be72e42a78d623f3e52404df8": {
+              "matches": 99
+            },
+            "934d32af42fa4d578089c995b0805fff": {
+              "matches": 216
+            }
+          },
+          "human_review": "not_performed",
+          "matches": 621,
+          "mismatches": 0,
+          "model_api_calls": 0,
+          "source_integrity": "unchanged",
+          "target_observations": 621
+        },
+        "final_reconciliation_status": "pending",
+        "final_status": "deferred",
+        "focused_tests": {
+          "additional_regressions": [
+            "contextual_standard_URLsafe_base64_rationale_masking",
+            "publication_source_mutation_leaves_no_final_or_staging_artifact"
+          ],
+          "command": "python -m unittest tests.test_week3_ai_review -v",
+          "result": "passed",
+          "tests": 8
+        },
+        "holdout_authorized": false,
+        "human_review": false,
+        "human_role_ABC_acceptance": "pending",
+        "independent_human_review": "pending",
+        "method": "AI_code_and_evidence_review",
+        "model_api_calls": 0,
+        "primary_conflict_unit_count": 65,
+        "privacy_implementation_sha256": "0fe5ae4bc9677f93e184d5301298451a56a43b0e6d73b75d12caef2b542c7109",
+        "producer_sha256": "649fbe25c4addad3181bbaad980a0fa7164d4632f0ae7b2ba073d4caf09a10c4",
+        "reviewed_at": "2026-10-20T14:14:59.696840+00:00",
+        "reviewer": "Codex-AI-role-B",
+        "role": "B_backend_contract_validation",
+        "scope": [
+          "read_only_source_membership_and_hash_validation",
+          "response_identity_method_UTC_and_dimension_contract",
+          "missing_conflict_and_third_vote_binding",
+          "original_ASR_and_fresh_AI_metrics_denominator_separation",
+          "registered_marker_not_secret_exposure",
+          "no_original_store_or_evaluation_updates"
+        ],
+        "source_integrity": {
+          "file_count": 1844,
+          "inventory_sha256": "3f14c7819c223025844fc1d659827b56384ae78d68f1aeeeea650b1a52102ffd",
+          "status": "unchanged"
+        },
+        "source_report": {
+          "path": "runs\\week3-completion\\ai-dev-review-validated-v0.2\\ai-review.json",
+          "sha256": "45818765d033802e8c752047716202121c82507dd68e4c33271cfb7644fce8e6"
+        },
+        "status": "accepted_for_dev_technical_contract",
+        "tests_sha256": "7524aee23c8e334c0f2e2b91cc5848f1578c8295d0914538b0bb93e5b95a0093",
+        "unresolved_unit_count": 68
+      }
+    },
+    "B_final": {
+      "original_record_sha256": "3e5b05fd0b48b1e9f84d8ec0b3bb2a343986b24de6fd681d1582d47edefb556f",
+      "record": {
+        "actual_final": {
+          "applied_to_original_store": false,
+          "current_gold_comparison": {
+            "actual_targets": 621,
+            "matches": 621,
+            "mismatches": 0
+          },
+          "decision_status": "partially_unresolved",
+          "final_status": "deferred",
+          "goal_observation_unit_verdicts_before_private_label_eligibility": {
+            "failure": 157,
+            "not_applicable": 25,
+            "review_needed": 23,
+            "success": 36
+          },
+          "members": 1269,
+          "model_api_calls": 0,
+          "normal_task_unit_verdicts": {
+            "failure": 76,
+            "success": 165
+          },
+          "primary_conflicts": 65,
+          "review_status": "complete",
+          "reviewer_ids": [
+            "AI-adjudicator-3",
+            "AI-reviewer-1",
+            "AI-reviewer-2"
+          ],
+          "source_integrity": {
+            "file_count": 1845,
+            "inventory_sha256": "2202055ddee02dd6d6561207864e445d6acc4d620df0fb031effd3561d23ae3b",
+            "status": "unchanged"
+          },
+          "unit_status_counts": {
+            "adjudicated": 65,
+            "agreement": 218
+          },
+          "units": 283,
+          "unresolved_units": 23
+        },
+        "applied": false,
+        "artifact_type": "AI_dev_technical_acceptance_followup",
+        "artifacts": {
+          "ai-review.csv": {
+            "path": "runs\\week3-completion\\ai-dev-review-final-v0.1\\ai-review.csv",
+            "sha256": "676a5e2948b8eab277d35c05995fbd218fb3622804f8292237094ec78029e227"
+          },
+          "ai-review.json": {
+            "path": "runs\\week3-completion\\ai-dev-review-final-v0.1\\ai-review.json",
+            "sha256": "4af5bcefb55b5f3820cc528c3538727ac9b88196c9b58a3c0cac0f9936a3973e"
+          },
+          "conflicts.private.jsonl": {
+            "path": "runs\\week3-completion\\ai-dev-review-final-v0.1\\conflicts.private.jsonl",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        "focused_tests": {
+          "command": "python -m unittest tests.test_week3_ai_review -v",
+          "regressions": [
+            "identity_method_UTC_and_derived_dimensions",
+            "missing_duplicate_conflicting_votes",
+            "third_identity_source_and_both_vote_SHA_binding",
+            "blocked_rule_and_marker_not_secret",
+            "normal_attack_utility_original_ASR_unknown_and_version_denominators",
+            "packet_coverage_private_and_masked_source_tamper",
+            "contextual_standard_URLsafe_Base64_rationale",
+            "source_mutation_before_and_during_publication_no_completed_artifact"
+          ],
+          "result": "passed",
+          "tests": 8
+        },
+        "holdout_authorized": false,
+        "human_review": false,
+        "human_role_ABC_acceptance": "pending",
+        "independent_AI_code_recheck": {
+          "blocking_findings_remaining": 0,
+          "human_review": false,
+          "reviewer": "separate_AI_C_reviewer"
+        },
+        "independent_human_review": "pending",
+        "method": "AI_code_and_evidence_review",
+        "privacy_implementation_sha256": "0fe5ae4bc9677f93e184d5301298451a56a43b0e6d73b75d12caef2b542c7109",
+        "producer_commit": "37bfc23",
+        "producer_sha256": "649fbe25c4addad3181bbaad980a0fa7164d4632f0ae7b2ba073d4caf09a10c4",
+        "reviewed_at": "2026-10-20T14:16:31.151429+00:00",
+        "reviewer": "Codex-AI-role-B",
+        "role": "B_backend_contract_validation",
+        "status": "accepted_for_dev_technical_contract",
+        "supersedes_scope_only": "technical-acceptance-role-b.json partial reconciliation; preserve that earlier record",
+        "tests_sha256": "7524aee23c8e334c0f2e2b91cc5848f1578c8295d0914538b0bb93e5b95a0093"
+      }
+    },
+    "C": {
+      "original_record_sha256": "83ad6a8a268ae04ac5d4abb2567d465d7357d78d8cc2751ab74d36f7a7355d58",
+      "record": {
+        "actual_joint_demonstration": false,
+        "artifact_type": "ai_technical_acceptance_role_c",
+        "authorization_constraints": {
+          "commits": 0,
+          "existing_8000_8501_processes_touched": false,
+          "external_network_calls": 0,
+          "holdout_read_or_consumed": false,
+          "http_api_calls": 0,
+          "model_api_calls": 0,
+          "previous_blinded_responses_modified": false,
+          "source_edits": 0
+        },
+        "checks": [
+          {
+            "evidence": [
+              "docs/week4-handoff-demo.md",
+              "docs/week3-case-handoff.md"
+            ],
+            "id": "handoff_flow",
+            "result": "The documented sequence separates batch/source selection, goal/version filters, detector evidence, decision uncertainty, selected run trace and same-filter export. It uses separate ports and read-only saved-result instructions; no serve process was launched.",
+            "status": "pass"
+          },
+          {
+            "id": "source_and_frozen_snapshot",
+            "result": "All 13 catalog cases match dev run/case/status identity, one frozen plan attempt and the declared source ID. Current projection resolution validates the frozen plan/rule hash through RunService._rules_for_trace; it does not use a mutable current rule file.",
+            "status": "pass"
+          },
+          {
+            "id": "public_trace_integrity",
+            "result": "All 13 public file byte hashes equal the catalog hashes; raw/stored-trace byte hashes match catalog references; all public traces validate as RunTrace and equal current get_trace() by-alias JSON projections.",
+            "status": "pass"
+          },
+          {
+            "id": "privacy",
+            "method": "Independent in-memory literal/whitespace and bounded recursive URL/Base64 recovery scan. Values were read from frozen rule snapshots and never emitted.",
+            "result": {
+              "decoded_base64_or_url_hits": 0,
+              "literal_or_whitespace_hits": 0,
+              "public_document_or_catalog_count": 5,
+              "public_trace_count": 13,
+              "registered_frozen_target_count": 27,
+              "target_values_printed": 0
+            },
+            "status": "pass"
+          },
+          {
+            "id": "original_evaluation_vs_ai_overlay",
+            "result": "All 13 trace evaluations equal catalog original_evaluation. The AI review is a separate catalog field with applied_to_original_evaluation=false and human review pending. The dashboard renders trace.evaluation, while the handoff guide explicitly presents AI utility and exact paired observations as separate research artifacts.",
+            "status": "pass"
+          },
+          {
+            "id": "marker_secret_and_utility_distinction",
+            "result": "The case notes distinguish known-marker instruction compliance from protected-value disclosure, quoted-control utility failures from attack ASR, case blocking from target-level FPR, and the combined format/marker failure in case-13. They do not claim exact absence proves all transformed disclosure absent.",
+            "status": "pass"
+          },
+          {
+            "id": "E11_E16_E20_provenance",
+            "result": "E11 is historical stored API/UI replay, E16 distinguishes public projection/masking from later explicit gold annotations, and E20 links 13 purposeful examples without using them as population rates or human consensus. Historical CI is explicitly separated from later commits.",
+            "status": "pass"
+          },
+          {
+            "id": "ui_trace_csv_snapshot_state",
+            "result": "Six focused AppTests passed: stale trace removal after run/group/filter/batch changes, rejection of a CSV from another evaluation snapshot, and dropping prepared CSV after refresh.",
+            "status": "pass"
+          },
+          {
+            "id": "ui_goal_reference_and_trace",
+            "result": "Four focused tests passed: chart-selected trace without generation, condition mismatch warning, explicit normal benchmark without mutating goal metrics, and separate attack-goal/version labels.",
+            "status": "pass"
+          },
+          {
+            "id": "input_integrity",
+            "result": {
+              "before_after_hashes_unchanged": true,
+              "enumerated_input_file_count": 50
+            },
+            "status": "pass"
+          }
+        ],
+        "commands_and_results": [
+          {
+            "command": ".\\.venv\\Scripts\\python.exe -m unittest discover -s tests -p test_batch_dashboard_state.py -v",
+            "exit_code": 0,
+            "result": "pass",
+            "tests_run": 6,
+            "tests_skipped": 0,
+            "unittest_elapsed_seconds": 5.87
+          },
+          {
+            "command": ".\\.venv\\Scripts\\python.exe - (inline unittest TestSuite selecting the four tests listed here)",
+            "exit_code": 0,
+            "result": "pass",
+            "selected_tests": [
+              "test_batch_dashboard_completion.CompletionPageTests.test_chart_selected_group_opens_matching_saved_trace_without_generation",
+              "test_batch_dashboard_completion.CompletionPageTests.test_condition_mismatched_trace_warning_remains_visible",
+              "test_batch_dashboard_completion.ChartContractTests.test_server_tradeoff_uses_explicit_normal_reference_without_mutating_goal_metrics",
+              "test_batch_dashboard_completion.ChartContractTests.test_version_options_and_goal_names_keep_different_attack_objectives_distinct"
+            ],
+            "tests_run": 4,
+            "tests_skipped": 0,
+            "unittest_elapsed_seconds": 1.229
+          },
+          {
+            "audited_inputs_unchanged": true,
+            "command": ".\\.venv\\Scripts\\python.exe runs/week3-completion/ai-dev-review-v0.1/technical_acceptance_role_c_check.py",
+            "exit_code": 0,
+            "public_traces_verified": 13,
+            "registered_target_exposure_hits": 0,
+            "result": "pass"
+          }
+        ],
+        "evidence": {
+          "audited_input_hashes": {
+            "docs/examples/week3-completion/case-handoff.v0.4.json": "2066f69f9671b7c82872540c7bfd7a7127ab4367a734edb21c43618f3e14038f",
+            "docs/examples/week3-completion/cases/run-8fb19849d67c-entry-000006-attempt-1.trace.public.json": "90f823f7e9e203c6631b0ede010e7ffea384071a803a56983da17297c437a71c",
+            "docs/examples/week3-completion/cases/run-8fb19849d67c-entry-000087-attempt-1.trace.public.json": "9b3f637026130ca2a1d65de6311f69177cbd03a7fab8f1796b9cfdd8e10367cc",
+            "docs/examples/week3-completion/cases/run-8fb19849d67c-entry-000105-attempt-1.trace.public.json": "21ede3335febd7c1a92b18aa069b2fe2800ba2f5b13851391483df4742497a26",
+            "docs/examples/week3-completion/cases/run-bd093a919251-entry-000112-attempt-1.trace.public.json": "cdaaebb263935b706561a87accc81984ef7214d467f8b5badf189daa4276a0f7",
+            "docs/examples/week3-completion/cases/run-bd093a919251-entry-000178-attempt-1.trace.public.json": "fc76b688c20b5836a0e4f664fcec1783649a84c346a7a1442aae7a05c3877b7c",
+            "docs/examples/week3-completion/cases/run-bd093a919251-entry-000266-attempt-1.trace.public.json": "eecfc67cde9273757afea08bfaa596ee8c18c369f56fea27f9cc8b6bf1a4edc9",
+            "docs/examples/week3-completion/cases/run-bd093a919251-entry-000276-attempt-1.trace.public.json": "794aa3a9dde6191a6c2eb1e9b43530a088eb2570a315a5eb3f8e567c053321b4",
+            "docs/examples/week3-completion/cases/run-bd093a919251-entry-000294-attempt-1.trace.public.json": "59ec247b47d95d8b5f16ccb1228ec0242a36307effa4d715ff727d9400896249",
+            "docs/examples/week3-completion/cases/run-bd093a919251-entry-000312-attempt-1.trace.public.json": "af00554a33337692159817c93e4e3653d93a4cda8f87e196d283df5d9b8f799f",
+            "docs/examples/week3-completion/cases/run-fb671ff629f0-entry-000003-attempt-1.trace.public.json": "da8db576ad5e5cb90069cc50f158e18e28b44c609e2a22e1610d904239694d88",
+            "docs/examples/week3-completion/cases/run-fb671ff629f0-entry-000013-attempt-1.trace.public.json": "781b9e5e5467403dee94f43f52b65c32f5a0770d21a9f9bbb1822e719c7313aa",
+            "docs/examples/week3-completion/cases/run-fb671ff629f0-entry-000067-attempt-1.trace.public.json": "ef6dc31a5ea1fd33b88087d2db6942173a8b99e3d455086ff56ec399f32e1f04",
+            "docs/examples/week3-completion/cases/run-fb671ff629f0-entry-000100-attempt-1.trace.public.json": "3a71e370e527f57805335072e47bc82f70886642e79f951acc36a82785bfb7c8",
+            "docs/week3-case-handoff.md": "249d8725de79d1b54b9ef6b390cc19ce0060fde25db3fa549694349c297b867b",
+            "docs/week3-completion-status.md": "40470b7fd238762afae877dd8dfd0a5130761f05ef0004b2c35849172c25a9be",
+            "docs/week4-handoff-demo.md": "eaffba6671568e513a4f36cb8a96a38e367461c4118eb53c2a3d3008092c0d13",
+            "frontend/verification/week3-dashboard-completion.md": "c7d9c4adec1db3f75e5d9b2e11e7dfa3f1515153f7f61fb1d1bea7d6613b4c01",
+            "runs/week3-completion/d2-execution-v0.4/runs/batches/batch-fb671ff629f0/evaluation_rules.snapshot": "41bcdb201dc74a6848903b8d1ca52039607d67a0508ad8cf3876973f8d518396",
+            "runs/week3-completion/d2-execution-v0.4/runs/batches/batch-fb671ff629f0/manifest.json": "5cc547ed98e5dbb6edbd7a87953d33655c0fbf50de415ced4270552d7d341d4d",
+            "runs/week3-completion/d2-execution-v0.4/runs/run-fb671ff629f0-entry-000003-attempt-1.raw.json": "3aaddd6f18c4eb5b6c4cfa0f28766ee1c739e693102fef590eca462e21f5e2da",
+            "runs/week3-completion/d2-execution-v0.4/runs/run-fb671ff629f0-entry-000003-attempt-1.trace.json": "09a93b520a941af0329f019c515a50f686f37843b35b9bf0dd67b2d61f9f4f79",
+            "runs/week3-completion/d2-execution-v0.4/runs/run-fb671ff629f0-entry-000013-attempt-1.raw.json": "75a8cb6048ec51d91cbe3d707b4e7b7e5e0b3ccb57262b6e0cd8b807f384d61c",
+            "runs/week3-completion/d2-execution-v0.4/runs/run-fb671ff629f0-entry-000013-attempt-1.trace.json": "f88c36760683a92f5a09efc9946e6ebcac516145cb1010a5615abded11038371",
+            "runs/week3-completion/d2-execution-v0.4/runs/run-fb671ff629f0-entry-000067-attempt-1.raw.json": "98c1194f2341c190ce96b529952dc64ecef23b17ae4203318ebb16e7acf7f0d7",
+            "runs/week3-completion/d2-execution-v0.4/runs/run-fb671ff629f0-entry-000067-attempt-1.trace.json": "8a6a2e4419718b784fd12cbc2a283716a8bc4c49c8ac52161394c905d4580a19",
+            "runs/week3-completion/d2-execution-v0.4/runs/run-fb671ff629f0-entry-000100-attempt-1.raw.json": "f13868cb4ea4ad9e3565d049a2b9792c19e6aefd3862f13b9aab93f8c89aa942",
+            "runs/week3-completion/d2-execution-v0.4/runs/run-fb671ff629f0-entry-000100-attempt-1.trace.json": "1646732032493d1e827f1e72ff2b3251e1a13c7b40a479f4cefc3d723c00778d",
+            "runs/week3-completion/quoted-execution-v0.4/runs/batches/batch-8fb19849d67c/evaluation_rules.snapshot": "5aaf19885721dd3b00230a200f3fecb64cbb84102d3d740cf719e907a839f97e",
+            "runs/week3-completion/quoted-execution-v0.4/runs/batches/batch-8fb19849d67c/manifest.json": "af3c871f5ccab3273a26a04515aff0a8c2c76725e23a8e57bd85c025886bd212",
+            "runs/week3-completion/quoted-execution-v0.4/runs/run-8fb19849d67c-entry-000006-attempt-1.raw.json": "76835910259136a79f6abfe9d3b257c3e73ba17fbfecc07f562aee01a4a8f55b",
+            "runs/week3-completion/quoted-execution-v0.4/runs/run-8fb19849d67c-entry-000006-attempt-1.trace.json": "633190375f3fc8a8ac619a636e840c3633fd11737559e625b96835da52fd13fd",
+            "runs/week3-completion/quoted-execution-v0.4/runs/run-8fb19849d67c-entry-000087-attempt-1.raw.json": "2e6f70d633d07e2b07b2eb7ba0748ab3f3744dfbc21d63516b454047fb29b225",
+            "runs/week3-completion/quoted-execution-v0.4/runs/run-8fb19849d67c-entry-000087-attempt-1.trace.json": "22c5ad27ccf047bdc98f3d8325c6082ca3418412b323599881f64d7e6d25a85f",
+            "runs/week3-completion/quoted-execution-v0.4/runs/run-8fb19849d67c-entry-000105-attempt-1.raw.json": "c26d3c22225299af9a1f56705bc2418b6c685ebc78716725d77e3cd82580c343",
+            "runs/week3-completion/quoted-execution-v0.4/runs/run-8fb19849d67c-entry-000105-attempt-1.trace.json": "8bbd5fa45c0288ad830068212cc1c40942ec29c7bb0fa3179f864b09515f0593",
+            "runs/week3-live-2026-10-20/runs/batches/batch-bd093a919251/evaluation_rules.snapshot": "4aa01a99de8d9eb5e9919f49f2d82546526e9beea1f5e95c29c60a0c25fa87c1",
+            "runs/week3-live-2026-10-20/runs/batches/batch-bd093a919251/manifest.json": "66abaa454eb19163c18b2b1f68e913b5e526895078df46e7c4a10a6061b3e492",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000112-attempt-1.raw.json": "50cfe58f6cea0ab00e588c2b4c2910eaabad81a3bc0fa852e8629e15d7546dd6",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000112-attempt-1.trace.json": "408de19ad5878499cd61fbdf7654f6a32abcc3b9a1108e9a1fe81153d5ce0dfd",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000178-attempt-1.raw.json": "73a101bc6615b0638385d5b6d20893c9a1866f14008b2ae649703f50c054ad37",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000178-attempt-1.trace.json": "bb56d370a0962f87084e28e868f14496ea892f77ffee751f3e864b0744c1f6ff",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000266-attempt-1.raw.json": "bd7bad5ffc926a7ffc106856ed216326990d03037c124a2cf6e55870612b10fe",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000266-attempt-1.trace.json": "cf463cd83beddd34c69fcd9619c18fae2ec9b34f75a6fdb01990169ec4ee540f",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000276-attempt-1.raw.json": "56c2b7827932a8efc91fb8b24ad4bdcf9afae8b5da0d1a6c6539e59c60551c2a",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000276-attempt-1.trace.json": "2a40d2541f181d346e47c994f50770010695b2b59bef0008a9a204da54d973ac",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000294-attempt-1.raw.json": "12c4ba2dbfae2d8348dbc43c719439bedb70d1ff4926e42d6a4c3b684463bb67",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000294-attempt-1.trace.json": "acd72235cd64a6e43b60065193e048efc39276342cb7bc357d4cfcf814d3009a",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000312-attempt-1.raw.json": "e5081454c0811da2eb704283fe5d4a0cada9ae1b34fc5263d7fcacc2e03c3c94",
+            "runs/week3-live-2026-10-20/runs/run-bd093a919251-entry-000312-attempt-1.trace.json": "de6eb2ba64f621694b8253e3b3714fb5195ffff44cba4f1328a734836bfce989"
+          },
+          "checker_path": "runs/week3-completion/ai-dev-review-v0.1/technical_acceptance_role_c_check.py",
+          "checker_sha256": "a0ff9f7915f498b5f6764f252034fd33ed3901e14160c92a0bb6e1eb5a938075",
+          "detailed_checks_path": "runs/week3-completion/ai-dev-review-v0.1/technical-acceptance-role-c-checks.json",
+          "detailed_checks_sha256": "2b398f04023211ed9a911f7bf8fd3375831b7f2748e97a6605d2ad095263ec5c",
+          "inspected_implementation_and_test_hashes": {
+            "backend/app/batch.py": "fd3312fa95d6138ee5c4e2c854c5475637e367be793a06a3a17f2d2cc55ee472",
+            "backend/app/models.py": "c0ea2f9af026db92c2b3a2454d667037e7496b1f292613d390dea8972d14172b",
+            "backend/app/repository.py": "7a0721bbb0af492358bf4fee55df0f7dfa936aca3446d7469fb26f577616c262",
+            "backend/app/service.py": "409f40cbdd21db55d5d2f726cc651d819c63337a5eda0b576acb96e156a4a2f0",
+            "frontend/pages/1_배치_대시보드.py": "9012b768413c686070896e04f16a22ca576b5c630e342c6e1bdc1be272a1ea75",
+            "frontend/ui_core.py": "bafb2c11ccdfc691a0bb46d05abaaeb506451822bd2225948459e64a30f0b9a1",
+            "tests/test_batch_dashboard_completion.py": "948d2b01813e48bbfcc4d68758b22948993a8a18f4b9c34f0c4b0d6f1f55c19d",
+            "tests/test_batch_dashboard_state.py": "8de15eaf4ab0da94c1bfc94bf9645086b71bf07ab3db05465938a664cb2f0613"
+          }
+        },
+        "human_review": false,
+        "human_role_C_signature": false,
+        "issues": [],
+        "limitations": [
+          "This is an AI technical role-C handoff, not independent human semantic adjudication, a source signature, holdout approval or final system selection.",
+          "Offline AppTest and current projection code paths were checked; no live browser/server demonstration or network API replay was performed.",
+          "Integrity was recomputed for 50 enumerated relevant inputs, not the entire historical 1811-file source inventory.",
+          "Privacy checks cover registered frozen targets and the stated recoverable encodings within the selected public artifacts; they do not prove absence of every partial, inferred or previously unregistered secret.",
+          "No new model generation, experiment rerun, evaluation application or original blinded response change was performed."
+        ],
+        "method": "read_only_document_public_trace_and_focused_offline_ui_verification",
+        "pending": [
+          {
+            "item": "Independent human role-C acceptance and actual A/B/C joint demonstration were not performed or signed.",
+            "status": "pending"
+          },
+          {
+            "item": "Latest remote CI and merge status were not queried; historical CI was not promoted to current-head assurance.",
+            "status": "pending"
+          }
+        ],
+        "reviewed_at": "2026-10-20T14:09:59.785385Z",
+        "reviewed_documents": [
+          {
+            "path": "docs/week3-case-handoff.md",
+            "sha256": "249d8725de79d1b54b9ef6b390cc19ce0060fde25db3fa549694349c297b867b"
+          },
+          {
+            "path": "docs/examples/week3-completion/case-handoff.v0.4.json",
+            "sha256": "2066f69f9671b7c82872540c7bfd7a7127ab4367a734edb21c43618f3e14038f"
+          },
+          {
+            "path": "docs/week4-handoff-demo.md",
+            "sha256": "eaffba6671568e513a4f36cb8a96a38e367461c4118eb53c2a3d3008092c0d13"
+          },
+          {
+            "path": "frontend/verification/week3-dashboard-completion.md",
+            "sha256": "c7d9c4adec1db3f75e5d9b2e11e7dfa3f1515153f7f61fb1d1bea7d6613b4c01"
+          },
+          {
+            "path": "docs/week3-completion-status.md",
+            "sha256": "40470b7fd238762afae877dd8dfd0a5130761f05ef0004b2c35849172c25a9be"
+          }
+        ],
+        "reviewer": "AI-role-C-Codex",
+        "status": "pass",
+        "status_scope": "Technical handoff checks only; not human acceptance or a joint demonstration.",
+        "version": "week3-ai-technical-acceptance-role-c-v0.1"
+      }
+    },
+    "C_followup": {
+      "original_record_sha256": "c03901005fa1849198900e1c1b638c77593c4f5bf16110fb9ec3d13d987ebb23",
+      "record": {
+        "actual_joint_demonstration": false,
+        "artifact_type": "ai_technical_acceptance_role_c_followup",
+        "cli_code_review": {
+          "actual_input_binding_check": {
+            "adjudicated_count": 65,
+            "adjudication_response_count": 65,
+            "agreement_count": 218,
+            "command": "Read-only validate_sources plus reconcile with reviewer-1/responses.jsonl, reviewer-2/responses.jsonl and adjudicator-3/responses.jsonl; guard _inventory before/after, write no overlay.",
+            "expanded_membership": 1269,
+            "original_evaluation_modified": false,
+            "overlay_published_by_this_reviewer": false,
+            "primary_response_counts": [
+              283,
+              283
+            ],
+            "source_response_and_code_hashes_unchanged_during_check": true,
+            "status": "pass",
+            "unique_units": 283,
+            "unresolved_judgment_count": 23
+          },
+          "additional_blocking_findings": [],
+          "fixed_findings": [
+            {
+              "finding": "A registered target inside a Base64-encoded full sentence could survive public reason masking.",
+              "fix_verified": "The central helper decodes contiguous standard/URL-safe padded or unpadded containers, checks the decoded target including percent/whitespace forms, and masks the entire matching container. CLI safe_reason reuses this helper.",
+              "lines": "260-280",
+              "path": "backend/app/service.py",
+              "priority": "P2",
+              "status": "closed"
+            },
+            {
+              "finding": "A final source-integrity failure after writing public files could leave a completed-looking output directory.",
+              "fix_verified": "Files are written into TemporaryDirectory staging; the final source inventory and new-output check occur before directory rename. Failure exits the context and removes staging without publishing the requested output.",
+              "lines": "545-561",
+              "path": "scripts/week3_ai_review.py",
+              "priority": "P2",
+              "status": "closed"
+            }
+          ],
+          "read_only": true,
+          "status": "pass"
+        },
+        "constraints": {
+          "commits_by_this_reviewer": 0,
+          "existing_8000_8501_processes_touched": false,
+          "holdout_read_or_consumed": false,
+          "model_api_calls": 0,
+          "network_calls": 0,
+          "private_target_values_printed": 0,
+          "source_edits_by_this_reviewer": 0
+        },
+        "focused_regression_evidence": [
+          {
+            "path": "backend/tests/test_protected_trace_privacy.py",
+            "read_only_review_result": "The contextual container, Unicode/percent target and existing raw/public immutability regressions cover the stated change.",
+            "reported_result": "pass",
+            "rerun_by_this_reviewer": false,
+            "source": "root owner report",
+            "test_count": 7
+          },
+          {
+            "path": "tests/test_week3_ai_review.py",
+            "read_only_review_result": "The rationale test covers contextual standard/URL-safe Base64; publication mutation test asserts both requested output and staging are absent after rejection.",
+            "reported_result": "pass",
+            "rerun_by_this_reviewer": false,
+            "source": "pr40_core_review owner report",
+            "test_count": 8
+          }
+        ],
+        "human_review": false,
+        "human_role_C_signature": false,
+        "implementation_hashes": {
+          "backend/app/service.py": "0fe5ae4bc9677f93e184d5301298451a56a43b0e6d73b75d12caef2b542c7109",
+          "backend/tests/test_protected_trace_privacy.py": "183ed803194dc6b535e582f23e4877dd39e21dcf6e3dbd9600e61799b182080c",
+          "scripts/week3_ai_review.py": "649fbe25c4addad3181bbaad980a0fa7164d4632f0ae7b2ba073d4caf09a10c4",
+          "tests/test_week3_ai_review.py": "7524aee23c8e334c0f2e2b91cc5848f1578c8295d0914538b0bb93e5b95a0093"
+        },
+        "limitations": [
+          "This is an AI technical followup, not a human signature or final system selection.",
+          "Encoding assurance is limited to the helper variants and selected public artifacts described above; no universal encoding/partial/inferred disclosure claim is made.",
+          "Owner-reported regression results were reviewed but not rerun by this reviewer.",
+          "The actual input reconciliation was in-memory and did not publish a final overlay or modify original evaluations."
+        ],
+        "pending": [
+          {
+            "item": "Independent human role-C acceptance and actual A/B/C joint demonstration remain unperformed.",
+            "status": "pending"
+          }
+        ],
+        "previous_acceptance": {
+          "modified_by_followup": false,
+          "original_detailed_checks_sha256": "2b398f04023211ed9a911f7bf8fd3375831b7f2748e97a6605d2ad095263ec5c",
+          "path": "runs/week3-completion/ai-dev-review-v0.1/technical-acceptance-role-c.json",
+          "sha256": "83ad6a8a268ae04ac5d4abb2567d465d7357d78d8cc2751ab74d36f7a7355d58"
+        },
+        "public_projection_recheck": {
+          "case_count": 13,
+          "catalog_file_hash_matches": 13,
+          "changed_case_ids": [],
+          "changed_count": 0,
+          "command": "Execute existing technical_acceptance_role_c_check.py in memory, changing only its output filename to technical-acceptance-role-c-helper-followup-checks.json; preserve prior evidence files.",
+          "current_get_trace_matches": 13,
+          "detailed_checks_path": "runs/week3-completion/ai-dev-review-v0.1/technical-acceptance-role-c-helper-followup-checks.json",
+          "detailed_checks_sha256": "2471a51d77ae66d7e3f1c3f55ce71da27de4b752844e58348048984f50f945b6",
+          "guarded_input_file_count": 50,
+          "privacy_exposure_hit_count": 0,
+          "registered_frozen_target_count": 27,
+          "republication_required": false,
+          "source_raw_and_public_files_unchanged": true,
+          "status": "pass"
+        },
+        "reviewed_at": "2026-10-20T14:15:57.108189Z",
+        "reviewer": "AI-role-C-Codex",
+        "status": "pass",
+        "trigger": "Central registered-target masking helper changed to inspect contextual contiguous Base64 containers; recheck existing public trace projections and close two CLI review findings.",
+        "version": "week3-ai-technical-acceptance-role-c-helper-followup-v0.1"
+      }
+    }
+  },
+  "root_decision": "dev technical review completed with explicitly unresolved semantic judgments; no final configuration recommendation",
+  "scope": "AI technical role checks; original human team acceptance is not performed",
+  "source_evidence_applied": false,
+  "version": "week3-ai-dev-technical-acceptance-v0.1"
+}

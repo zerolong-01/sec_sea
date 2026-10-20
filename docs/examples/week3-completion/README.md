@@ -2,6 +2,8 @@
 
 사용자가 위임한 데이터·gold·정상 작업 rubric과 서비스·통계 기준을 [연구 결정](../../week3-research-decisions.md)에 채택했다. 이 문서는 그 기준과 연결한 실제 dev 실행, AI 의미 검토, 저장 결과 재생을 기록한다. 모든 이슈의 요구 사항과 남은 작업은 [완료 대조표](../../week3-completion-status.md)에서 확인한다.
 
+**최신 위임 AI dev 검토:** [완료 방법·기술 인수](../../week3-ai-dev-acceptance.md)와 [새 판정·해시 요약](ai-dev-review.v0.1.json)에 별도 AI 두 검토·제3 조정 결과를 출판했다. 283종을 각각 실독해 실제1,269task에 연결했고,218합의·65조정·미조정0·goal미확정23종을 기록했다. 원래 평가·gold는 불변이며 사람 검토·서명은 수행하지 않았다. 아래 v0.4 표는 당시 single-AI 판정 이력이다.
+
 **후속 v0.5 기록:** [전체 621대상 AI gold](../../week3-target-gold-registration.md), [실패 구간 표](../../week3-failure-slices.md),
 [D2 조작 제거 미탐 비교](../../week3-derived-detector-review.md), [대표 사례 13건](../../week3-case-handoff.md),
 [최신 시연 안내](../../week4-handoff-demo.md)와 [공개 후속 증거 JSON](followup.v0.5.json)을 추가했다.

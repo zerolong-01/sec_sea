@@ -6,7 +6,7 @@
 
 | 범위 | 전체 | 개별 AI 검토 | 보존·제외 |
 | --- | ---: | ---: | ---: |
-| D2 target gold | 48 | 30 | 18 holdout target |
+| D2 target gold | 48 | 30 RAG dev | RAG holdout 12 + 당시 정적 검토 범위 밖 email dev 6 |
 | 공격 catalog | 28 | 25 | 3 holdout attack |
 | 영어 입력 변형 | 3 | 3 | 0 |
 

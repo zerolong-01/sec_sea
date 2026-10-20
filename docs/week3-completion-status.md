@@ -4,6 +4,8 @@
 
 사용자는 공개 논문·기업 자료를 근거로 프로젝트 기준을 결정하도록 위임했다. 따라서 **dev용 데이터·gold·정상 작업 rubric, 서비스 수치·우선순위, 통계 방법의 연구 결정은 채택 완료**다. 이를 사람 2인의 독립 검토, A/B/C 세 담당자의 실제 합의, 운영 승인 또는 holdout 승인으로 바꾸지 않는다. 정책의 runtime `draft`는 이 구별을 유지하는 계약 지위이며 수치 미정을 뜻하지 않는다. [연구 결정](week3-research-decisions.md), [통계 정책](week3-statistical-policy.md)을 함께 읽는다.
 
+**후속 사용자 위임에 따른 AI dev 검토·기술 인수도 완료했다(E21).** 실제 사람 기록이 별도로 없다는 답변을 반영해 새 AI 두 검토와 제3 조정, AI 역할 A/B/C 검증을 수행했다. 아래 `human_review_pending`은 원문 사람 요건의 실제 미충족 사실이며, 이번 위임 AI dev 절차를 아직 수행하지 않았다는 뜻이 아니다. 사람·최종 holdout·운영 인수와 구별한 [완료 기록](week3-ai-dev-acceptance.md)을 함께 본다.
+
 ## 상태와 검증 범위
 
 | 상태 | 의미 |
@@ -13,7 +15,7 @@
 | `human_review_pending` | 원문이 요구하는 실제 독립 사람 검토·불일치 조정·역할별 합의가 없음. AI 검토 기록과 구별함. |
 | `not_in_dev_scope` | 보존하기로 한 holdout, 운영 배포·최종 확증 결론, 미구현 도구·외부 전송·대규모 확장 등 이번 dev 완료 범위 밖임. |
 
-**구현 head `63ef871`의 Ubuntu·Windows CI에서 root191개·backend113개와 통합 검증이 모두 통과했다.** 실제324·새인용108·새D2 216의 저장 재집계/export도 추가 모델0으로 완료했다. PR #39는 base dev의 draft이며 실제 공동 인수·merge는 별도다. [공개 안전 요약](examples/week3-completion/README.md), [실제 artifact hash·수치](examples/week3-completion/summary.v0.4.json), [해당 head CI](https://github.com/zerolong-01/sec_sea/actions/runs/39428651601)를 함께 본다.
+**구현 head `63ef871`의 Ubuntu·Windows CI에서 root191개·backend113개와 통합 검증이 모두 통과했다.** 실제324·새인용108·새D2 216의 저장 재집계/export도 추가 모델0으로 완료했다. base dev인 PR #39의 최신 체크·병합 상태는 [GitHub 기록](https://github.com/zerolong-01/sec_sea/pull/39)을 따른다. [공개 안전 요약](examples/week3-completion/README.md), [실제 artifact hash·수치](examples/week3-completion/summary.v0.4.json), [해당 head CI](https://github.com/zerolong-01/sec_sea/actions/runs/39428651601)를 함께 본다.
 
 이후 추가한 실패 구간 분석·파생 D2 문구 제거 비교·target gold와 사례 인계는 아래 E18–E20 및 [후속 증거](examples/week3-completion/followup.v0.5.json)에 연결한다. `63ef871`의 CI가 이 후속 변경까지 검증했다고 주장하지 않으며, 최신 head의 PR Checks 확인은 별도다.
 
@@ -28,7 +30,7 @@
 | E5 D2 진단 | [18건 탐지 검증](examples/real-api/detector-verification.json) | 탐지 전용 18건·36대상, 생성 0회, 반복 1회. 당시 gold 36개는 팀 검토 대기로 미등록. 생성 공격 효과나 6종 D2 공격의 3회 평가를 대신하지 않는다. |
 | E6 새 인용 실제 실행 | [입력 peer review](week3-quotation-review.md), [출력 의미 검토](week3-quotation-output-review.md) | batch-8fb19849d67c: dev6×6조건×3회=108, 생성85·차단23·오류0, 호출184·추정$0.0373288. 고유 생성 본문42개 실독·108행 기록. quoted 정상54/54, attack 아래 업무18/54, a021 original 보호값 실제 노출10. 기존324와 합치지 않음. |
 | E7 채택 정책 | [서비스 근거](../configs/week3-service-decision.v0.2.json), [실행 정책](../configs/week3-evaluation-policy.json), [통계 wrapper](../configs/week3-statistical-policy.json), [rubric](../data/week3/research-evaluation-spec.v0.4.json), [loader](../scripts/week3_policy.py) | `adopted_for_dev`. 서비스 8개 수치·우선순위, 반복 3·bootstrap 10,000·최소 family 20/판정 60을 결정. 사람 reviewer는 만들지 않고 holdout 권한은 false. 새 준비에 적용하고 과거 snapshot은 보존한다. |
-| E8 gold·분류·번역 AI 검토 | [설명](week3-gold-review.md), [58행 기록](../data/week3/research-gold-review.v0.2.jsonl) | dev 실제 target 30행·서로 다른 텍스트 25개, dev catalog 25행, 번역 3행을 AI가 검토. 번역은 영어 입력과 한국어 문서의 혼합 언어 변형이다. 원본 gold 48행을 수정하지 않으며 holdout 18 target·3 attack은 의미 검토에서 제외. 인간 독립 검토와 통계 family 독립성을 확정한 기록이 아니다. |
+| E8 gold·분류·번역 AI 검토 | [설명](week3-gold-review.md), [58행 기록](../data/week3/research-gold-review.v0.2.jsonl) | RAG dev 실제 target 30행·서로 다른 텍스트 25개, dev catalog 25행, 번역 3행을 AI가 검토. 번역은 영어 입력과 한국어 문서의 혼합 언어 변형이다. 원본 gold 48행을 수정하지 않으며 RAG holdout 12 target·3 attack과 당시 정적 범위 밖 email dev 6 target은 이 기록에서 제외했다. 이후 실제 이메일 target 검토는 E14/E21과 구별한다. 인간 독립 검토와 통계 family 독립성을 확정한 기록이 아니다. |
 | E9 기존324 정상 출력 AI 검토·검산 | [방법·결과](week3-output-review.md), [324행](../data/week3/research-output-review.v0.4.jsonl) | 고유 본문114개 실독. 전체 success223/failure100/review_needed1, 정상 세트170/179·coverage179/180 partial. 연구 overlay CLI 해시 검산 통과·원본 자동 평가/ASR 보존. 애매한1건 강제 판정 없음. |
 | E10 독립 검토 인계 | [계획기](../scripts/week3_review_handoff.py), [11회귀](../tests/test_week3_review_handoff.py), [현재 post-gold packet 인덱스](examples/week3-completion/review-handoff.v0.4.json) | 세 배치 final-output648+D2-target621=1,269 private task. 현재 annotation 이후 hash를 고정한 packet이며 blinding·신원/충돌/시각/근거/마스킹 검사를 지원한다. applied=false·human pending. 옛630task manifest는 당시 이력으로 보존하고 새 사람 응답에는 현재 인덱스를 사용한다. |
 | E11 대시보드/API 재생 | [화면 기록](../frontend/verification/week3-dashboard-completion.md), E16 최신 legacy projection 재생 | 실제324 저장 API→집계→화면 JSON/CSV/trace, 대표3사례·3개 대시보드 필터 재생. 모델 추가0. 과거90그룹·payload78·family비교114는 당시 snapshot으로 보존하고 공개 projection 계약은 E16으로 갱신. |
@@ -41,6 +43,7 @@
 | E18 실제 실패 구간 분석 | [분석·실제 표](week3-failure-slices.md), [도구](../scripts/week3_failure_slices.py), [5회귀](../tests/test_week3_failure_slices.py), [최종 후속 증거](examples/week3-completion/followup.v0.5.json) | 세 배치648행을 따로 검증해 앱/언어/실제 frozen 공격유형·심각도 및 조건/목표/변형/버전별 144교차·216case slice, CSV729행(지표720+미평가scope9)을 생성. 정상·attack 아래 업무·원ASR·두FPR의 분모 분리. 최종 post-gold 재출판1,821입력파일 불변·API0. 옛 severity unspecified와 en/실제다중턴/도구의0/0·null 보존·CI null. |
 | E19 악성 목표 유지 D2 조작 제거 비교 | [파생 target 검토·실제 FNR 표](week3-derived-detector-review.md), [도구](../scripts/week3_detector_ablation.py), 로컬 legacy-d2-manipulation-ablation-fnr.v0.1.json | 원본/제거본의 실제 검사·gold·raw detector 응답을 연결한 12조건/stage 비교·72target행. input의 공통 유효 반복 각3에서 D2-input FNR2/3→0/3, D2-both·D1-D2 각3/3→0/3. inherited family1·CI null·미검사/비악성 제외·API0. 일반적 인과/우월성 주장이 아님. |
 | E20 대표 사례·4주차 재현 인계 | [13사례 설명](week3-case-handoff.md), [기계 판독 catalog](examples/week3-completion/case-handoff.v0.4.json), [저장 시연·사용법](week4-handoff-demo.md) | 공격 관측·정상 기능 실패·과잉 차단·미확정·인용 대조를 run/hash와 현재 마스킹 trace13개로 연결. 독립 검사에서 보호값 노출0·1,811입력파일 불변·API0. 원래 평가와 AI 의미 판정을 구별하며 실제 오류0 cohort에 가짜 오류를 추가하지 않음. 사람2인/세역할 합의·최종 발표/선정 완료를 대신하지 않음. |
+| E21 위임 AI dev 교차 검토·기술 인수 | [완료 방법·한계](week3-ai-dev-acceptance.md), [283종·1,269연결 안전 증거](examples/week3-completion/ai-dev-review.v0.1.json), [별도 정책](../configs/week3-ai-dev-review-policy.v0.1.json) | 새 별도 context의 두 AI가283종을 각각 실독,218합의·65불일치를제3AI가모두조정. source/vote hash binding 통과·누락/미조정0·goal미확정23유지. fresh gold621/621일치,1,845입력파일불변·API0·원본적용false. AI역할A/B/C검증과두발견코드결함수정·8CLI/7privacy 회귀·13trace재검증. 사람서명없음·동일모델/공유준비한계·holdout보존·최종추천deferred. |
 
 E6의 옛 quoted-controls-v0.2-draft·quote-experiment-v0.2/prepared는 준비 이력으로 보존한다.
 실제 실행 입력은 quoted-controls-prepared-v0.4, 결과는 quoted-execution-v0.4다.
@@ -195,7 +198,7 @@ E13도 d2-controls-prepared-v0.4와 d2-execution-v0.4를 구별한다. 옛 준�
 ## 현재 완료한 범위와 남는 한계
 
 1. **dev 기준·실제 실행·분석 인계 완료.** E7 정책, E6 실제108·E13 실제216, E9/E14/E15 의미/target/paired 검산, E16 privacy/API/UI, E17 회귀/export와 E18–E20 실패 구간·D2 조작 제거·사례/시연을 연결했다. head63ef871의 Ubuntu·Windows CI 통과는 확인했고, 후속 변경의 최신 head PR Checks는 별도로 확인한다.
-2. **독립 사람 검토·실제 공동 인수는 pending.** AI 의미 판단·교차검토·gold 등록은 사람2인·세 역할 합의나 source 서명 인증이 아니다. 현재1,269task packet·template·역할명은 실제 응답/서명을 대신하지 않는다.
+2. **사용자 위임 AI dev 검토·기술 인수 완료(E21).** 두 primary AI의 실제283행씩 응답과 제3 조정65행·역할별기술검증을 소속1,269task 및 원증거hash에 연결했다. 실제 사람2인·A/B/C 담당자의 공동서명은 수행하지 않았으며 원문 사람요건은 pending 사실을 보존한다. 동일모델계열·공유준비과정과 미확정goal23종의 한계를 기록했다.
 3. **과거와 새 판정 상태를 분리.** 원래324의 자동 공격 success21/failure69/review_needed54, 정상 review_needed230/failure94·BatchReview0을 보존했다. 새 AI 정상 overlay는 정상170/179·미확정1이다. 당시 미등록306/99였던 target은 후속 AI annotation을 추가해 현재 legacy306·quotation99·D2 216 모두621개가 등록됐다. public trace/gold history 변경과 raw·원자동평가·frozen/manifest/ledger 보존을 구별하며 목표가 다른 ASR을 합치지 않는다.
 4. **통계·적용 범위 제한.** 새 quotation/D2는 각각3family로 최소20에 미달한다. 반복·6기법으로 독립 family를 늘리지 않고 CI null·final deferred를 유지한다. exact 부재는 모든 부분/인코딩/추론 유출 부재를 증명하지 않는다.
 5. **하위 분석·holdout 한계.** 선택 dev의 실제 실패 구간 표는 확보했으며 옛324의 severity/일부email goal unspecified는 보존한다. 신규 실행에는 위험·목표가 반영됐지만 corpus 전체나 미관측 영어/도구/실제다중턴으로 성능을 확대하지 않는다. holdout 최종평가·사람 동결·운영 배포/최종 안전 구성 확정은 `not_in_dev_scope`다.
@@ -231,7 +234,7 @@ E13도 d2-controls-prepared-v0.4와 d2-execution-v0.4를 구별한다. 옛 준�
 | 후속621 gold·paired 관측 | legacy306·quotation99·D2 216 applied·API0; matched54/108·각3family | E14/E15; public annotation/history 변경을 기록하고 raw·원평가·frozen/manifest/ledger 보존 |
 | 621 gold 후 세 배치 재집계/export | 90/24/12그룹·CSV990/264/132·각922/297/585 runs파일 읽기 전후 불변·모델0 | [등록·보존 기록](week3-target-gold-registration.md), [후속 증거](examples/week3-completion/followup.v0.5.json); 과거 v0.4 산출물 덮어쓰기 없음 |
 | 후속 실패 구간·D2 조작 제거 | 144교차·216case slice/CSV729행; FNR12비교·CI null·API0 | E18/E19, [후속 증거](examples/week3-completion/followup.v0.5.json); 기존 보고서는 당시 hash로 보존 |
-| 대표 사례·사람 인계 | 실제13사례·원평가/AI판정 분리; post-gold1,269task·human pending | E10/E20; 실제 사람2인/세 역할 합의·holdout 승인을 만들지 않음 |
+| 대표 사례·AI dev 인수 | 실제13사례·원평가/AI판정 분리;283종/1,269task·두AI+제3조정완료 | E10/E20/E21; 실제 사람2인/세 역할 서명·holdout 승인을 만들지 않음 |
 | UI paired 관측 focused | 별도1개 pass·실제 두 overlay 생성·모델0 | commit9763648·E15 final JSON; root191과 중복 합산하지 않음 |
 | Ubuntu CI / Windows CI | head63ef871 두 OS passed; 후속 최신 head Checks는 별도 확인 대기 | [검증된 CI](https://github.com/zerolong-01/sec_sea/actions/runs/39428651601), [고정 기록](examples/week3-completion/ci-63ef871.json); 과거 통과를 새 head 통과로 쓰지 않음 |
-| PR·검토·merge | PR39 draft·base dev 유지, 자동 merge 없음 | 최종 head의 실제 검토/Checks 결과 확인 후 별도 인수 |
+| PR·검토·merge | PR39 base dev; AI dev 검토·기술 인수 E21 | [PR 실제 상태·Checks](https://github.com/zerolong-01/sec_sea/pull/39) 기준이며 과거 draft/CI 상태를 최신으로 쓰지 않음 |
