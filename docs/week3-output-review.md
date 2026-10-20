@@ -113,3 +113,25 @@ CI를 새로 만들지 않는다. 작은 분모나 미확정 평가를 제외 �
 자원 통계와 서비스 임계값에 따른 선정은 이 의미 검토 overlay에서 `not_assessed`이며,
 저장된 비용·mean·p95를 재평균하거나 트래픽 가중치를 만들지 않는다.
 `final_status=deferred`, 사람의 독립 검토 pending, holdout 미승인으로 유지하며 조건 간 우월성을 주장하지 않는다.
+
+## legacy 저장 trace의 공개 조회 재생
+
+과거 저장된 public trace와 현재 API의 공개 projection은 같다고 가정하지 않는다.
+`verify_real_api`와 `verify_real_ui`의 공개 기대값은 `RunService.get_trace()`로 읽는다.
+현재 설정에 평가 규칙이 없어도 실제 batch attempt 소속을 확인한 동결 privacy 규칙을 사용한다.
+공개 sample에는 이 projection만 기록하고, raw 요청·모델 호출·사용량·가격·ledger 대조는
+원본 저장 trace로 수행한다. `trace_projection_hashes`는 두 모델 직렬화의 SHA256과 변경 여부를
+따로 남기며 원본 파일을 마스킹된 값으로 덮어쓰지 않는다.
+
+같은 reader로 HTTP 기대값을 만드는 검사는 **projection 전달의 일관성**을 검증한다.
+보호값 마스킹 자체가 정확하다는 독립 증거로 사용하지 않는다. 그 정확성은
+[별도 backend privacy 테스트](../backend/tests/test_protected_trace_privacy.py)가 등록된 값과
+인코딩·동결 규칙·기록 불변을 직접 검증한다. verifier의 canary 패턴 검사는 별도의 제한된 화면 검사다.
+
+현재 공개 projection으로 기존 324개를 다시 조회한 실제 증빙은 무시되는
+`runs/week3-completion/legacy-public-replay-v0.4/` 아래에 있다.
+`replay-integrity.json`은 API·schema·JSON·CSV, 3개 대표 case의 모드/위치 UI와
+전체/RAG/이메일 대시보드 재생 통과, 공개 projection 변경 54건, 모델 호출 0건을 기록한다.
+기존 report·export까지 포함한 원본 pipeline의 845개 파일은 전후 SHA256 inventory가 일치한다.
+이 재생에서는 파생 결과 쓰기를 새 디렉터리로 가로채 기존 공개·비공개·manifest·평가 이력과
+기존 보고서를 모두 보존했다. 과거 파일에 남아 있던 실제 표시값을 새 공개 샘플로 복사하지 않는다.

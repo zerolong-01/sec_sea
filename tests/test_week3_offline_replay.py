@@ -11,10 +11,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 from backend.app.config import Settings
+from backend.app.batch import BatchRunner, file_hash
 from backend.app.providers import OpenAICompatibleProvider
 from backend.testing.fixture_model import FixtureModelServer
 from scripts.data_contract import ROOT
-from scripts.verify_real_api import VerificationError
+from scripts.verify_real_api import VerificationError, runner_trace, verify_saved
 from scripts.week3_pipeline import verify
 
 
@@ -100,6 +101,43 @@ class Week3OfflineReplayTests(unittest.TestCase):
             with self.assertRaisesRegex(VerificationError, "PUBLIC_USAGE_MISMATCH"):
                 verify(self.output, report_only=True)
         calls.assert_not_called()
+
+    def test_legacy_projection_matches_http_with_no_current_rules_and_preserves_original_evidence(self):
+        # Simulate a pre-privacy-fix display field, not a new model observation.
+        # The frozen rule is deliberately absent from current reader settings.
+        path = next((self.output / "runs").glob("*.trace.json"))
+        stored = json.loads(path.read_text(encoding="utf-8"))
+        target = "legacy-registered-private-example"
+        rules_path = self.batch / "evaluation_rules.snapshot"
+        rules = json.loads(rules_path.read_text(encoding="utf-8"))
+        rule = next(r for r in rules["rules"] if r["case_id"] == stored["request"]["case_id"])
+        rule.setdefault("protected_values", []).append(target)
+        rules_path.write_text(json.dumps(rules), encoding="utf-8")
+        manifest_path = self.batch / "manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["configuration_hashes"]["evaluation_rules"] = file_hash(rules_path)
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        stored["output"]["display_text"] = target
+        stored["output"]["is_masked"] = False
+        path.write_text(json.dumps(stored), encoding="utf-8")
+        before = {p: file_hash(p) for p in (self.output / "runs").rglob("*") if p.is_file()}
+        settings = replace(self.settings, runs_dir=self.output / "runs", evaluation_rules_path=None)
+        runner = BatchRunner(settings)
+        result_output = self.folder / "legacy-projection-derived"
+        with patch.object(OpenAICompatibleProvider, "complete", side_effect=AssertionError("model called")) as calls:
+            public = runner_trace(settings, stored["run_id"])
+            result = verify_saved(runner, runner.store.get(self.batch_id), (), result_output, save_result=False)
+        calls.assert_not_called()
+        self.assertNotIn(target, json.dumps(public))
+        self.assertNotEqual(public, stored)
+        self.assertEqual(result["public_projection_changed_count"], 1)
+        self.assertEqual(result["public_trace_contract"], "RunService.get_trace_read_projection")
+        self.assertTrue(result["projection_consistency_is_not_independent_masking_verification"])
+        self.assertEqual(result["refresh_model_calls"], 0)
+        self.assertEqual({p: file_hash(p) for p in before}, before)
+        self.assertFalse((result_output / "verification-report.json").exists())
+        for sample in (result_output / "public-samples").glob("*.json"):
+            self.assertNotIn(target, sample.read_text(encoding="utf-8"))
 
     def test_paid_resume_still_rejects_changed_execution_settings(self):
         with patch.object(OpenAICompatibleProvider, "complete", side_effect=AssertionError("model called")) as calls:

@@ -11,9 +11,10 @@ from unittest.mock import patch
 from urllib.parse import urlsplit
 
 from backend.app.batch import BatchStore
-from backend.app.repository import RepositoryError, RunTraceStore
+from backend.app.repository import RepositoryError
 from backend.app.storage import atomic_json
 from scripts.data_contract import CANARY_PATTERN, ROOT, load_bundle, require
+from scripts.verify_real_api import public_trace_reader, runner_trace
 
 
 def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> dict:
@@ -133,9 +134,9 @@ def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> d
                     trace_id = app.selectbox(key="trace_run").value
                     app.button(key="load_trace").click().run()
                     require(not app.exception and not app.error, "Dashboard trace lookup failed")
-                    trace = RunTraceStore(runs_dir).get(trace_id).model_dump(mode="json")
+                    trace = runner_trace(settings, trace_id)
                     shown = [json.loads(element.value) for element in app.json]
-                    require(trace in shown, "Dashboard trace differs from saved public trace")
+                    require(trace in shown, "Dashboard trace differs from current public projection")
                 visible = "\n".join(str(element.value) for element in [*app.code, *app.text, *app.caption, *app.json])
                 visible += "\n".join(frame.to_json(force_ascii=False) for frame in frames)
                 visible += "\n".join(str(value) for value in downloads.values())
@@ -158,6 +159,9 @@ def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> d
         "calculation_implementation_sha256": original.provenance.get("calculation_implementation_sha256"),
         "additional_model_calls": 0, "network_calls": 0, "saved_batch_unchanged": True,
         "api_aggregate_ui_json_csv_consistent": True, "canary_masking_verified": True,
+        "public_trace_contract": "RunService.get_trace_read_projection",
+        "privacy_correctness_evidence": "independent_backend_privacy_tests",
+        "projection_consistency_is_not_independent_masking_verification": True,
         "contexts": checked, "read_api_requests": len(api_calls)}
     atomic_json(runs_dir.parent / "dashboard-verification-report.json", result)
     return result
@@ -170,7 +174,13 @@ def verify(runs_dir: Path, batch_id: str, *, data_dir=None, case_ids=None) -> di
     from ui_core import COMPARE_SAME, compare_verdict, label_of, summary_row
 
     state = BatchStore(runs_dir).get(batch_id)
-    store = RunTraceStore(runs_dir)
+    from backend.app.config import Settings
+    # No .env or current gold is needed: get_trace resolves the frozen batch
+    # rules through actual attempt membership even with evaluation_rules=None.
+    settings = Settings(project_root=ROOT, data_dir=runs_dir, runs_dir=runs_dir,
+        model_provider="demo", model_id="demo-rag-v0.1", system_prompt_version="v0.1",
+        retrieval_config_version="lexical-v0.1", model_base_url=None, model_api_key=None)
+    reader = public_trace_reader(settings)
     data_dir = Path(data_dir or ROOT / "data/week2").resolve()
     case_ids = case_ids or ("a006", "b006", "h007")
     bundle = load_bundle(data_dir)
@@ -181,7 +191,7 @@ def verify(runs_dir: Path, batch_id: str, *, data_dir=None, case_ids=None) -> di
         for attempt in entry["attempts"]:
             if attempt["status"] not in ("completed", "blocked"):
                 continue
-            trace = store.get(attempt["run_id"]).model_dump(mode="json")
+            trace = runner_trace(settings, attempt["run_id"], reader=reader)
             require(trace["manifest"]["execution_scope"] == "real", "UI replay needs real traces")
             if trace["status"] in ("completed", "blocked"):
                 selected.setdefault((entry["case_id"], entry["condition_id"]), trace)
