@@ -1,4 +1,4 @@
-"""저장된 v0.3 배치를 실제 집계 API와 대시보드로 재생한다."""
+"""저장 배치를 현재 집계 API와 대시보드로 재생한다."""
 from __future__ import annotations
 
 import copy
@@ -13,6 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from backend.app.batch import BatchRunner
+from backend.app.batch_analysis import REPORT_VERSION
 from backend.app.batch_models import BatchSpec
 from backend.app.config import Settings
 from scripts.data_contract import ROOT, DataContractError
@@ -61,7 +62,7 @@ class SavedBatchDashboardTests(unittest.TestCase):
         before = copy.deepcopy(self.runner.store.get(self.state.batch_id).model_dump(mode="json"))
         report = verify_dashboard(self.runs, self.state.batch_id, allow_fixture=True)
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(report["report_version"], "batch-cluster-summary-v0.3")
+        self.assertEqual(report["report_version"], REPORT_VERSION)
         self.assertEqual(report["execution_scope"], "demo")
         self.assertFalse(report["real_model_verified"])
         self.assertEqual((report["additional_model_calls"], report["network_calls"]), (0, 0))
@@ -71,6 +72,7 @@ class SavedBatchDashboardTests(unittest.TestCase):
         self.assertEqual(len(report["contexts"]), 3)  # 전체 + RAG + 이메일
         self.assertTrue(all(context["trace_run_id"] for context in report["contexts"]))
         self.assertGreater(report["contexts"][0]["payload_comparison_count"], 0)
+        self.assertGreater(report["contexts"][0]["family_comparison_count"], 0)
         after = self.runner.store.get(self.state.batch_id).model_dump(mode="json")
         self.assertEqual(before, after)
 

@@ -99,9 +99,25 @@ def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> d
                         "Dashboard comparison differs from saved aggregate")
                 payload = batch_core.payload_rows(expected_json)
                 if payload:
-                    tables = [frame for frame in frames if "공격 변형 vs 대조" in frame.columns]
+                    tables = [frame for frame in frames if "공격 변형 vs 대조" in frame.columns and "family" not in frame.columns]
                     require(len(tables) == 1 and tables[0].to_dict("records") == payload,
                             "Dashboard payload uncertainty differs from saved aggregate")
+                family_payload = batch_core.payload_rows(expected_json, by_family=True)
+                if family_payload:
+                    tables = [frame for frame in frames if "공격 변형 vs 대조" in frame.columns and "family" in frame.columns]
+                    require(len(tables) == 1 and tables[0].to_dict("records") == family_payload,
+                            "Dashboard family exposure differs from saved aggregate")
+                tables = [frame for frame in frames if "정책값" in frame.columns and "코드" in frame.columns]
+                require(len(tables) == 1 and tables[0].to_dict("records") == batch_core.policy_rows(expected_json),
+                        "Dashboard policy thresholds differ from saved aggregate")
+                selected_group = next(group for group in expected.groups
+                                      if group["group_id"] == app.selectbox(key="kpi_group").value)
+                tables = [frame for frame in frames if "표본·평가" in frame.columns]
+                require(len(tables) == 1 and tables[0].to_dict("records") == batch_core.sample_rows(selected_group),
+                        "Dashboard sample counts differ from saved aggregate")
+                tables = [frame for frame in frames if "집계·불확실성" in frame.columns]
+                require(len(tables) == 1 and tables[0].to_dict("records") == batch_core.metric_rows(selected_group),
+                        "Dashboard metric uncertainty differs from saved aggregate")
                 app.button(key="prepare_csv").click().run()
                 require(not app.exception and not app.error, "Dashboard CSV preparation failed")
                 require(downloads.get("download_csv") == report_csv(expected).encode("utf-8"),
@@ -126,6 +142,7 @@ def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> d
                 require(not CANARY_PATTERN.search(visible), "Dashboard leaked a protected canary")
                 checked.append({"filters": filters, "group_count": len(expected.groups),
                     "payload_comparison_count": len(payload), "trace_run_id": trace_id,
+                    "family_comparison_count": len(family_payload),
                     "evaluation_snapshot_sha256": expected.evaluation_snapshot_sha256})
             require(model.call_count == 0, "Dashboard called model")
     require(hashlib.sha256(manifest.read_bytes()).hexdigest() == before, "Dashboard modified saved batch")

@@ -51,6 +51,9 @@ class SavedBatchServer:
         for report in self.reports.values():
             report["report_version"] = REPORT_VERSION
             report["provenance"]["calculation_implementation_sha256"] = "a" * 64
+            for group in report["groups"]:
+                group["goal_kind"] = "unspecified"
+                group["model_id"] = "fixture-generation"
         self.csv_snapshot = None
         self.calls = []
 
