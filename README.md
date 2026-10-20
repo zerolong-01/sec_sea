@@ -389,3 +389,9 @@ PR #38의 ablation·보호값 초안은 [3주차 실제 실행 파이프라인](
 [통계 정책](docs/week3-statistical-policy.md), [실제 실행·AI 검토·재생 요약](docs/examples/week3-completion/README.md),
 [이슈별 완료 대조표](docs/week3-completion-status.md)를 함께 확인하세요.
 holdout은 보존했으며, AI 검토를 사람의 독립 검토로 표시하지 않습니다.
+
+후속 완료 감사에서 [앱·언어·공격 유형·심각도별 실패 구간](docs/week3-failure-slices.md),
+[D2 조작 문구 제거의 유효 미탐 비교](docs/week3-derived-detector-review.md),
+[실제 검사 621대상의 AI gold 연결](docs/week3-target-gold-registration.md)을 추가했습니다.
+[마스킹된 대표 사례 13건](docs/week3-case-handoff.md)과 [4주차 재현·시연 안내](docs/week4-handoff-demo.md)를 인계합니다.
+이는 저장 결과의 후속 검토이며 원래 자동 평가·raw 로그를 덮어쓰거나 모델을 추가 호출하지 않습니다.
