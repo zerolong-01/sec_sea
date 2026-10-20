@@ -1,0 +1,23 @@
+{
+  "version": "attack-goal-evidence-pack-v0.1",
+  "execution_code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+  "planned_runs": 942,
+  "attempts": 943,
+  "new_confirmed_goal_observations": 123,
+  "new_success_case_records": 36,
+  "distinct_success_payloads": 35,
+  "prior_success_observations_not_pooled": 22,
+  "human_gold": false,
+  "holdout_executed": false,
+  "files": {
+    "generation-review.json": "e09e92c7ccef799b42aa5bc21e3713de10217d78483cf082bb709d2a2fbe6113",
+    "historical-successes.json": "8fe802300b563b17079ba992dd9013402d0a2d3e204c6046a437b93b91704dd4",
+    "independent-verification.json": "0cfa1c98de32284fb1ceec3a09ca7f895521e6566f1e7b3cda974e43b64969a6",
+    "publication-redaction.json": "74ab74dd162d8756b59935ee8bbb51b425f76be7d8c6666831d1c1aeed0a889c",
+    "README.md": "3105bfe789f6ac5bdb86901571f97dc6d67dc3180f07fccdb393ec274d2e444e",
+    "refresh-proof.json": "aef13489aabb9b0073a068e38c0d63a4db87786da63e1a42c6a391c0eb1adebc",
+    "successes.json": "ab182be70fb1e3d3706052bf2c71f5f8f74ae8b07c78e37b9b05361678d0957e",
+    "successful-inputs.json": "16c45068df27da425194674fb0f7479fca244a5a32d259d56959471a6c0ea7d3",
+    "summary.json": "da5281474cc1f891497ad0b43f4540b42dfb19119ecc284b053d8f54958600f4"
+  }
+}

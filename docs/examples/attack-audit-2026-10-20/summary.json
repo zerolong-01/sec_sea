@@ -1,0 +1,504 @@
+{
+  "version": "full-dev-attack-audit-v0.1",
+  "status": "passed",
+  "scope": "all_existing_unique_dev_cases_and_generated_dev_attack_variants",
+  "execution_scope": "real",
+  "planned_runs": 942,
+  "repeats": 1,
+  "unique_conditions": 6,
+  "inventory": {
+    "selected_cases": 157,
+    "by_source": {
+      "legacy": 36,
+      "week2": 75,
+      "translations": 3,
+      "week3": 15,
+      "email": 3,
+      "ai": 25
+    },
+    "by_label": {
+      "attack": 71,
+      "benign": 45,
+      "hard_negative": 41
+    },
+    "existing_unique_cases": 132,
+    "ai_variants": 25,
+    "holdout_selected": 0,
+    "holdout_preserved": true
+  },
+  "status_counts": {
+    "completed": 742,
+    "blocked": 200
+  },
+  "budget": {
+    "max_execution_usd": 4.7,
+    "known_execution_cost_usd": 0.34291000000000027,
+    "committed_execution_usd": 0.3564268000000002,
+    "admitted_calls": 1619,
+    "unresolved_calls": 0,
+    "generation_cost_included": false,
+    "note": "Variant generation is accounted for separately."
+  },
+  "sources": [
+    {
+      "source_id": "legacy",
+      "batch_id": "batch-12f3f8027f48",
+      "status": "completed",
+      "reason": null,
+      "planned_runs": 216,
+      "status_counts": {
+        "completed": 162,
+        "blocked": 54
+      },
+      "execution_scope": "real",
+      "budget": {
+        "admitted_calls": 376,
+        "reserved_tokens": 12458496,
+        "observed_input_tokens": null,
+        "observed_output_tokens": null,
+        "known_cost_usd": 0.07857960000000003,
+        "total_cost_usd": null,
+        "committed_usd": 0.09209639999999998,
+        "unresolved_calls": 0,
+        "elapsed_seconds": 537.2290000008652,
+        "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+      },
+      "code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+      "implementation_sha256": "e07c0923624acd6ec0cd9344559846b61385df6cdaa95ce5d0486f743bb96c39",
+      "reconciled_calls": 376,
+      "unreconciled_calls": 0,
+      "http_status_counts": {
+        "200": 375,
+        "None": 1
+      },
+      "pricing_usage_ledger_consistent": true
+    },
+    {
+      "source_id": "week2",
+      "batch_id": "batch-6450c31dd6a7",
+      "status": "completed",
+      "reason": null,
+      "planned_runs": 450,
+      "status_counts": {
+        "completed": 391,
+        "blocked": 59
+      },
+      "execution_scope": "real",
+      "budget": {
+        "admitted_calls": 814,
+        "reserved_tokens": 26981632,
+        "observed_input_tokens": 211485,
+        "observed_output_tokens": 64028,
+        "known_cost_usd": 0.18703880000000017,
+        "total_cost_usd": 0.18703880000000017,
+        "committed_usd": 0.18703880000000017,
+        "unresolved_calls": 0,
+        "elapsed_seconds": 1176.088000000629,
+        "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+      },
+      "code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+      "implementation_sha256": "e07c0923624acd6ec0cd9344559846b61385df6cdaa95ce5d0486f743bb96c39",
+      "reconciled_calls": 814,
+      "unreconciled_calls": 0,
+      "http_status_counts": {
+        "200": 814
+      },
+      "pricing_usage_ledger_consistent": true
+    },
+    {
+      "source_id": "translations",
+      "batch_id": "batch-61fce8219c05",
+      "status": "completed",
+      "reason": null,
+      "planned_runs": 18,
+      "status_counts": {
+        "blocked": 3,
+        "completed": 15
+      },
+      "execution_scope": "real",
+      "budget": {
+        "admitted_calls": 33,
+        "reserved_tokens": 1093632,
+        "observed_input_tokens": 9250,
+        "observed_output_tokens": 2152,
+        "known_cost_usd": 0.007143199999999999,
+        "total_cost_usd": 0.007143199999999999,
+        "committed_usd": 0.007143199999999999,
+        "unresolved_calls": 0,
+        "elapsed_seconds": 40.82600000000093,
+        "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+      },
+      "code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+      "implementation_sha256": "e07c0923624acd6ec0cd9344559846b61385df6cdaa95ce5d0486f743bb96c39",
+      "reconciled_calls": 33,
+      "unreconciled_calls": 0,
+      "http_status_counts": {
+        "200": 33
+      },
+      "pricing_usage_ledger_consistent": true
+    },
+    {
+      "source_id": "week3",
+      "batch_id": "batch-eaab44a61d26",
+      "status": "completed",
+      "reason": null,
+      "planned_runs": 90,
+      "status_counts": {
+        "completed": 69,
+        "blocked": 21
+      },
+      "execution_scope": "real",
+      "budget": {
+        "admitted_calls": 153,
+        "reserved_tokens": 5070336,
+        "observed_input_tokens": 35004,
+        "observed_output_tokens": 8873,
+        "known_cost_usd": 0.02819840000000002,
+        "total_cost_usd": 0.02819840000000002,
+        "committed_usd": 0.02819840000000002,
+        "unresolved_calls": 0,
+        "elapsed_seconds": 201.6610000000219,
+        "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+      },
+      "code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+      "implementation_sha256": "e07c0923624acd6ec0cd9344559846b61385df6cdaa95ce5d0486f743bb96c39",
+      "reconciled_calls": 153,
+      "unreconciled_calls": 0,
+      "http_status_counts": {
+        "200": 153
+      },
+      "pricing_usage_ledger_consistent": true
+    },
+    {
+      "source_id": "email",
+      "batch_id": "batch-e06e60d7eb4b",
+      "status": "completed",
+      "reason": null,
+      "planned_runs": 18,
+      "status_counts": {
+        "blocked": 3,
+        "completed": 15
+      },
+      "execution_scope": "real",
+      "budget": {
+        "admitted_calls": 33,
+        "reserved_tokens": 1093632,
+        "observed_input_tokens": 7540,
+        "observed_output_tokens": 1688,
+        "known_cost_usd": 0.0057167999999999984,
+        "total_cost_usd": 0.0057167999999999984,
+        "committed_usd": 0.0057167999999999984,
+        "unresolved_calls": 0,
+        "elapsed_seconds": 38.297999999835156,
+        "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+      },
+      "code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+      "implementation_sha256": "e07c0923624acd6ec0cd9344559846b61385df6cdaa95ce5d0486f743bb96c39",
+      "reconciled_calls": 33,
+      "unreconciled_calls": 0,
+      "http_status_counts": {
+        "200": 33
+      },
+      "pricing_usage_ledger_consistent": true
+    },
+    {
+      "source_id": "ai",
+      "batch_id": "batch-2e60822e5d58",
+      "status": "completed",
+      "reason": null,
+      "planned_runs": 150,
+      "status_counts": {
+        "blocked": 60,
+        "completed": 90
+      },
+      "execution_scope": "real",
+      "budget": {
+        "admitted_calls": 210,
+        "reserved_tokens": 6958080,
+        "observed_input_tokens": 52495,
+        "observed_output_tokens": 9522,
+        "known_cost_usd": 0.03623320000000002,
+        "total_cost_usd": 0.03623320000000002,
+        "committed_usd": 0.03623320000000002,
+        "unresolved_calls": 0,
+        "elapsed_seconds": 247.43099999980768,
+        "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+      },
+      "code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+      "implementation_sha256": "e07c0923624acd6ec0cd9344559846b61385df6cdaa95ce5d0486f743bb96c39",
+      "reconciled_calls": 210,
+      "unreconciled_calls": 0,
+      "http_status_counts": {
+        "200": 210
+      },
+      "pricing_usage_ledger_consistent": true
+    }
+  ],
+  "errors": [],
+  "raw_generation_usage_price_ledger_verified": true,
+  "refresh_model_calls": 0,
+  "generation_file_sha256": "7e519ed0737238fe71f897ea13b9f3a662a007e384e061146d65d87eff2d38d2",
+  "frozen_orchestrator_sha256": "bbe5813e8b333f90fcfee4de04fe05bc00ead2cc4b85c3b3fa4f3f707d1502d1",
+  "review_orchestrator_sha256": "bbe5813e8b333f90fcfee4de04fe05bc00ead2cc4b85c3b3fa4f3f707d1502d1",
+  "preparation_sha256": "9823ad67e67d32829cee243c597c4c62d25b19a496be3de6829a85837b47b205",
+  "team_review": "pending",
+  "final_recommendation": "deferred",
+  "holdout_executed": false,
+  "inference": "Exploratory n=1 per condition; exact evidence and context-review candidates, not final ASR/FPR.",
+  "parallel_stop_semantics": "Stop further item admissions on failure; other already admitted items settle.",
+  "automatic_classification_counts": {
+    "review_needed": 23,
+    "failure": 289,
+    "success": 114
+  },
+  "evidence_review_classification_counts": {
+    "failure": 303,
+    "success": 123
+  },
+  "confirmed_success_observations": 123,
+  "confirmed_success_case_records": 36,
+  "distinct_success_payloads": 35,
+  "review_files_sha256": {
+    "legacy-semantic-review.json": "d47b5bf35341ccdff60ae4270a1ef260779fd2e452a6ed944f91cf3f6c8b533e",
+    "disclosure-review.json": "6a38bdef4b20e6d12e52dcbe46d432bb74ab5d00df3f3b36a300631709f4b974",
+    "context-review.json": "5eafaf08df97cc130f03b1b3eafe03d4a1f4f340e51641d98e23922365d53961",
+    "absent-target-review.json": "86c6266bf79a1097e02a07b9ecf31f24df945c18eda11e64379fdeec2812752a"
+  },
+  "source_automatic_report_sha256": "33da9204b3d533fb15357092a4660d126300faf724ef046d83fb12b8d3f1d977",
+  "generation_accounting": {
+    "version": "generated-attack-variants-v0.1",
+    "selection_version": "validated-selection-v0.1",
+    "status": "completed",
+    "generation_model": "gpt-4.1-mini-2025-04-14",
+    "completed_parent_ids": [
+      "a001",
+      "a002",
+      "a003",
+      "a004",
+      "a005",
+      "a006",
+      "a007",
+      "a008",
+      "a009",
+      "a010",
+      "a011",
+      "a012",
+      "a013",
+      "a014",
+      "a015",
+      "a016",
+      "a017",
+      "a018",
+      "a019",
+      "a020",
+      "a021",
+      "a022",
+      "a023",
+      "a024",
+      "a027"
+    ],
+    "calls": [
+      {
+        "directory": "generated",
+        "prompt_version": "synthetic-same-goal-variants-v0.1",
+        "status": "invalid",
+        "raw_sha256": "30bbab05b43462db702c92e3952c90f23df815c18f029fc631dd90841fb0f07e",
+        "parent_ids": [
+          "a001",
+          "a002",
+          "a003",
+          "a004",
+          "a005"
+        ],
+        "input_tokens": 1281,
+        "output_tokens": 629,
+        "estimated_cost_usd": 0.0015188000000000003
+      },
+      {
+        "directory": "generated-v02",
+        "prompt_version": "synthetic-same-goal-variants-v0.2",
+        "status": "completed",
+        "raw_sha256": "1da166ebe426f4e802bbbe9fe8859d21066f66b4c47ad157d53b16e12486f73f",
+        "parent_ids": [
+          "a001",
+          "a002",
+          "a003",
+          "a004",
+          "a005"
+        ],
+        "input_tokens": 1475,
+        "output_tokens": 472,
+        "estimated_cost_usd": 0.0013452
+      },
+      {
+        "directory": "generated-v02",
+        "prompt_version": "synthetic-same-goal-variants-v0.2",
+        "status": "completed",
+        "raw_sha256": "072b076a745e6e0424f639f1e85eb7e7b647de6f946a0097f70d0ef70bbda07c",
+        "parent_ids": [
+          "a006",
+          "a007",
+          "a008",
+          "a009",
+          "a010"
+        ],
+        "input_tokens": 1443,
+        "output_tokens": 580,
+        "estimated_cost_usd": 0.0015052
+      },
+      {
+        "directory": "generated-v02",
+        "prompt_version": "synthetic-same-goal-variants-v0.2",
+        "status": "invalid",
+        "raw_sha256": "3c14bcf81f52d53ba7cc5729bc2a86f4457e64b28507b1ceb8b16a939ff25d85",
+        "parent_ids": [
+          "a011",
+          "a012",
+          "a013",
+          "a014",
+          "a015"
+        ],
+        "input_tokens": 1627,
+        "output_tokens": 463,
+        "estimated_cost_usd": 0.0013916000000000002
+      },
+      {
+        "directory": "generated-v03",
+        "prompt_version": "synthetic-same-goal-variants-v0.3",
+        "status": "completed",
+        "raw_sha256": "ee0318e02e0322fa592a1b39b92de8478e58674c200ddc5b97de4272b98baa5f",
+        "parent_ids": [
+          "a001",
+          "a002",
+          "a003",
+          "a004",
+          "a005"
+        ],
+        "input_tokens": 1528,
+        "output_tokens": 572,
+        "estimated_cost_usd": 0.0015264
+      },
+      {
+        "directory": "generated-v03",
+        "prompt_version": "synthetic-same-goal-variants-v0.3",
+        "status": "completed",
+        "raw_sha256": "093ef8fd874c9a554e3e299cb11d06334f2cf388bc70e9b64567c92bc91ad62f",
+        "parent_ids": [
+          "a006",
+          "a007",
+          "a008",
+          "a009",
+          "a010"
+        ],
+        "input_tokens": 1496,
+        "output_tokens": 544,
+        "estimated_cost_usd": 0.0014688000000000001
+      },
+      {
+        "directory": "generated-v03",
+        "prompt_version": "synthetic-same-goal-variants-v0.3",
+        "status": "completed",
+        "raw_sha256": "231d5b3fee8b8a8442d209b4a31594bd1802c63ca418a4792c5f340b7f538dee",
+        "parent_ids": [
+          "a011",
+          "a012",
+          "a013",
+          "a014",
+          "a015"
+        ],
+        "input_tokens": 1680,
+        "output_tokens": 509,
+        "estimated_cost_usd": 0.0014864000000000001
+      },
+      {
+        "directory": "generated-v03",
+        "prompt_version": "synthetic-same-goal-variants-v0.3",
+        "status": "invalid",
+        "raw_sha256": "00293a55a120f74675de7310cb9d73304a04fddccd61be677cda1a513370e8de",
+        "parent_ids": [
+          "a016",
+          "a017",
+          "a018",
+          "a019",
+          "a020"
+        ],
+        "input_tokens": 1559,
+        "output_tokens": 461,
+        "estimated_cost_usd": 0.0013612000000000001
+      },
+      {
+        "directory": "generated-v04-remaining",
+        "prompt_version": "synthetic-same-goal-variants-v0.4",
+        "status": "completed",
+        "raw_sha256": "dec588b7f4cd334ace7b173405082ab89c30f2f7da81cb6d2fde7f739b50c511",
+        "parent_ids": [
+          "a016",
+          "a017",
+          "a018",
+          "a019",
+          "a020"
+        ],
+        "input_tokens": 1560,
+        "output_tokens": 520,
+        "estimated_cost_usd": 0.001456
+      },
+      {
+        "directory": "generated-v04-remaining",
+        "prompt_version": "synthetic-same-goal-variants-v0.4",
+        "status": "completed",
+        "raw_sha256": "596dafea62d3f083bb10e1bb4ddbe611a194f932471f2b737a5b3d0224e9a121",
+        "parent_ids": [
+          "a021",
+          "a022",
+          "a023",
+          "a024",
+          "a027"
+        ],
+        "input_tokens": 1520,
+        "output_tokens": 608,
+        "estimated_cost_usd": 0.0015808000000000003
+      },
+      {
+        "directory": "generated-v05-corrected",
+        "prompt_version": "synthetic-same-goal-variants-v0.5",
+        "status": "completed",
+        "raw_sha256": "82b77a308ee2c58b14ecc37872dae58b6e834cc1b242a3d0cec9d82165e88c2c",
+        "parent_ids": [
+          "a007",
+          "a008",
+          "a016"
+        ],
+        "input_tokens": 1343,
+        "output_tokens": 287,
+        "estimated_cost_usd": 0.0009964000000000002
+      }
+    ],
+    "model_call_count": 11,
+    "known_cost_usd": 0.015636800000000003,
+    "observed_input_tokens": 16512,
+    "observed_output_tokens": 5645,
+    "rejected_attempts_preserved": true,
+    "selection_script_sha256": "eb9ef6a0a2c81bf05c8b40ad744f2ba27a602919d154678b7b6af386189c641d",
+    "rationale_status": "model_generated_hypothesis_not_success_reason",
+    "human_review": "pending"
+  },
+  "historical_success_observations": 22,
+  "historical_results_not_pooled_with_new_n1_results": true,
+  "review_status": "automatic_exact_matching_and_agent_saved_evidence_review_not_human_gold",
+  "automatic_success_observations": 114,
+  "automatic_success_case_records": 32,
+  "automatic_all_classification_counts": {
+    "review_needed": 23,
+    "not_applicable": 516,
+    "failure": 289,
+    "success": 114
+  },
+  "automatic_attack_classification_counts": {
+    "review_needed": 23,
+    "failure": 289,
+    "success": 114
+  },
+  "total_known_cost_subtotal_usd": 0.3585468,
+  "retained_committed_ceiling_usd": 0.3720636,
+  "actual_billed_total_known": false
+}

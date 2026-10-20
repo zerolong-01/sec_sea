@@ -1,0 +1,14 @@
+{
+  "method": "union_source_sensitive_fields_and_goal_targets_including_partial_values",
+  "statistics_or_verdicts_changed": false,
+  "reports": {
+    "audit-report.json": {
+      "source_sha256": "33da9204b3d533fb15357092a4660d126300faf724ef046d83fb12b8d3f1d977",
+      "published_sha256": "53d0f46d6955e66da4b54358ed6a180bc4e9965846c360b22da95ceb0f95afc5"
+    },
+    "successes.json": {
+      "source_sha256": "e071d5e82a1a430d9c2ca27eb6de3a95e51285a0257cf8788362aa4ec0b37fb6",
+      "published_sha256": "62bff8d2cbe1969c481209a0038c5c46969fb7bc5f606df7115239481c91e802"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "status": "passed",
+  "admitted_calls_before": 1619,
+  "admitted_calls_after": 1619,
+  "additional_model_calls": 0,
+  "observations": 942,
+  "generation_file_sha256": "7e519ed0737238fe71f897ea13b9f3a662a007e384e061146d65d87eff2d38d2"
+}
