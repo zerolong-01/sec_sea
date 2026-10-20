@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "execution_scope": "real",
+  "batch_id": "batch-3fb7c66981bd",
+  "verification_kind": "saved_real_trace_ui_replay",
+  "additional_model_calls": 0,
+  "comparison_metrics_match_saved_traces": true,
+  "canary_masking_verified": true,
+  "cases": [
+    {
+      "case_id": "a006",
+      "mode_rows": 4,
+      "position_rows": 3
+    },
+    {
+      "case_id": "b006",
+      "mode_rows": 4,
+      "position_rows": 3
+    },
+    {
+      "case_id": "h007",
+      "mode_rows": 4,
+      "position_rows": 3
+    }
+  ]
+}

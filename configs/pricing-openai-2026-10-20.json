@@ -1,0 +1,14 @@
+{
+  "version": "openai-standard-2026-10-20-v0.1",
+  "currency": "USD",
+  "models": [
+    {
+      "model_id": "gpt-4.1-mini-2025-04-14",
+      "input_usd_per_million": 0.4,
+      "output_usd_per_million": 1.6,
+      "source_url": "https://developers.openai.com/api/docs/models/gpt-4.1-mini",
+      "effective_date": "2026-10-20",
+      "verified": true
+    }
+  ]
+}

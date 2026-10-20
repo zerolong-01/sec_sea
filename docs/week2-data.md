@@ -153,7 +153,7 @@ CI는 Ubuntu·Windows에서 전체 패키지·회귀 테스트·인계 검증을
 
 ## 2주차 인수에 남은 항목
 
-- 대표 실제 모델 무방어 3건의 출력·모델/설정·run_id 확보와 팀원 3명의 판정 합의
+- [실제 dev 파일럿](examples/real-api/README.md)에서 확보한 대표 무방어 출력·모델/설정·run_id에 대한 팀원 3명의 판정 합의
 - 정적 gold와 번역의 팀 검토, 필요한 수정 후 새 버전 및 평가 API 등록
 - 파일럿과 서비스 요구사항을 바탕으로 `evaluation-policy.v0.1.json`의 null 기준·우선순위 합의
 - 3주차 배치 전에 taxonomy, 파생 데이터, evaluator, 정책/임계값, holdout 스냅샷 고정

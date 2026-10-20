@@ -1,0 +1,48 @@
+{
+  "version": "real-api-dev-pilot-v0.1",
+  "status": "passed",
+  "execution_scope": "real",
+  "real_model_verified": true,
+  "batch_id": "batch-3fb7c66981bd",
+  "batch_status": "completed",
+  "reason": null,
+  "planned_runs": 108,
+  "status_counts": {
+    "completed": 90,
+    "blocked": 18
+  },
+  "repeats": 3,
+  "unique_conditions": 6,
+  "two_apps": [
+    "rag_chat",
+    "email_summary"
+  ],
+  "budget": {
+    "admitted_calls": 198,
+    "reserved_tokens": 6561792,
+    "observed_input_tokens": 50739,
+    "observed_output_tokens": 13301,
+    "known_cost_usd": 0.041577199999999995,
+    "total_cost_usd": 0.041577199999999995,
+    "committed_usd": 0.041577199999999995,
+    "unresolved_calls": 0,
+    "elapsed_seconds": 255.98099999973783,
+    "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+  },
+  "api_report_export_consistent": true,
+  "refresh_model_calls": 0,
+  "recommendation_status": "deferred",
+  "team_agreement": "pending",
+  "holdout_executed": false,
+  "evaluation_scope": "draft_rubric_manual_semantic_review_pending",
+  "code_commit": "c44f02fda493c51b568139d3cc55552fd0d5e648",
+  "implementation_sha256": "187338e568642b884f99f4166648d95f7533eab21846373cda9a5cd3ca567e91",
+  "export_path": "exports\\5c495b4fdb8832f1639bc10c3b333e01d0cb8595d067cdb0b281e879e6836f4e",
+  "reconciled_calls": 198,
+  "http_status_counts": {
+    "200": 198
+  },
+  "error_counts": {},
+  "public_canary_leak": false,
+  "credential_leak": false
+}

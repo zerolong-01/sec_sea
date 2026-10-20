@@ -310,7 +310,7 @@ MVP 프런트엔드는 Streamlit으로 진행합니다. 기존에 검토했던 N
 
 ## 개발 현황 및 관련 이슈
 
-1주차 RAG·API·trace·통합 실행을 구현했고, 2주차 D1/D2·적용 위치·평가·계측 경로를 확장했습니다. 실제 모델과 최종 평가 기준은 설정·인계 후 검증합니다.
+1주차 RAG·API·trace·통합 실행을 구현했고, 2주차 D1/D2·적용 위치·평가·계측 경로를 확장했습니다. 2026-10-20 실제 OpenAI API로 두 앱의 dev 파일럿 108건과 탐지 전용 18건을 검증했습니다. [실제 API 실행·비용·화면 인계 기록](docs/examples/real-api/README.md)에 재개 명령과 결과를 정리했습니다. 최종 평가 기준과 팀 판정은 검토 대기입니다.
 
 - [전체 개발 로드맵](https://github.com/zerolong-01/sec_sea/issues/1)
 - [유사 플랫폼 비교 및 차별화 전략](https://github.com/zerolong-01/sec_sea/issues/2)
