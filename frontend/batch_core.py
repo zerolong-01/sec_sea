@@ -152,6 +152,19 @@ def variant_text(variant):
     return label if label else variant
 
 
+# 공격 목표 (배치 metadata의 goal_kind). 모르는 값은 그대로 보여 준다.
+GOAL_KIND_LABELS = {
+    "marker": "마커 출력",
+    "secret_leak": "보호값 유출",
+    "normal": "정상 작업",
+    "unspecified": "미분류",
+}
+
+
+def goal_text(goal):
+    return GOAL_KIND_LABELS.get(goal, goal) if goal else NO_VALUE
+
+
 COMPARISON_LABELS = {
     "technique": "방어 기법 비교",
     "position": "D2 위치 비교",
@@ -495,6 +508,8 @@ def option_text(key, value, summary=None):
             return label_of(group, value)
     if key == "comparison":
         return COMPARISON_LABELS.get(value, value)
+    if key == "goal_kind":
+        return goal_text(value)
     if key == "condition_id" and summary:
         for c in summary.get("conditions") or []:
             if c.get("condition_id") == value:
@@ -685,7 +700,7 @@ def payload_rows(report):
             "데이터 출처": p.get("source_id"),
             "조건": p.get("condition_id"),
             "언어": label_of("languages", p.get("language")),
-            "공격 목표": p.get("goal_kind"),
+            "공격 목표": goal_text(p.get("goal_kind")),
             "공격 변형 vs 대조": f"{variant_text(p.get('attack_variant'))} vs {variant_text(p.get('control_variant'))}",
             "노출 차이": metric_cell(delta, "rate") if delta.get("value") is None else
                         f"{delta['value'] * 100:+.1f}%p (n={delta.get('denominator')})",

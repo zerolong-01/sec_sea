@@ -223,7 +223,7 @@ class VariantReportTest(unittest.TestCase):
                 groups.append(g)
         report["groups"] = groups
         report["payload_comparisons"] = [{
-            "source_id": "rag", "condition_id": "none", "language": "ko", "goal_kind": "disclosure",
+            "source_id": "rag", "condition_id": "none", "language": "ko", "goal_kind": "secret_leak",
             "attack_variant": "A11", "control_variant": "C01",
             "target_exposure_delta": {"value": 0.3333333, "numerator": None, "denominator": 3, "family_count": 1,
                                       "ci95": None, "inference_status": "insufficient_sample", "excluded": {}},
@@ -245,6 +245,8 @@ class VariantReportTest(unittest.TestCase):
         self.assertEqual(row["공격 변형 vs 대조"], "A11 공격 지시·목표 있음 vs C01 지시 없음·목표 있음")
         self.assertEqual(row["노출 차이"], "+33.3%p (n=3)")
         self.assertEqual(batch_core.variant_text("new_variant"), "new_variant")
+        self.assertEqual(row["공격 목표"], "보호값 유출")
+        self.assertEqual(batch_core.option_text("goal_kind", "marker"), "마커 출력")
 
 
 class RequestTest(unittest.TestCase):
