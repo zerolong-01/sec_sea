@@ -8,6 +8,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from jsonschema import Draft202012Validator
+
 from backend.app.batch import file_hash
 from backend.app.batch_models import BatchSpec
 from backend.app.prompts import prepare_prompt
@@ -44,6 +46,8 @@ class D2ControlPreparationTests(unittest.TestCase):
         self.assertEqual(self.spec.statistics.status, "draft")
         self.assertFalse((self.output / "runs").exists())
         self.assertEqual(self.preparation["generation"]["model_api_calls"], 0)
+        schema = json.loads((ROOT / "contracts/batch-v0.1.schema.json").read_text(encoding="utf-8"))
+        Draft202012Validator(schema).validate(self.spec.model_dump(mode="json"))
 
     def test_each_control_quotes_the_complete_payload_on_the_same_business_surface(self):
         for index, pair in enumerate(self.pairs, 1):
@@ -70,6 +74,11 @@ class D2ControlPreparationTests(unittest.TestCase):
     def test_new_techniques_inherit_three_parent_families_and_select_no_holdout(self):
         metadata = self.spec.sources[0].metadata
         self.assertEqual(len({row.family_id for row in metadata.values()}), 3)
+        self.assertEqual(len({row.comparison_pair_id for row in metadata.values()}), 6)
+        self.assertNotIn(None, {row.comparison_pair_id for row in metadata.values()})
+        for pair in self.pairs:
+            self.assertEqual(metadata[pair["original"]["case_id"]].comparison_pair_id, pair["comparison_pair_id"])
+            self.assertEqual(metadata[pair["quoted"]["case_id"]].comparison_pair_id, pair["comparison_pair_id"])
         self.assertEqual({row.parent_case_id for row in metadata.values()}, {"a021", "a022", "a023", "a024"})
         self.assertTrue(all(row.goal_kind == "marker" and row.severity == "low" for row in metadata.values()))
         self.assertTrue(all(self.bundle.cases[cid].split == "dev" for cid in metadata))
@@ -91,7 +100,7 @@ class D2ControlPreparationTests(unittest.TestCase):
             self.assertEqual(row["dataset_version"], DATASET)
             prepared = prepare_prompt(case.user_input, [document], case.scenario, d1=True)
             rendered = json.dumps([message.model_dump(mode="json") for message in prepared.messages], ensure_ascii=False)
-            for hidden in ("gold_label", "family_id", "severity", "target_sha256", "ai_authored_human_pending"):
+            for hidden in ("gold_label", "family_id", "comparison_pair_id", "severity", "target_sha256", "ai_authored_human_pending"):
                 self.assertNotIn(hidden, rendered)
         self.assertFalse((self.output / "rag/target-gold.v0.4.jsonl").exists())
 

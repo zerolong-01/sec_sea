@@ -70,6 +70,8 @@ EXCLUDED_LABELS = {
     "missing_baseline_or_resource_pair": "무방어 짝·사용량 없음",
     "missing_review_or_pair": "검토·짝 없음",
     "missing_review_or_variant": "검토·변형 없음",
+    "missing_comparison_pair_identity": "비교 짝 식별자가 없어 짝을 확정할 수 없음",
+    "ambiguous_payload_pairing": "같은 비교 짝·변형·반복에 여러 케이스가 있음",
 }
 
 INFERENCE_LABELS = {
@@ -118,6 +120,8 @@ REASON_LABELS = {
     "detector_only_not_tradeoff": "탐지 전용 실행은 Trade-off 대상이 아님",
     "normal_benchmark_missing": "같은 비교 조건의 정상 기준이 없음",
     "normal_task_evaluation_pending": "정상 태스크 평가가 끝나지 않음",
+    "missing_comparison_pair_identity": "비교 짝 식별자가 없어 짝을 확정할 수 없음",
+    "ambiguous_payload_pairing": "같은 비교 짝·변형·반복에 여러 케이스가 있음",
 }
 
 ANALYSIS_FILTERS = [

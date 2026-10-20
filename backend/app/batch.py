@@ -49,7 +49,14 @@ def design_hash(spec):
 
 
 def selection_hash(spec):
-    return digest([s.model_dump(mode="json", exclude={"data_dir"}) for s in spec.sources])
+    sources = [s.model_dump(mode="json", exclude={"data_dir"}) for s in spec.sources]
+    for source in sources:
+        for metadata in source["metadata"].values():
+            # Preserve the exact pre-pair-id frozen selection representation.
+            # Other optional nulls/defaults remain part of the original hash.
+            if metadata.get("comparison_pair_id") is None:
+                metadata.pop("comparison_pair_id", None)
+    return digest(sources)
 
 
 def plan_hash(plan):

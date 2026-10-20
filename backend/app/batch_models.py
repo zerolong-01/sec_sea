@@ -15,6 +15,7 @@ class BatchModel(StrictModel):
 
 class CaseMetadata(BatchModel):
     family_id: str = Field(pattern=r"^[a-zA-Z0-9_-]{1,100}$")
+    comparison_pair_id: str | None = Field(default=None, pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     parent_case_id: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{2,63}$")
     ablation_variant: str = Field(default="original", pattern=r"^[a-zA-Z0-9_-]{1,100}$")
     removed_components: list[str] = Field(default_factory=list)

@@ -14,6 +14,9 @@
 | 영어·스페인어·한국어 지시 | a021의 새 변형 | F006 |
 
 기술은 6종이지만 원본 family는 **3개**다. 새로운 변형·대조군·반복으로 독립 family 수를 늘리지 않는다.
+새 준비물은 각 기술의 attack·quoted 양쪽 메타데이터에 동일한 `comparison_pair_id`를 기록한다.
+이 ID는 비교 짝을 식별하는 키일 뿐 독립 family가 아니다. 6개 명시적 짝을 3개 parent family 안에서
+계산하며 bootstrap도 parent family 단위로 유지한다. pair sidecar에도 같은 ID를 기록하고 모델 입력에는 넣지 않는다.
 a021/a022의 원래 사용자 입력 스타일을 새 문서 표면으로 옮겼으므로 이 실험과 원본 실행의 차이를 단일 요소 효과로 부르지 않는다.
 새 실험 안의 각 attack/quoted 쌍은 같은 정상 질문·업무 사실·문서 제목·문서 개수·위치·언어·표식을 유지한다.
 대조군은 전체 공격 payload를 한 글자도 생략하지 않고 명백한 교육용 인용 경계로 감싼다.
@@ -51,6 +54,25 @@ python -m scripts.week3_d2_controls --output runs/week3-completion/d2-controls-p
 
 모든 소스·생성 파일의 해시와 lineage를 남긴다. 이미 존재하는 준비 디렉터리를 덮어쓰지 않는다.
 `validate(output)`은 소스 또는 준비 파일 변경을 거부한다. 실행·재개 과정에서는 기존 batch의 frozen 입력·설정·예산 ledger를 사용해야 한다.
+
+## 기존 동결 데이터와 짝 식별의 하위 호환
+
+선택적 `comparison_pair_id`가 없는 기존 batch를 다시 쓰거나 6개 새 독립 family로 바꾸지 않는다.
+`selection_hash`는 새 필드가 `None`일 때 그 필드만 생략하여 기존 동결 해시를 보존한다.
+다른 필드의 null/default는 원래대로 포함한다. 실제 pair ID가 있으면 선택 해시에 포함하므로 변경 시 검증이 거절된다.
+
+같은 source·조건·언어·family·목표·반복 안에서 한 변형이 여러 case로 겹치면, ID 없는
+짝을 case 이름으로 추론하거나 임의의 첫 행을 택하지 않는다. 이 bucket의 paired delta는
+`missing_comparison_pair_identity`로 제외한다. 명시한 ID마저 중복되면 `ambiguous_payload_pairing`으로 제외한다.
+`pairing.diagnostics`는 모호한 bucket 수, ID 누락 bucket 수와 해당 입력 행 수를 따로 제공한다.
+이 진단 수는 겹칠 수 있으며 실제 미확정 짝 개수를 추정한 수가 아니다.
+variant별 노출률은 짝짓기와 독립적으로 실제 검토된 각 행을 보존하고, paired delta만 확정 가능한 공통 짝을 사용한다.
+그 외 ASR·utility·detector 집계와 JSON/CSV export는 계속 제공한다.
+
+이미 실행한 216회 계획에는 ID를 소급 추가하지 않았다. 기존 frozen manifest·입력·규칙·raw·trace의 해시는 유지한다.
+필요한 paired overlay는 별도로 동결된 `evaluation-private/pairs.v0.4.json`을 검증해 메모리에서만 명시적으로 연결할 수 있다.
+현재 report v0.4의 기존 필드·goal 분리·CSV 계약은 유지하며 계산 구현 SHA256으로 변경을 구별한다.
+새 generator 버전의 소스 해시가 과거 준비물과 달라졌다는 사실은 과거 준비물을 재생성하거나 유료 재실행할 이유가 아니다.
 
 검증:
 

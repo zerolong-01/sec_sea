@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from fastapi.testclient import TestClient
-from app.batch import BatchRunner
+from app.batch import BatchRunner, digest, selection_hash, verify_frozen_artifacts
 from app.batch_analysis import aggregate, decisions, detector_diagnostics, payload_results, report_csv, statistic
 from app.batch_models import BatchFilters, BatchReview, BatchSpec, StatisticsPolicy
 from app.config import Settings
@@ -389,6 +389,65 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(result["target_exposure_delta"]["denominator"], 2)
         self.assertEqual(result["family_details"][0]["family_id"], "parent")
         self.assertIsNone(result["family_details"][0]["target_exposure_delta"]["ci95"])
+
+    def _same_family_payload_pairs(self):
+        trace = self.runner.traces.get(self.state.plan[0]["attempts"][0]["run_id"])
+        condition = self.state.spec.conditions[0].model_copy(update={"comparisons": ["payload"]})
+        return [{"entry": {"source_id": "rag", "condition_id": "none", "language": "ko", "repeat": repeat,
+                           "metadata": {"family_id": "parent", "goal_kind": "marker", "ablation_variant": variant,
+                                        "comparison_pair_id": pair}},
+                 "trace": trace, "condition": condition,
+                 "review": {"target_exposed": pair == "pair-a" and variant == "original"}}
+                for repeat in range(2) for pair in ("pair-a", "pair-b") for variant in ("original", "quoted")]
+
+    def test_two_explicit_payload_pairs_preserve_one_parent_family(self):
+        result = next(r for r in payload_results(self._same_family_payload_pairs(), self.state.spec.statistics)
+                      if r["control_variant"] == "quoted")
+        delta = result["target_exposure_delta"]
+        self.assertEqual((delta["value"], delta["denominator"], delta["family_count"]), (.5, 4, 1))
+        self.assertIsNone(delta["ci95"])
+        self.assertEqual(result["pairing"]["comparison_pair_count"], 2)
+        self.assertEqual(result["pairing"]["explicit_pair_count"], 2)
+        self.assertEqual(result["family_details"][0]["pairing"]["comparison_pair_count"], 2)
+
+    def test_legacy_ambiguous_pairing_is_excluded_without_picking_a_case(self):
+        rows = self._same_family_payload_pairs()
+        for row in rows:
+            row["entry"]["metadata"].pop("comparison_pair_id")
+        result = next(r for r in payload_results(rows, self.state.spec.statistics) if r["control_variant"] == "quoted")
+        self.assertIsNone(result["target_exposure_delta"]["value"])
+        self.assertEqual(result["target_exposure_delta"]["denominator"], 0)
+        self.assertEqual(result["target_exposure_delta"]["excluded"]["missing_comparison_pair_identity"], 2)
+        self.assertEqual(result["pairing"]["diagnostics"]["ambiguous_payload_pairing"], 2)
+        self.assertEqual(result["pairing"]["diagnostics"]["ambiguous_input_rows"], 8)
+        self.assertEqual(result["pairing"]["comparison_pair_count"], 0)
+        # Unpaired variant observations are still real; no guessed paired delta.
+        self.assertEqual(result["attack_exposure"]["denominator"], 4)
+        self.assertEqual(result["attack_exposure"]["value"], .5)
+
+    def test_duplicate_explicit_pair_id_is_ambiguous_rather_than_first_wins(self):
+        rows = self._same_family_payload_pairs()
+        for row in rows:
+            row["entry"]["metadata"]["comparison_pair_id"] = "same-pair"
+        result = next(r for r in payload_results(rows, self.state.spec.statistics) if r["control_variant"] == "quoted")
+        self.assertEqual(result["target_exposure_delta"]["denominator"], 0)
+        self.assertEqual(result["target_exposure_delta"]["excluded"]["ambiguous_payload_pairing"], 2)
+        self.assertEqual(result["pairing"]["diagnostics"]["missing_comparison_pair_identity"], 0)
+
+    def test_optional_pair_id_preserves_legacy_selection_hash_but_real_id_is_frozen(self):
+        legacy = [source.model_dump(mode="json", exclude={"data_dir"}) for source in self.state.spec.sources]
+        for source in legacy:
+            for metadata in source["metadata"].values():
+                metadata.pop("comparison_pair_id")
+                self.assertIn("parent_case_id", metadata)
+                self.assertIsNone(metadata["parent_case_id"])
+        self.assertEqual(selection_hash(self.state.spec), digest(legacy))
+        verify_frozen_artifacts(self.runner.store, self.state)
+        previous = self.state.configuration_hashes["selection"]
+        self.state.spec.sources[0].metadata["a006"].comparison_pair_id = "new-pair"
+        self.assertNotEqual(selection_hash(self.state.spec), previous)
+        with self.assertRaisesRegex(ValueError, "Frozen design or selection changed"):
+            verify_frozen_artifacts(self.runner.store, self.state)
 
     def test_protected_disclosure_is_rejected_even_below_overall_asr_limit(self):
         groups = aggregate(self.settings.runs_dir, self.state.batch_id).groups

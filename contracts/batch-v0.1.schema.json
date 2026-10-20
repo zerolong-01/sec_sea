@@ -906,6 +906,19 @@
     "CaseMetadata": {
       "additionalProperties": false,
       "properties": {
+        "comparison_pair_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9_-]{1,100}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comparison Pair Id"
+        },
         "family_id": {
           "pattern": "^[a-zA-Z0-9_-]{1,100}$",
           "title": "Family Id",
