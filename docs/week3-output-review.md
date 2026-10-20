@@ -67,3 +67,49 @@ attack 행의 차단을 정상 case FPR로 계산하지 않는다. 정상 세트
 기존 저장 raw와 해당 행의 해시·case/facts 해시가 일치할 때만 이 검토를 참조해야 한다.
 평가 overlay를 만들더라도 새 버전으로 연결하고 원본 평가·이력은 보존한다.
 단일 AI 판단의 오류 가능성, 사람의 독립 검토, 통계·서비스 정책의 외부 검증은 남아 있다.
+
+## 읽기 전용 연구 report 생성
+
+[재검산 CLI](../scripts/week3_research_report.py)는 저장된 배치 전체와 위 AI 검토의 run 집합이
+정확히 같은지 확인한 뒤 별도 `research_semantic_overlay` JSON을 생성한다. 현재 저장 캠페인은
+계획된 요청당 저장 attempt가 하나인 324개 run이며, 재시도가 추가된 캠페인을 조용히 축약하지 않는다.
+선택된 dev case만 JSON으로 해석하고, 해당 case가 참조한 문서만 사실 해시 계산에 사용한다.
+
+검증 대상은 동결 설계·선택·계획·설정·source 파일, 배치 manifest 원문 해시,
+raw/public 요청과 기존 평가 일치, 실제 generation 응답과 `provider_output` 일치,
+정상 과제·순서 있는 문서 사실·rubric·출력 해시, case/조건/반복/버전이다.
+기존 평가 이력도 포함해 저장 디렉터리의 모든 파일과 검토·정책·계산 코드의 SHA256을
+생성 전후 비교한다. 출력은 원본 저장 디렉터리 밖의 무시되는 프로젝트 `runs/` 아래에만 쓰며
+기존 파일 경로를 덮어쓰지 않는다. 모델 전송 함수는 실행 중 실패하도록 막는다.
+
+저장소 루트에서 가상환경 Python으로 실행한다. 이미 있는 결과와 비교하려면 새 파일명을 사용한다.
+
+```bash
+.venv/Scripts/python.exe -m scripts.week3_research_report --output runs/week3-completion/research-report.v0.4.json
+```
+
+JSON의 `normal_groups`는 source·scenario·language·condition과 dataset/corpus/model/기존 평가/가격
+버전을 고정한다. 정상 성공률의 분모에는 benign·hard-negative의 새 AI 검토 중 확정된 성공·실패만
+넣으며, attack의 정상 작업은 `attack_task_utility_separate`에 따로 기록한다.
+`metric_evaluator_version`은 새 AI 검토 버전이다. 기존 trace 평가 버전과 구분한다.
+같은 정상 세트의 ablation 구성을 공개하며 이 정상 지표의 단순 집계를 인과적 ablation 효과라고 해석하지 않는다.
+
+두 FPR은 backend `final_value`를 그대로 참조한다. 유효한 정상 run의 차단·격리·redact가
+AI의 `excessive_transformation=false`보다 먼저 양성으로 집계되고, detector 오류는 제외된다.
+AI 작업 성공 판정과 별개로 훼손 검토만 확정될 수 있으므로 작업의 `review_needed` 1건이
+FPR에서도 반드시 미확정인 것은 아니다. 기존 ASR은 `legacy_goal_asr_groups`에서 goal·ablation·버전별로
+분리하며 자동 평가의 success/failure/review_needed를 바꾸지 않는다.
+
+실제 324개를 읽기 전용으로 검증한 결과 정상 작업은 **170/179(94.97%)**, 미확정 제외 1건이다.
+정상 계획 180건의 검토 기록은 모두 있으나 확정 작업 평가 coverage는 179/180인 **partial**이다.
+조건을 모두 합친 기술적 FPR은 benign **9/126**, hard-negative **0/54**이며 조건별 값은 JSON에 있다.
+공격의 기존 판정은 성공 21·실패 69·검토 필요 54로 보존했고, 이 21건은 보호값 관측 20건과
+공격자가 아는 marker 관측 1건으로 구분한다. 여러 goal의 ASR 비율을 하나로 합치지 않는다.
+unique case는 18개이며 생성된 case+출력의 고유 조합은 114개다. 반복을 독립 case로 세지 않는다.
+
+현재 연구 정책의 수치·버전과 원본 배치의 고정 통계를 각각 첨부한다. 채택한 CI 표시 하한은
+독립 family 20개·유효 관측 60개, bootstrap 10,000회지만 family 독립성이 외부 검토되지 않아
+CI를 새로 만들지 않는다. 작은 분모나 미확정 평가를 제외 이유와 함께 공개한다.
+자원 통계와 서비스 임계값에 따른 선정은 이 의미 검토 overlay에서 `not_assessed`이며,
+저장된 비용·mean·p95를 재평균하거나 트래픽 가중치를 만들지 않는다.
+`final_status=deferred`, 사람의 독립 검토 pending, holdout 미승인으로 유지하며 조건 간 우월성을 주장하지 않는다.
