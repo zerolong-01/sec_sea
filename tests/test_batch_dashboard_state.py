@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from backend.app.batch_analysis import report_csv
+from backend.app.batch_analysis import REPORT_VERSION, report_csv
 from backend.app.batch_models import BatchReport
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -46,6 +46,11 @@ class SavedBatchServer:
         other_report = json.loads(json.dumps(REPORT).replace(BATCH_ID[6:], OTHER_BATCH_ID[6:]))
         self.summaries = {BATCH_ID: copy.deepcopy(SUMMARY), OTHER_BATCH_ID: other_summary}
         self.reports = {BATCH_ID: copy.deepcopy(REPORT), OTHER_BATCH_ID: other_report}
+        # 과거 공개 fixture는 보존하고 모형 API만 현재 CSV 계약으로 만든다.
+        # 이 해시는 테스트용 metadata이며 실제 계산·실험 증거가 아니다.
+        for report in self.reports.values():
+            report["report_version"] = REPORT_VERSION
+            report["provenance"]["calculation_implementation_sha256"] = "a" * 64
         self.csv_snapshot = None
         self.calls = []
 
