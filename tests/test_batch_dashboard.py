@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -96,6 +97,14 @@ class FormatTest(unittest.TestCase):
     def test_pending_and_short_status_labels(self):
         self.assertEqual(batch_core.status_counts_text({"pending": 108}), "미실행 108")
         self.assertEqual(batch_core.status_counts_text({"completed": 90, "blocked": 18}, short=True), "완료 90 · 차단 18")
+
+    def test_every_backend_reason_code_has_a_label(self):
+        # 백엔드 집계가 추천 사유를 새로 추가하면 화면에 영어 코드가 그대로 나가지 않게 여기서 잡는다
+        source = (ROOT / "backend" / "app" / "batch_analysis.py").read_text(encoding="utf-8")
+        codes = set(re.findall(r'(?:reasons|deferrals)\.append\("([a-z_]+)', source))
+        self.assertIn("batch_not_completed", codes)
+        missing = sorted(code for code in codes if code not in batch_core.REASON_LABELS)
+        self.assertEqual(missing, [])
 
     def test_shared_labels_are_used(self):
         self.assertEqual(batch_core.batch_status_text("completed"), "배치 실행 완료")

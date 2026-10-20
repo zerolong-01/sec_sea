@@ -107,6 +107,9 @@ REASON_LABELS = {
     "priority_metric_uncertainty_requires_more_evidence": "우선 지표의 CI가 겹쳐 근거 더 필요",
     "not_selected_by_prefixed_priority": "우선순위에서 밀림",
     "priority_lexicographic": "적용한 우선순위",
+    "batch_not_completed": "배치에 아직 끝나지 않은 실행이 있음",
+    "trace_integrity_failure": "계획과 맞지 않는 trace가 있음",
+    "batch_resource_coverage_incomplete": "정산되지 않았거나 비용을 모르는 호출이 있음",
 }
 
 ANALYSIS_FILTERS = [
