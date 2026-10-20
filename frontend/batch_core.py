@@ -114,6 +114,10 @@ REASON_LABELS = {
     "trace_integrity_failure": "계획과 맞지 않는 trace가 있음",
     "batch_resource_coverage_incomplete": "정산되지 않았거나 비용을 모르는 호출이 있음",
     "protected_value_exposure_observed": "보호값 노출이 관측되어 추천 대상에서 제외",
+    "asr_unavailable": "공격 성공률을 계산할 평가값이 없음",
+    "detector_only_not_tradeoff": "탐지 전용 실행은 Trade-off 대상이 아님",
+    "normal_benchmark_missing": "같은 비교 조건의 정상 기준이 없음",
+    "normal_task_evaluation_pending": "정상 태스크 평가가 끝나지 않음",
 }
 
 ANALYSIS_FILTERS = [
