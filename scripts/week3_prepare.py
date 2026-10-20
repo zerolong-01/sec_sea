@@ -16,6 +16,7 @@ from backend.app.models import CaseRecord, SourceDocument
 from backend.app.storage import atomic_json
 from scripts.data_contract import ROOT, load_bundle, require
 from scripts.week2_data import prepare as prepare_week2
+from scripts.week3_policy import research_policy
 
 VERSION = "week3-execution-v0.1-draft"
 DATASET = "synthetic_week3_v0.1_draft"
@@ -38,6 +39,7 @@ def write_jsonl(path, values):
 def prepare(output: Path) -> dict:
     output = output.resolve()
     require(not output.exists(), "Preparation output already exists; use another directory")
+    research = research_policy()
     bundle = load_bundle(ROOT / "data/week2")
     cases = {k: dict(v.model_dump(mode="json"), source_version=DATASET) for k, v in bundle.cases.items()}
     documents = {k: dict(v.model_dump(mode="json"), source_version=DATASET) for k, v in bundle.documents.items()}
@@ -125,6 +127,7 @@ def prepare(output: Path) -> dict:
     inputs += [ROOT / "data/week3" / name for name in FILES]
     inputs += [ROOT / "configs" / name for name in ("evaluation-week2.json", "evaluation-week3-protected.json")]
     inputs += [ROOT / "data/week2" / name for name in ("cases.email.v0.1.jsonl", "corpus.email.v0.1.jsonl")]
+    inputs += [ROOT / name for name in research["source_files"]]
     source_hashes = {p.relative_to(ROOT).as_posix(): file_hash(p) for p in inputs}
     output.mkdir(parents=True)
     rag = output / "rag"
@@ -145,18 +148,18 @@ def prepare(output: Path) -> dict:
     spec = BatchSpec.model_validate({"sources": [
         {"source_id": "week3", "data_dir": str(rag), "split": "dev", "case_ids": list(metadata), "metadata": metadata},
         {"source_id": "email", "data_dir": str(email), "split": "dev", "case_ids": email_ids}],
-        "conditions": [c.model_dump(mode="json") for c in conditions], "repeats": 3,
+        "conditions": [c.model_dump(mode="json") for c in conditions], "repeats": research["repeats"],
         "budget": {"max_calls": 1200, "max_reserved_tokens": 40_000_000, "max_seconds": 5400,
                    "max_usd": 1.0, "unknown_price_policy": "stop", "per_call_input_token_ceiling": 32768},
-        "statistics": {"bootstrap_samples": 1000}, "min_call_interval_seconds": .1,
-        "evaluation_policy_file": "configs/week3-evaluation-policy.json"})
+        "statistics": research["statistics"], "min_call_interval_seconds": .1,
+        "evaluation_policy_file": research["evaluation_policy_file"]})
     atomic_json(output / "batch-spec.json", spec.model_dump(mode="json"))
     generated = [p for p in output.rglob("*") if p.is_file()]
     result = {"version": VERSION, "dataset_version": DATASET, "source_sha256": source_hashes,
         "generated_sha256": {p.relative_to(output).as_posix(): file_hash(p) for p in generated},
         "selected_rag_cases": len(metadata), "selected_email_cases": len(email_ids), "planned_runs": (len(metadata) + len(email_ids)) * 18,
         "case_provenance": provenance, "pairs": {k: [list(pair) for pair in pairs] for k, pairs in PAIRS.items()},
-        "team_review": "pending", "holdout_selected": False}
+        "team_review": "pending", "research_decision": research["decision"], "holdout_selected": False}
     require(all(file_hash(ROOT / p) == h for p, h in source_hashes.items()), "Source changed during preparation")
     atomic_json(output / "preparation.json", result)
     return result
