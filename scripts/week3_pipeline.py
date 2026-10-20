@@ -8,12 +8,15 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter, defaultdict
-from dataclasses import replace
+from dataclasses import fields, replace
 from pathlib import Path
+from unittest.mock import patch
 
-from backend.app.batch import BatchRunner, digest, file_hash, public_settings
+from backend.app.batch import BatchRunner, BatchStore, digest, file_hash, public_settings, verify_frozen_artifacts
 from backend.app.batch_analysis import eligible, statistic
 from backend.app.batch_models import BatchSpec
+from backend.app.config import Settings
+from backend.app.providers import OpenAICompatibleProvider
 from backend.app.storage import atomic_json
 from scripts.data_contract import ROOT
 from scripts.verify_real_api import (_execute, _settings, assert_safe, require, verify_saved, VerificationError)
@@ -81,6 +84,63 @@ def exact_observations(runner, state, prepared):
             "human_review": "pending"}
 
 
+def _saved_evidence(runner, state, credentials, output, prepared, ownership, implementation):
+    # Validate traces/conditions/ledger before computing automatic measurements.
+    result = verify_saved(runner, state, credentials, output, version=VERSION, save_result=False,
+        extra={"selected_rag_cases": prepared["selected_rag_cases"], "selected_email_cases": prepared["selected_email_cases"],
+               "preparation_sha256": digest(prepared), "automatic_observation_kind": "exact_literal_only",
+               "pipeline_implementation_sha256": ownership["implementation_sha256"],
+               "verification_implementation_sha256": implementation})
+    measured = exact_observations(runner, state, prepared)
+    assert_safe(measured, credentials)
+    atomic_json(output / "exact-observations.json", measured)
+    result.update(exact_observations_sha256=digest(measured), exact_observations_path="exact-observations.json",
+                  measured_output_count=sum(r["exact_target_exposed"] is not None for r in measured["observations"]))
+    atomic_json(output / "verification-report.json", result)
+    return result
+
+
+def _replay_saved(output, ownership, implementation):
+    """Read frozen inputs without live credentials, settings or source drafts."""
+    prepared_dir = output / "prepared"
+    require((prepared_dir / "preparation.json").is_file(), "PREPARED_DATA_NOT_CREATED")
+    prepared = json.loads((prepared_dir / "preparation.json").read_text(encoding="utf-8"))
+    require(prepared["version"] == VERSION, "PREPARATION_VERSION_MISMATCH")
+    for relative, sha in prepared["generated_sha256"].items():
+        require(file_hash(prepared_dir / relative) == sha, "PREPARED_ARTIFACT_HASH_MISMATCH")
+    expected_spec = BatchSpec.model_validate_json((prepared_dir / "batch-spec.json").read_text(encoding="utf-8"))
+    store = BatchStore(output / "runs")
+    checkpoint = output / "checkpoint.json"
+    if checkpoint.exists():
+        saved = json.loads(checkpoint.read_text(encoding="utf-8"))
+        require(saved["version"] == VERSION, "CHECKPOINT_VERSION_MISMATCH")
+        state = store.get(saved["batch_id"])
+    else:
+        manifests = list(store.root.glob("batch-*/manifest.json"))
+        require(bool(manifests), "BATCH_NOT_CREATED")
+        require(len(manifests) == 1, "AMBIGUOUS_EXISTING_BATCH")
+        state = store.get(manifests[0].parent.name)
+    require(state.spec == expected_spec, "PREPARED_BATCH_SPEC_MISMATCH")
+    require(len(state.plan) == prepared["planned_runs"] == 324 and state.spec.repeats == 3, "PIPELINE_PLAN_MISMATCH")
+    verify_frozen_artifacts(store, state)
+    folder = store.folder(state.batch_id)
+    excluded = {"project_root", "data_dir", "runs_dir", "model_api_key", "d2_api_key",
+                "pricing_path", "evaluation_rules_path", "common_policy_path"}
+    frozen = {f.name: state.execution_settings[f.name] for f in fields(Settings)
+              if f.name not in excluded and f.name in state.execution_settings}
+    def snapshot(name):
+        return folder / (name + ".snapshot") if state.configuration_hashes[name] != "not_configured" else None
+    configured = Settings(project_root=ROOT, data_dir=folder / "inputs/week3", runs_dir=output / "runs",
+        model_api_key=None, d2_api_key=None, pricing_path=snapshot("pricing"),
+        evaluation_rules_path=snapshot("evaluation_rules"), common_policy_path=snapshot("common_policy"), **frozen)
+    runner = BatchRunner(configured)
+    # main.py also creates its default app on import. Give that read-only app
+    # the same frozen settings rather than loading the current process/.env.
+    with patch.object(Settings, "from_environment", return_value=configured), \
+         patch.object(OpenAICompatibleProvider, "complete", side_effect=VerificationError("READ_CALLED_MODEL")):
+        return _saved_evidence(runner, state, (), output, prepared, ownership, implementation)
+
+
 def verify(output: Path, *, settings=None, max_items=None, allow_fixture=False, report_only=False):
     require(max_items is None or type(max_items) is int and max_items > 0, "MAX_ITEMS_MUST_BE_POSITIVE")
     output = output.resolve()
@@ -95,6 +155,8 @@ def verify(output: Path, *, settings=None, max_items=None, allow_fixture=False, 
     ownership = json.loads(marker.read_text(encoding="utf-8"))
     require(ownership["version"] == VERSION, "PIPELINE_VERSION_MISMATCH")
     require(report_only or ownership["implementation_sha256"] == implementation, "PIPELINE_IMPLEMENTATION_CHANGED")
+    if report_only:
+        return _replay_saved(output, ownership, implementation)
     prepared_dir = output / "prepared"
     prepared = validate(prepared_dir) if prepared_dir.exists() else prepare(prepared_dir)
     configured = _settings(output, settings, allow_fixture)
@@ -121,20 +183,7 @@ def verify(output: Path, *, settings=None, max_items=None, allow_fixture=False, 
     atomic_json(checkpoint, {"version": VERSION, "batch_id": state.batch_id})
     if not report_only:
         state = _execute(runner, state, max_items)
-    # First validate traces/conditions/ledger. Automatic measurements must not
-    # make a mismatched trace look like valid experimental evidence.
-    result = verify_saved(runner, state, credentials, output, version=VERSION, save_result=False,
-        extra={"selected_rag_cases": prepared["selected_rag_cases"], "selected_email_cases": prepared["selected_email_cases"],
-               "preparation_sha256": digest(prepared), "automatic_observation_kind": "exact_literal_only",
-               "pipeline_implementation_sha256": ownership["implementation_sha256"],
-               "verification_implementation_sha256": implementation})
-    measured = exact_observations(runner, state, prepared)
-    assert_safe(measured, credentials)
-    atomic_json(output / "exact-observations.json", measured)
-    result.update(exact_observations_sha256=digest(measured), exact_observations_path="exact-observations.json",
-                  measured_output_count=sum(r["exact_target_exposed"] is not None for r in measured["observations"]))
-    atomic_json(output / "verification-report.json", result)
-    return result
+    return _saved_evidence(runner, state, credentials, output, prepared, ownership, implementation)
 
 
 def main(argv=None):
