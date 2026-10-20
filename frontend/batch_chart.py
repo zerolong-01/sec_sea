@@ -12,7 +12,9 @@ def tradeoff_chart(points):
                alt.Tooltip("공격 차단율 (1-ASR):Q", format=".1%"),
                "ASR 95% CI:N", "공격 차단율 95% CI:N", "정상 성공률 95% CI:N", "공격 평가 수:Q", "정상 평가 수:Q",
                "공격 family 수:Q", "정상 family 수:Q", "비용 표시:N", "비용 상태:N",
+               "평가 상태:N", "공격 평가 제외:N", "정상 평가 제외:N",
                "정상 기준:N", "정상 기준 공유 범위:N", "정상 기준 실행 번호:N", "비용 범위:N",
+               "정상 기준 평가 완료:N", "정상 기준 평가/계획:N", "정상 기준 제외 수:N",
                "대표 실행 번호:N", "같은 자리 그룹:N"]
 
     def base(rows):
@@ -20,7 +22,7 @@ def tradeoff_chart(points):
             x=alt.X("정상 태스크 성공률:Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format="%")),
             y=alt.Y("공격 차단율 (1-ASR):Q", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(format="%")),
             color=alt.Color("방어 조건:N"), shape=alt.Shape("앱:N"),
-            opacity=alt.Opacity("표본:N", scale=alt.Scale(domain=["충분", "표본 부족"], range=[0.9, 0.35])),
+            opacity=alt.Opacity("표본:N", scale=alt.Scale(domain=["CI 계산됨", "표본 부족"], range=[0.9, 0.35])),
             tooltip=tooltip,
         )
 

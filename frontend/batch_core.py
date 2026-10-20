@@ -697,6 +697,7 @@ def scatter_points(report):
             continue
         metrics = g.get("metrics") or {}
         reference = g.get("utility_reference") or {}
+        coverage = reference.get("evaluation_coverage") or {}
         task = (metrics.get("task_success") or {}).get("value")
         asr = (metrics.get("asr") or {}).get("value")
         missing = [k for k, v in (("task_success", task), ("asr", asr)) if v is None]
@@ -731,15 +732,24 @@ def scatter_points(report):
             "정상 평가 수": normal.get("denominator"),
             "공격 family 수": attack.get("family_count"),
             "정상 family 수": normal.get("family_count"),
+            "공격 평가 제외": fmt_excluded(attack.get("excluded")) or "없음",
+            "정상 평가 제외": fmt_excluded(normal.get("excluded")) or "없음",
+            "평가 상태": "일부 평가 제외" if any((attack.get("excluded") or {}).values()) or
+                        any((normal.get("excluded") or {}).values()) else "선택 범위 평가됨",
             "데이터 출처": g.get("source_id", NO_VALUE),
             "데이터 구분": label_of("splits", g.get("split")),
             "대표 실행 번호": next(iter(g.get("run_ids") or []), NO_VALUE),
             "정상 기준": reference.get("benchmark_id") or NO_VALUE,
+            "정상 기준 평가 완료": "완료" if g.get("normal_evaluation_complete") is True else
+                                   "일부 평가" if g.get("normal_evaluation_complete") is False else NO_VALUE,
+            "정상 기준 평가/계획": f"{coverage['evaluated_requests']}/{coverage['planned_requests']}" if
+                                     coverage.get("evaluated_requests") is not None and coverage.get("planned_requests") is not None else NO_VALUE,
+            "정상 기준 제외 수": coverage.get("excluded_requests") if coverage.get("excluded_requests") is not None else NO_VALUE,
             "정상 기준 공유 범위": str(reference.get("shared_scope") or NO_VALUE),
             "정상 기준 실행 번호": ", ".join(reference.get("run_ids") or []) or NO_VALUE,
             "비용 범위": "공격 목표 그룹의 요청" if g.get("cost_scope") == "security_goal_group_only" else NO_VALUE,
             "추천 판단": decision_status_text(status),
-            "표본": "충분" if enough else "표본 부족",
+            "표본": "CI 계산됨" if enough else "표본 부족",
             "group_id": g.get("group_id"),
         })
     # 같은 자리에 찍히는 점은 겹쳐서 하나로 보이므로 몇 개가 겹쳤는지 적어 둔다

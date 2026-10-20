@@ -69,9 +69,12 @@ class ChartContractTests(unittest.TestCase):
         normal["metrics"]["asr"]["value"] = None
         point = copy.deepcopy(security)
         point["metrics"]["task_success"] = copy.deepcopy(normal["metrics"]["task_success"])
+        point["metrics"]["task_success"]["excluded"] = {"review_needed": 2}
         point["metrics"]["attack_block_rate"] = {"value": .75, "ci95": [.5, .9]}
         point["utility_reference"] = {"benchmark_id": "normal-benchmark-test", "run_ids": ["run-normal-reference"],
-                                      "shared_scope": "same frozen condition and filters"}
+                                      "shared_scope": "same frozen condition and filters",
+                                      "evaluation_coverage": {"planned_requests": 12, "evaluated_requests": 10, "excluded_requests": 2}}
+        point["normal_evaluation_complete"] = False
         point["cost_scope"] = "security_goal_group_only"
         report["tradeoff_points"] = [point]
         points, skipped = batch_core.scatter_points(report)
@@ -81,6 +84,11 @@ class ChartContractTests(unittest.TestCase):
         self.assertEqual(points[0]["공격 차단율 (1-ASR)"], .75)
         self.assertEqual(points[0]["공격 차단율 95% CI"], "95% CI 50.0% ~ 90.0%")
         self.assertEqual(points[0]["정상 기준"], "normal-benchmark-test")
+        self.assertEqual(points[0]["평가 상태"], "일부 평가 제외")
+        self.assertEqual(points[0]["정상 기준 평가 완료"], "일부 평가")
+        self.assertEqual(points[0]["정상 기준 평가/계획"], "10/12")
+        self.assertEqual(points[0]["정상 기준 제외 수"], 2)
+        self.assertIn("검토 필요 2", points[0]["정상 평가 제외"])
         self.assertIn("공격 목표 그룹", points[0]["비용 범위"])
         self.assertIsNone(report["groups"][0]["metrics"]["task_success"]["value"])
         report["tradeoff_points"] = []
