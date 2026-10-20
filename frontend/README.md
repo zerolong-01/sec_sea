@@ -142,18 +142,96 @@ python -m scripts.mvp verify-week2
 저장 조회·새로고침의 모델 호출 수 불변, 갱신된 평가 표시를 확인하고 `verify_ui.py`도 실행합니다.
 상태 샘플과 마스킹·부분 trace·잘못된 응답·연결 실패는 회귀 테스트로 확인합니다.
 
-## 6. 파일 구성
+## 6. 배치 대시보드 (3주차, #35)
+
+왼쪽 메뉴의 **배치 대시보드** 페이지입니다. 백엔드 배치 명령(`scripts.week3_batch`)으로 저장한 결과를 **조회만** 합니다.
+목록·상세·필터·내보내기 어느 것도 모델을 다시 호출하지 않습니다. 새 배치 실행은 화면이 아니라 백엔드 명령으로 합니다 ([3주차 백엔드 안내](../docs/week3-backend.md)).
+
+### 연습용 배치로 켜기
+
+```text
+python -m scripts.verify_week3 --output runs/week3-handoff                        # 가짜 모델로 108건 배치 생성
+python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs     # 그 배치를 읽는 서버 + 화면
+```
+
+실제 모델 배치를 보려면 그 배치가 저장된 runs 폴더를 `--runs-dir`로 지정합니다.
+
+### 화면 구성
+
+| 영역 | 내용 | 서버 API |
+| --- | --- | --- |
+| 배치 목록 | 저장된 배치, 실행 범위(데모·샘플·실제), 상태, 계획/시도 수, 총비용 | `GET /api/v1/batches` |
+| 배치 정보 | 예산·사용량, 6개 방어 조건, 데이터 출처, 고정 해시 | `GET /api/v1/batches/{batch_id}` |
+| 필터 | 출처·앱·언어·데이터 구분·조건·비교 종류·라벨·공격 유형·family·목표·심각도·실행 종류 | 아래 리포트 요청의 본문 |
+| 지표 요약 | 그룹 하나의 KPI 카드 + 조건별 비교표 | `POST .../report` → `groups[].metrics` |
+| Trade-off | x 정상 태스크 성공률, y 1 − ASR, 크기 요청당 비용, 색 추천 판단 | `groups[].metrics`, `decisions.records` |
+| 추천 근거 | 전체 판단, 모든 그룹 공통 보류 사유, 그룹별 추가 사유·열세 관계 | `decisions` |
+| 무방어 대비 변화 | 짝지은 %p 변화와 지연·비용 증가율 | `groups[].baseline_changes_pp`, `baseline_resource_changes` |
+| D2 탐지·payload | 탐지기 대상별 FNR/FPR, payload 짝 비교 | `detector_report`, `payload_comparisons` |
+| 실행 trace | 그룹 → 실행 번호(케이스·반복·시도) → 마스킹된 trace | `plan[].attempts[].run_id`, `GET /api/v1/runs/{run_id}` |
+| 내보내기 | 화면과 같은 필터의 리포트 JSON, 지표 CSV | 리포트 응답 그대로, `POST .../export.csv` |
+
+### 지표 칸은 어디서 오나
+
+화면은 서버 집계 값을 **그대로** 글자로만 바꿉니다. 지표·CI·Pareto·추천을 화면에서 다시 계산하지 않습니다.
+(산점도는 2개 축만 보이지만 Pareto 판단은 서버가 6개 지표 전체로 한 결과입니다.)
+
+| 화면 이름 | 리포트 필드 (`groups[].metrics.*`) | 표시 |
+| --- | --- | --- |
+| ASR (공격 성공률) | `asr` | 비율 (분자/분모) |
+| 정상 태스크 성공률 | `task_success` | 비율 (분자/분모) |
+| FPR (정상 케이스) / (하드 네거티브) | `benign_fpr` / `hard_negative_fpr` | 비율 (분자/분모) |
+| 목표값 노출률 | `target_exposure_rate` | 비율 |
+| 지연 p50 / p95 (ms) | `latency_p50_ms` / `latency_p95_ms` | 밀리초 |
+| 실행 실패율 | `run_failure_rate` | 비율 |
+| 요청당 비용 (USD) | `cost_per_request_usd` | 달러 |
+| 요청당 입력 / 출력 토큰 | `input_tokens` / `output_tokens` | 평균 토큰 수 |
+| KPI 카드 도움말 | 각 지표의 `numerator`, `denominator`, `family_count`, `ci95`, `inference_status`, `excluded` | 분자/분모 · family 수 · 95% CI · 표본 부족 여부 · 제외 사유 |
+| 추천 판단 | `decisions.records[].status`, `reasons`, `dominated_by` | 한글 사유 (원래 코드도 함께) |
+
+값이 없을 때는 이렇게 보입니다.
+
+- 지표 값이 null (분모 0, 미평가 등): **기록 없음**. 0%나 실패로 바꾸지 않음
+- CI가 null: **CI 없음**, 그리고 **표본 부족** 표시. 산점도에서는 흐린 점
+- 비용 합계가 null: **미확인 (확인된 소계 …)**
+- ASR이나 정상 성공률이 없는 그룹: 산점도에 찍지 않고 "점을 못 찍은 그룹"에 이유와 함께 표시
+- 같은 자리에 겹친 점: 점 위 도움말과 아래 표의 "같은 자리 그룹"에 표시
+
+화면 전용 한글 이름(지표 이름, 추천 판단 상태, 사유, 제외 사유)은 아직 통합 변수 파일에 없어서 `batch_core.py` 위쪽에 모아 두었습니다.
+팀에서 정하면 통합 변수 파일로 옮깁니다.
+
+### 확인한 것
+
+```text
+python -m unittest tests.test_batch_dashboard -v
+```
+
+공개 fixture(`docs/examples/week3`)로 표·산점도·추천 사유·실행 번호 연결·필터·오류 처리를 확인합니다.
+streamlit이 설치된 환경에서는 화면 테스트(정상, 연결 실패, 빈 목록)도 실행합니다.
+값이 채워진 경우는 fixture를 복사해 일부만 바꾼 합성 값이며 실제 결과가 아닙니다.
+
+## 7. 파일 구성
 
 | 파일 | 역할 |
 | --- | --- |
-| `app.py` | 화면 |
+| `app.py` | 화면 (한 번 실행, 4개 모드 비교, D2 위치 비교) |
+| `pages/1_배치_대시보드.py` | 배치 대시보드 화면 (3주차) |
 | `ui_core.py` | 화면과 검증이 같이 쓰는 부분 (서버 요청, 비교 표, 조건 확인) |
+| `batch_core.py` | 배치 대시보드의 서버 요청과 표시용 값 만들기 |
 | `verify_ui.py` | 통합 검증 스크립트 |
 | `verification/` | 검증 기록 |
 
-## 7. 이번 범위 밖
+### 검증 기록과 데모
 
-ASR/FPR 차트, Pareto 분석, 대시보드, 통계 집계는 다음 주차에 합니다.
+- 실제 모델 배치로 화면 JSON·CSV를 CLI 리포트·export와 대조한 기록: [verification/week3-ui-verification.md](verification/week3-ui-verification.md)
+- 3분 시연 순서: [verification/week3-demo-guide.md](verification/week3-demo-guide.md)
+
+## 8. 남은 일
+
+- 갱신 데이터 실제 배치(`feat/week3-live-pipeline`, 집계 v0.3, 변형 10종·payload 비교)로 화면 확인. 변형 이름 표시와 payload 표는 합성 리포트 테스트로만 확인함
+- 수동 검토 입력(`PUT .../reviews/{run_id}`) 화면
+- 부분 배치·전부 실패·가격 미확인·동률 상태를 실제 배치로 화면 확인 (지금은 테스트로만 확인)
+- 평가 담당 판정이 들어온 뒤 정상 성공률·산점도·추천 상태 표시 재확인
 
 ---
 
