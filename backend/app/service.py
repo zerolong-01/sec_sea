@@ -334,7 +334,7 @@ class RunService:
         return self._safe(value, canaries, protected)
 
     def _public_trace(self, trace: RunTrace, *, rules: RuleSet | None) -> RunTrace:
-        payload = trace.model_dump(mode="json")
+        payload = trace.model_dump(mode="json", by_alias=True)
         raw = self._trace_store.get_raw(trace.run_id)
         canaries = set(CANARY_PATTERN.findall(json.dumps(raw)))
         canaries.update(CANARY_PATTERN.findall(json.dumps(payload)))
