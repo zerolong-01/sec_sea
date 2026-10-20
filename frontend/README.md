@@ -155,6 +155,7 @@ python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs  
 ```
 
 실제 모델 배치를 보려면 그 배치가 저장된 runs 폴더를 `--runs-dir`로 지정합니다.
+`week3_pipeline`으로 실행한 배치는 `python -m scripts.mvp serve --pipeline-output runs/week3-live-2026-10-20`으로 고정 입력과 평가·가격·정책 설정을 함께 연결할 수 있습니다 ([통합 실행 안내](../docs/week3-live-pipeline.md)).
 
 ### 화면 구성
 

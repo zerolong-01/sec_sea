@@ -14,6 +14,8 @@ python -m scripts.week3_pipeline --output runs/week3-live-2026-10-20 --report-on
 
 첫 명령은 최대 두 항목만 실행한다. 두 번째는 같은 checkpoint에서 남은 항목을 실행한다. 완료 항목은 재전송하지 않는다. 세 번째는 저장 결과만 검사하며 모델을 호출하지 않는다. 실패/uncertain은 자동 재시도하지 않고 원시 trace·ledger를 보존한다. 미완료 시 종료 코드 2, 실패 시 1을 반환한다.
 
+`--report-only`는 저장 manifest의 모델 설정과 고정된 가격·평가 snapshot을 읽으므로 현재 API 키나 `.env`, 실행 당시의 Python·OS 환경이 필요하지 않다. 새 preparation·배치·checkpoint를 생성하지 않으며 파생 집계·export·검증 파일만 갱신한다. 원시 trace·ledger와 고정 파일의 무결성 검사는 유지한다. 실행 코드를 갱신한 뒤 과거 배치를 조회할 때도 이 옵션을 사용한다. 실제 실행·재개는 구현·설정의 동일성 검사를 유지하므로 변경된 조건의 새 실험은 별도 `--output`으로 만든다.
+
 기본 계획은 RAG 초안 15조건(원본/요소 제거/별도 대조군 11 + 보호값 4), 이메일 대표 3조건 × 중복 없는 방어 구성 6 × 반복 3 = **324건**이다. `dev`만 선택한다. 최대 $1, 1,200호출, 예약 토큰 4천만, 실행 시간 90분의 독립 상한을 적용한다. 이는 전체 데이터 성능 검증이나 holdout 실험이 아니다.
 
 데이터만 준비하려면 다음 명령을 사용한다. 기존 출력 경로는 덮어쓰지 않는다.
@@ -56,9 +58,22 @@ python -m scripts.mvp check --data-dir runs/week3-prepared/rag
 
 ```text
 python -m scripts.verify_real_ui --runs-dir runs/week3-live-2026-10-20/runs --batch-id <batch_id> --data-dir runs/week3-live-2026-10-20/prepared/rag --case-ids w3_a006_original w3_a006_instruction_removed w3_a001_hard_negative_control w3pv_a11
-python -m scripts.mvp serve --data-dir runs/week3-live-2026-10-20/prepared/rag --runs-dir runs/week3-live-2026-10-20/runs
+python -m scripts.verify_real_ui --runs-dir runs/week3-live-2026-10-20/runs --batch-id <batch_id> --dashboard-only
+python -m scripts.mvp serve --pipeline-output runs/week3-live-2026-10-20
 ```
 
-화면 검증은 실제 저장 결과의 네 모드·세 위치 표를 trace와 대조하고 마스킹을 확인한다. 검증 중 네트워크 요청을 금지한다. `serve`는 사용자가 UI에서 실행할 때만 새 API 호출을 발생시키므로 저장 조회에는 run_id를 사용한다. 배치 실행은 CLI에서 한다.
+첫 화면 검증은 실제 저장 결과의 네 모드·세 위치 표와 새 배치 대시보드를 모두 검사한다. `--dashboard-only`는 대표 케이스를 지정하지 않고 대시보드만 검사한다. 전체·앱별 출처 필터의 집계 표, payload 불확실성, CSV/JSON 다운로드, 공개 trace를 실제 저장 API와 대조한다. 모델 호출과 외부 네트워크를 차단하며 결과는 `dashboard-verification-report.json`에 기록한다. 예전 네 모드 검증 기록은 대시보드 단독 검증으로 덮어쓰지 않는다.
+
+`serve --pipeline-output`은 checkpoint와 배치에 고정된 입력·설정 snapshot을 검증하고 데이터·runs·평가 규칙·가격·공통 정책을 두 서버에 함께 전달한다. 입력은 `runs/batches/<batch_id>/inputs/week3`에서 읽으므로 원본이나 `prepared`가 바뀌어도 저장된 배치를 열 수 있다. PowerShell 환경변수나 Bash `export`를 따로 입력할 필요가 없다. 이 옵션은 독립적인 `--data-dir`, `--manifest`, `--runs-dir`, `--fixture-model`과 섞을 수 없다. 화면 왼쪽의 **배치 대시보드**에서 checkpoint의 배치를 선택한다. 기본 포트가 사용 중이면 `--api-port 8001 --ui-port 8502`처럼 변경한다.
+
+`serve`의 새 단건 실행 버튼은 현재 `.env`의 모델 설정을 사용한다. 저장된 배치 조회·필터·export에는 새 모델 호출이 없으며, 과거 실제 실행의 설정과 범위는 저장 manifest에서 표시한다. 배치 실행은 CLI에서 한다.
 
 회귀 `tests/test_week3_pipeline.py`는 변환의 결정성·원본 보존·파생 라벨·조건별 문서 분리·프롬프트 gold 분리와 실제 로컬 HTTP의 324건 재개·집계·마스킹·추가 호출 없는 조회를 검증한다. CI에서는 실제 API 키를 사용하지 않는다.
+
+추가 통합 회귀는 다음 명령으로 실행한다.
+
+```text
+python -m unittest tests.test_pipeline_services tests.test_week3_offline_replay tests.test_verify_batch_ui
+```
+
+키와 현재 설정이 없는 재검증, 손상된 snapshot 거절, 대시보드의 실제 v0.3 API/CSV/trace 경로와 서버 환경 연결을 검사한다. [프론트엔드 통합 기록](../frontend/verification/week3-pipeline-integration.md)을 참고한다.
