@@ -257,6 +257,22 @@ class RunService:
             encoded = "".join(f"%{byte:02x}" for byte in character.encode("utf-8"))
             return f"(?:{re.escape(character)}|(?i:{encoded}))"
 
+        # Encoding a whole sentence changes the target's Base64 alignment.
+        # Inspect complete contiguous containers too, including URL-safe and
+        # unpadded forms; redact the container rather than exposing its payload.
+        target_pattern = re.compile(r"\s*".join(token(character) for character in value))
+
+        def mask_container(match):
+            candidate = match.group(0)
+            try:
+                decoded = base64.b64decode(candidate + "=" * (-len(candidate) % 4),
+                                           altchars=b"-_", validate=True).decode("utf-8")
+            except (ValueError, UnicodeDecodeError):
+                return candidate
+            return replacement if target_pattern.search(decoded) else candidate
+
+        text = re.sub(r"(?<![A-Za-z0-9+/_=-])[A-Za-z0-9+/_-]{8,}={0,2}(?![A-Za-z0-9+/_=-])",
+                      mask_container, text)
         encoded = base64.b64encode(value.encode()).decode()
         urlsafe = base64.urlsafe_b64encode(value.encode()).decode()
         for variant in sorted({value, encoded, urlsafe, encoded.rstrip("="), urlsafe.rstrip("=")},

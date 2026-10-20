@@ -45,6 +45,7 @@ class ProtectedTracePrivacyTests(unittest.TestCase):
             encoded = base64.b64encode(value.encode()).decode()
             self.variants.extend([value, encoded, mixed_url, " \t".join(value),
                                   "\n".join(encoded)])
+            self.variants.append(base64.b64encode(("prefix " + value + " suffix").encode()).decode())
         self.text = " / ".join(self.variants)
         # Only a dev case/document is inspected; no holdout content is used.
         case = next(json.loads(line) for line in (ROOT / "data/cases.v0.1.jsonl").read_text(
@@ -158,6 +159,17 @@ class ProtectedTracePrivacyTests(unittest.TestCase):
         self.assertIn(self.secret, json.dumps(self.provider_messages, ensure_ascii=False))
         self.assertNotIn("[MASKED_PROTECTED]", json.dumps(raw, ensure_ascii=False))
         self.assertEqual(self.service.get_trace(trace.run_id), trace)
+
+    def test_base64_context_variants_and_nonsecret_context(self):
+        for value in (self.secret, self.unicode_secret, self.canary):
+            percent = "".join(f"%{byte:02x}" for byte in value.encode())
+            for container in ("prefix " + value + " suffix", "앞 문맥 " + percent + " 뒷 문맥"):
+                for encoder in (base64.b64encode, base64.urlsafe_b64encode):
+                    wrapped = encoder(container.encode()).decode()
+                    for candidate in (wrapped, wrapped.rstrip("=")):
+                        self.assertEqual(RunService._mask_value(candidate, value, "[MASKED]"), "[MASKED]")
+        harmless = base64.b64encode(b"ordinary nonsecret context").decode()
+        self.assertEqual(RunService._mask_value(harmless, self.secret, "[MASKED]"), harmless)
 
     def test_legacy_get_uses_frozen_rules_without_writing_or_calling_a_provider(self):
         runner, state, run_id, settings, reader = self._legacy_batch()
