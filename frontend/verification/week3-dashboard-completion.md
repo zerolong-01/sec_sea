@@ -52,4 +52,6 @@ python -m scripts.verify_real_ui --runs-dir runs/week3-live-2026-10-20/runs --ba
 목표별 ASR 분리로 과거 v0.3의 66개 그룹과 개수가 다르며, 과거 실행을 다시 호출한 결과가 아닙니다.
 정상 기준에 평가된 차단 실패만 일부 존재하면 탐색용 점을 표시할 수 있지만, 나머지 검토 대기를 정상 성공·실패에 합치지 않습니다.
 
-`test_batch_dashboard_completion.py`의 차트·선택 연결·정책·표본·특수 상태 회귀 10개가 통과했습니다.
+`test_batch_dashboard_completion.py`의 차트·선택 연결·정책·표본·특수 상태 회귀를 확인했습니다.
+예산의 이종 단위 표시 열은 문자열로 통일하고, 표본 수는 nullable 정수와 별도 기록 상태를 사용합니다.
+Arrow 직렬화 타입 회귀와 실제 API→대시보드→CSV 재생 스모크가 통과했으며 원본 숫자·통계값은 바꾸지 않습니다.

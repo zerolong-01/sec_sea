@@ -223,6 +223,25 @@ class CompletionPageTests(unittest.TestCase):
         self.assertFalse(app.exception, app.exception)
         self.assertTrue(any("계획과 맞지 않아" in warning.value and "1개" in warning.value for warning in app.warning))
 
+    def test_budget_and_nullable_sample_counts_serialize_without_arrow_type_coercion(self):
+        import pyarrow as pa
+
+        original = copy.deepcopy(SUMMARY)
+        app = self.page(copy.deepcopy(REPORT))
+        self.assertFalse(app.exception, app.exception)
+        frames = [element.value for element in app.dataframe]
+        budget = next(frame for frame in frames if set(frame.columns) == {"항목", "값"})
+        samples = next(frame for frame in frames if "표본·평가" in frame.columns)
+        budget_arrow = pa.Table.from_pandas(budget, preserve_index=False)
+        sample_arrow = pa.Table.from_pandas(samples, preserve_index=False)
+        display_type = budget_arrow.schema.field("값").type
+        self.assertTrue(pa.types.is_string(display_type) or pa.types.is_large_string(display_type))
+        self.assertTrue(pa.types.is_int64(sample_arrow.schema.field("수").type))
+        self.assertGreater(sample_arrow["수"].null_count, 0)  # 과거 fixture에는 repeat_count가 없다.
+        self.assertIn(batch_core.NO_VALUE, samples["기록 상태"].tolist())
+        self.assertEqual(SUMMARY, original)
+        self.assertIsInstance(SUMMARY["budget"]["admitted_calls"], int)
+
 
 if __name__ == "__main__":
     unittest.main()

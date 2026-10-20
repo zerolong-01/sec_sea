@@ -36,9 +36,12 @@ def show_error(error):
         st.text(error["message"])
 
 
-def table(rows, **kwargs):
+def table(rows, *, integer_columns=(), **kwargs):
     if rows:
-        st.dataframe(pd.DataFrame(rows), hide_index=True, **kwargs)
+        frame = pd.DataFrame(rows)
+        for column in integer_columns:
+            frame[column] = frame[column].astype("Int64")
+        st.dataframe(frame, hide_index=True, **kwargs)
     else:
         st.info("표시할 항목이 없습니다.")
 
@@ -188,7 +191,7 @@ with tab_kpi:
             col.caption(md_safe(detail))
     st.caption("값이 '기록 없음'이면 분모가 0이거나 평가가 끝나지 않은 것입니다. 0%나 실패로 바꾸지 않았습니다.")
     with st.expander("선택 그룹의 표본·평가 수와 모든 지표의 불확실성"):
-        table(sample_rows(group_by_id[selected]))
+        table(sample_rows(group_by_id[selected]), integer_columns=("수",))
         table(metric_rows(group_by_id[selected]))
 
     st.subheader("조건별 비교표")
@@ -346,7 +349,7 @@ with tab_trace:
                             "판정": label_of("defense_decisions", e.get("decision")),
                             "방어": e.get("defense_id") or e.get("defense_mode") or NO_VALUE,
                             "근거": e.get("reason") or NO_VALUE,
-                            "점수": e.get("score") if e.get("score") is not None else NO_VALUE,
+                            "점수": str(e["score"]) if e.get("score") is not None else NO_VALUE,
                             "모순": e.get("consistency_issue") or "없음",
                             "오류": e.get("error") or ""} for e in events])
                 st.markdown("**출력 (마스킹된 공개 trace)**")

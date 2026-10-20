@@ -510,7 +510,9 @@ def budget_rows(summary):
         ("결과 미확정 호출", budget.get("unresolved_calls")),
         ("걸린 시간(초)", None if budget.get("elapsed_seconds") is None else round(budget["elapsed_seconds"], 1)),
     ]
-    return [{"항목": k, "값": NO_VALUE if v is None else v} for k, v in items]
+    # This is a heterogeneous display column (counts, currency, seconds).
+    # Keep its cells textual; the API budget retains its numeric values.
+    return [{"항목": k, "값": NO_VALUE if v is None else str(v)} for k, v in items]
 
 
 def condition_rows(summary):
@@ -613,7 +615,8 @@ def sample_rows(group):
                          "execution_unavailable": "유효 실행 없음"}
         items.extend((f"{name} · {status_labels.get(status, label_of('evaluation_statuses', status))}", count)
                      for status, count in statuses.items())
-    return [{"표본·평가": name, "수": value if value is not None else NO_VALUE} for name, value in items]
+    return [{"표본·평가": name, "수": value, "기록 상태": "기록됨" if value is not None else NO_VALUE}
+            for name, value in items]
 
 
 POLICY_THRESHOLDS = {
