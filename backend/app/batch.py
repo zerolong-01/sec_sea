@@ -142,9 +142,11 @@ class BatchStore:
 
 
 def public_settings(settings):
+    from .prompts import D1_VERSION
     excluded = {"project_root", "data_dir", "runs_dir", "model_api_key", "d2_api_key",
                 "pricing_path", "evaluation_rules_path", "common_policy_path"}
     result = {f.name: getattr(settings, f.name) for f in fields(settings) if f.name not in excluded}
+    result["d1_version"] = D1_VERSION
     from .providers import OpenAICompatibleProvider
     for name in ("model_base_url", "d2_base_url"):
         if result[name]:
@@ -386,7 +388,10 @@ class BatchRunner:
             attempt["error_code"] = trace.error.code if trace.error else None
         except ArtifactNotFound:
             paid_or_sent = any(c["attempt_id"] == attempt["attempt_id"] for c in state.calls)
-            entry["status"] = attempt["status"] = "uncertain" if paid_or_sent else "pending"
+            entry["status"] = "uncertain" if paid_or_sent else "pending"
+            # Keep the interrupted attempt for auditing without claiming an
+            # unresolved request when no transport reservation ever existed.
+            attempt["status"] = "uncertain" if paid_or_sent else "cancelled_before_transport"
         self.store.save(state)
 
     def review(self, batch_id, run_id, review):

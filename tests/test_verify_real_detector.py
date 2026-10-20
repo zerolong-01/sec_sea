@@ -13,7 +13,7 @@ from backend.app.batch import BatchRunner
 from backend.app.config import Settings
 from backend.testing.fixture_model import FixtureModelServer
 from scripts.data_contract import ROOT, DataContractError
-from scripts.verify_real_detector import main, verify
+from scripts.verify_real_detector import _summarize, main, verify
 
 
 class RealDetectorDiagnosticTests(unittest.TestCase):
@@ -73,6 +73,36 @@ class RealDetectorDiagnosticTests(unittest.TestCase):
         resumed = self.run_diagnostic()
         self.assertEqual(resumed, result)
         self.assertEqual(len(self.fixture.requests), before)
+
+    def test_cancelled_before_transport_resumes_without_missing_trace_or_hidden_calls(self):
+        with patch("backend.app.batch.RunService.execute", side_effect=KeyboardInterrupt):
+            interrupted = self.run_diagnostic(max_items=1)
+        self.assertEqual((interrupted["status"], interrupted["saved_runs"],
+                          interrupted["model_call_count"]), ("incomplete", 0, 0))
+        self.assertEqual(self.fixture.requests, [])
+        runner = BatchRunner(replace(self.settings, runs_dir=self.output / "runs"))
+        state = runner.store.get(interrupted["batch_id"])
+        entry = next(e for e in state.plan if e["attempts"])
+        cancelled = entry["attempts"][0]
+        self.assertEqual(cancelled["status"], "cancelled_before_transport")
+        self.assertFalse((self.output / "runs" / (cancelled["run_id"] + ".trace.json")).exists())
+
+        resumed = self.run_diagnostic(max_items=1)
+        self.assertEqual(resumed["batch_id"], interrupted["batch_id"])
+        self.assertEqual((resumed["saved_runs"], resumed["reconciled_calls"]), (1, 2))
+        self.assertEqual(len(self.fixture.requests), 2)
+        self.assertTrue(resumed["usage_complete"] and resumed["cost_complete"])
+        state = runner.store.get(resumed["batch_id"])
+        entry = next(e for e in state.plan if e["attempts"])
+        self.assertEqual(len(entry["attempts"]), 2)
+        self.assertEqual(entry["attempts"][0], cancelled)
+        report_text = (self.output / "verification-report.json").read_text(encoding="utf-8")
+        self.assertNotIn("CANARY_", report_text)
+        self.assertNotIn(self.settings.model_api_key, report_text)
+
+        state.calls[0]["attempt_id"] = cancelled["attempt_id"]
+        with self.assertRaisesRegex(DataContractError, "cancelled-before-transport"):
+            _summarize(self.output, runner, state)
 
     def test_fixture_needs_explicit_opt_in_and_cli_errors_never_echo_settings(self):
         with self.assertRaises(DataContractError):

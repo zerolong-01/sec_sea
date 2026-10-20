@@ -13,12 +13,14 @@ import hashlib
 import random
 from collections import Counter, defaultdict
 
+from .accounting import Accounting
 from .batch import BatchStore, atomic_json, digest, verify_frozen_artifacts
 from .batch_models import BatchFilters, BatchReport, RecommendationPolicy
 from .detector_evaluation import report as detector_report
+from .prompts import D1_VERSION
 from .repository import ArtifactNotFound, RunTraceStore
 
-REPORT_VERSION = "batch-cluster-summary-v0.1"
+REPORT_VERSION = "batch-cluster-summary-v0.2"
 
 
 def quantile(values, q):
@@ -124,7 +126,8 @@ def group_summary(rows, policy, calls):
         else:
             exposed.append((row["family"], int(row["review"]["target_exposed"])))
     values["target_exposure_rate"] = statistic(exposed, policy, numerator=sum(v for _, v in exposed), excluded=missing)
-    attempts = [(row, attempt, trace) for row in rows for attempt, trace in row["attempt_traces"]]
+    attempts = [(row, attempt, trace) for row in rows for attempt, trace in row["attempt_traces"]
+                if attempt["status"] != "cancelled_before_transport"]
     latencies = [(row["family"], trace.metrics.latency_ms) for row, _, trace in attempts
                  if trace is not None and trace.metrics.latency_ms is not None]
     missing_latency = len(attempts) - len(latencies)
@@ -143,10 +146,11 @@ def group_summary(rows, policy, calls):
                           ("output_tokens", "output_tokens")):
         observed, missing = [], Counter()
         for row in rows:
-            if not row["entry"]["attempts"]:
+            sent_attempts = [a for a in row["entry"]["attempts"] if a["status"] != "cancelled_before_transport"]
+            if not sent_attempts:
                 missing["not_attempted"] += 1
                 continue
-            item_calls = [c for a in row["entry"]["attempts"] for c in by_attempt[a["attempt_id"]]]
+            item_calls = [c for a in sent_attempts for c in by_attempt[a["attempt_id"]]]
             if any(c[field] is None or c["status"] != "settled" for c in item_calls) or any(
                     a["status"] in ("running", "uncertain", "pending") for a in row["entry"]["attempts"]):
                 missing["unknown_usage_or_outcome"] += 1
@@ -156,7 +160,10 @@ def group_summary(rows, policy, calls):
     selected_attempt_ids = {a["attempt_id"] for row in rows for a in row["entry"]["attempts"]}
     selected_calls = [c for c in calls if c["attempt_id"] in selected_attempt_ids]
     return {"metrics": values, "planned_count": len(rows), "unique_case_count": len({r["entry"]["case_id"] for r in rows}),
-            "family_count": len({r["family"] for r in rows}), "attempt_count": len(attempts),
+            "family_count": len({r["family"] for r in rows}),
+            "attempt_count": sum(len(r["entry"]["attempts"]) for r in rows),
+            "cancelled_before_transport_count": sum(a["status"] == "cancelled_before_transport"
+                                                     for r in rows for a in r["entry"]["attempts"]),
             "status_counts": dict(Counter(r["entry"]["status"] for r in rows)),
             "call_count": len(selected_calls), "detection_call_count": sum(c["purpose"] == "detection" for c in selected_calls),
             "generation_call_count": sum(c["purpose"] == "generation" for c in selected_calls),
@@ -196,12 +203,14 @@ def paired_resources(rows, baseline, metric, policy, calls):
         by_attempt[call["attempt_id"]].append(call)
     def values(row):
         if metric.startswith("latency"):
-            traces = [t for _, t in row["attempt_traces"]]
+            traces = [t for attempt, t in row["attempt_traces"]
+                      if attempt["status"] != "cancelled_before_transport"]
             return ([t.metrics.latency_ms for t in traces] if traces and all(t and t.metrics.latency_ms is not None for t in traces) else None)
         field = {"cost_per_request_usd": "known_cost_usd", "input_tokens": "input_tokens", "output_tokens": "output_tokens"}[metric]
-        if not row["entry"]["attempts"] or any(a["status"] in ("pending", "running", "uncertain") for a in row["entry"]["attempts"]):
+        sent_attempts = [a for a in row["entry"]["attempts"] if a["status"] != "cancelled_before_transport"]
+        if not sent_attempts or any(a["status"] in ("pending", "running", "uncertain") for a in sent_attempts):
             return None
-        entries = [c for a in row["entry"]["attempts"] for c in by_attempt[a["attempt_id"]]]
+        entries = [c for a in sent_attempts for c in by_attempt[a["attempt_id"]]]
         return ([sum(c[field] for c in entries)] if all(c[field] is not None and c["status"] == "settled" for c in entries) else None)
     clusters, excluded = defaultdict(list), Counter()
     for row in rows:
@@ -368,6 +377,36 @@ def decisions(groups, policy, statistics, scope):
             "no_candidate": not any(r["status"] in ("recommended_candidate", "provisional_tied") for r in records)}
 
 
+def expected_manifest(condition, configured, folder):
+    """Execution identity comes from frozen settings; later human ratings may change."""
+    common = (folder / "common_policy.snapshot").read_text(encoding="utf-8").strip()
+    base = configured["system_prompt_version"] + "+policy-sha256:" + hashlib.sha256(common.encode()).hexdigest()
+    d1 = condition.defense_mode in ("D1", "D1+D2")
+    d2 = condition.defense_mode in ("D2", "D1+D2")
+    d1_version = configured.get("d1_version", D1_VERSION)
+    versions = {**({"D1": d1_version} if d1 else {}),
+                **({"D2": configured["d2_version"]} if d2 else {})}
+    pricing_path = folder / "pricing.snapshot"
+    book = Accounting(pricing_path).book if pricing_path.exists() else None
+    price = book.model_dump(mode="json") if book else {}
+    return {"execution_scope": configured["execution_scope"], "model_id": configured["model_id"],
+            "provider": configured["model_provider"], "base_system_prompt_version": base,
+            "system_prompt_version": base + "+" + d1_version if d1 else base,
+            "defense_config_versions": versions, "defense_position": condition.defense_position,
+            "execution_kind": condition.execution_kind, "retrieval_config_version": configured["retrieval_config_version"],
+            "generation_parameters": {"temperature": configured["temperature"], "max_tokens": configured["max_tokens"]},
+            "max_model_calls": configured["max_model_calls"],
+            "pricing_version": price.get("version"), "pricing_snapshot": price,
+            "d2_configuration": {"model_id": configured["d2_model_id"] or configured["model_id"],
+                "detector_version": configured["d2_version"], "policy_version": configured["d2_policy_version"],
+                "threshold": condition.d2_threshold if condition.d2_threshold is not None else configured["d2_threshold"],
+                "error_policy": configured["d2_error_policy"],
+                "consistency_policy": condition.consistency_policy or configured["d2_consistency_policy"],
+                "response_format": configured["d2_response_format"], "temperature": 0, "max_tokens": 256,
+                "base_url": configured["d2_base_url"] or configured["model_base_url"],
+                "input_action": "block", "document_action": configured["d2_document_action"]} if d2 else {}}
+
+
 def aggregate(runs_dir, batch_id, filters=None):
     filters = filters or BatchFilters()
     store = BatchStore(runs_dir)
@@ -379,6 +418,8 @@ def aggregate(runs_dir, batch_id, filters=None):
     review_history = json.loads(review_path.read_text(encoding="utf-8")) if review_path.exists() else []
     reviews = {r["run_id"]: r for r in review_history}
     conditions = {c.condition_id: c for c in state.spec.conditions}
+    manifests = {key: expected_manifest(condition, state.execution_settings, folder)
+                 for key, condition in conditions.items()}
     rows, evaluation_snapshots, invalid_traces = [], [], []
     for entry in state.plan:
         condition = conditions[entry["condition_id"]]
@@ -395,24 +436,11 @@ def aggregate(runs_dir, batch_id, filters=None):
                 expected = {"case_id": entry["case_id"], "scenario": entry["scenario"],
                             "defense_mode": condition.defense_mode, "defense_position": condition.defense_position,
                             "execution_kind": condition.execution_kind, "dataset_version": source["dataset_version"],
-                            "corpus_version": source["corpus_version"]}
+                            "corpus_version": source["corpus_version"], "d2_threshold": condition.d2_threshold}
                 actual = trace.request.model_dump(mode="json")
-                configured = state.execution_settings
-                common = (folder / "common_policy.snapshot").read_text(encoding="utf-8").strip()
-                base_version = configured["system_prompt_version"] + "+policy-sha256:" + hashlib.sha256(common.encode()).hexdigest()
-                d2 = condition.defense_mode in ("D2", "D1+D2")
-                threshold = condition.d2_threshold if condition.d2_threshold is not None else configured["d2_threshold"]
+                manifest = trace.manifest.model_dump(mode="json")
                 if (any(actual[k] != v for k, v in expected.items())
-                        or trace.manifest.execution_scope != state.execution_settings["execution_scope"]
-                        or trace.manifest.model_id != configured["model_id"]
-                        or trace.manifest.provider != configured["model_provider"]
-                        or trace.manifest.base_system_prompt_version != base_version
-                        or trace.manifest.defense_position != condition.defense_position
-                        or trace.manifest.execution_kind != condition.execution_kind
-                        or trace.manifest.retrieval_config_version != configured["retrieval_config_version"]
-                        or trace.manifest.generation_parameters != {"temperature": configured["temperature"], "max_tokens": configured["max_tokens"]}
-                        or d2 and (trace.manifest.d2_configuration.get("threshold") != threshold
-                                   or trace.manifest.d2_configuration.get("consistency_policy") != (condition.consistency_policy or configured["d2_consistency_policy"]))):
+                        or any(manifest[k] != v for k, v in manifests[condition.condition_id].items())):
                     invalid_traces.append({"run_id": attempt["run_id"], "reason": "trace_plan_conditions_mismatch"})
                     trace = None
             attempt_traces.append((attempt, trace))
@@ -473,12 +501,19 @@ def aggregate(runs_dir, batch_id, filters=None):
                          groups=groups, payload_comparisons=payload_results(rows, state.spec.statistics),
                          detector_report=detector_report(selected_traces).model_dump(mode="json"),
                          decisions=decisions(groups, policy, state.spec.statistics, state.execution_settings["execution_scope"]))
+    deferrals = []
     if invalid_traces:
+        deferrals.append("trace_integrity_failure")
+    if state.status != "completed" or any(e["status"] in ("pending", "running", "uncertain") for e in state.plan):
+        deferrals.append("batch_not_completed")
+    if any(c["status"] != "settled" or c["known_cost_usd"] is None for c in state.calls):
+        deferrals.append("batch_resource_coverage_incomplete")
+    if deferrals:
         report.decisions["status"] = "deferred"
         report.decisions["no_candidate"] = True
         for record in report.decisions["records"]:
             record["status"] = "deferred"
-            record["reasons"].append("trace_integrity_failure")
+            record["reasons"] = sorted(set(record["reasons"] + deferrals))
     return report
 
 

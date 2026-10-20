@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -15,6 +16,18 @@ from app.models import DefenseEvent, EvaluationResult, RunRequest, RunResponse
 from app.shared_variables import DefenseMode, EvaluationStatus, RunStatus, TraceStage
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def isolated_demo_environment(backend: Path, root: Path):
+    config_names = {"MAX_MODEL_CALLS", "PRICING_FILE", "EVALUATION_RULES_FILE", "COMMON_POLICY_FILE",
+                    "DATA_DIR", "RUNS_DIR", "MVP_MANIFEST", "MVP_LOAD_DOTENV",
+                    "SYSTEM_PROMPT_VERSION", "RETRIEVAL_CONFIG_VERSION"}
+    environment = {name: value for name, value in os.environ.items()
+                   if not name.startswith(("MODEL_", "D2_")) and name not in config_names}
+    environment.update(PYTHONPATH=str(backend), DATA_DIR=str(root / "data"), RUNS_DIR=str(root / "runs"),
+                       MODEL_PROVIDER="demo", MODEL_ID="demo-rag-v0.1", MVP_LOAD_DOTENV="0",
+                       PYTHONDONTWRITEBYTECODE="1", PYTHONIOENCODING="utf-8")
+    return environment
 
 
 class SharedVariableTests(unittest.TestCase):
@@ -48,12 +61,14 @@ class SharedVariableTests(unittest.TestCase):
                 json.dumps(shared), encoding="utf-8"
             )
             shutil.copytree(ROOT / "data", root / "data")
-            environment = dict(os.environ)
-            environment.update(
-                PYTHONPATH=str(backend), DATA_DIR=str(root / "data"),
-                RUNS_DIR=str(root / "runs"), MODEL_PROVIDER="demo",
-                PYTHONDONTWRITEBYTECODE="1", PYTHONIOENCODING="utf-8",
-            )
+            # Local .env values may already be loaded by app.main during test
+            # collection. Missing copied configs or real detector endpoints
+            # must not change this isolated contract test's demo behavior.
+            with patch.dict(os.environ, {"MODEL_PROVIDER": "openai_compatible",
+                    "MODEL_API_KEY": "synthetic-parent-key", "D2_API_KEY": "synthetic-parent-detector-key",
+                    "D2_THRESHOLD": "invalid-parent-threshold", "PRICING_FILE": "missing-parent-pricing.json",
+                    "EVALUATION_RULES_FILE": "missing-parent-rules.json", "COMMON_POLICY_FILE": "missing-parent-policy.txt"}):
+                environment = isolated_demo_environment(backend, root)
             result = subprocess.run(
                 [sys.executable, "-c", """
 from fastapi.testclient import TestClient

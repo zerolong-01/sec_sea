@@ -19,7 +19,7 @@ from unittest.mock import patch
 from jsonschema import Draft202012Validator
 
 from backend.app.accounting import Accounting
-from backend.app.batch import BatchRunner, public_settings
+from backend.app.batch import BatchRunner, digest, public_settings
 from backend.app.batch_analysis import aggregate, export_report, report_csv
 from backend.app.batch_models import BatchSpec
 from backend.app.config import Settings
@@ -120,7 +120,12 @@ def _state(output, runner):
         state = runner.create(spec)
     require(len(state.plan) == 108 and state.spec.repeats == 3 and
             {s.split for s in state.spec.sources} == {"dev"}, "PILOT_PLAN_MISMATCH")
-    require(public_settings(runner.settings) == state.execution_settings, "EXECUTION_SETTINGS_CHANGED")
+    current = public_settings(runner.settings)
+    if state.status == "completed" and "d1_version" not in state.execution_settings:
+        # Old completed batches remain readable; unfinished executions still
+        # require the exact frozen settings and implementation before transport.
+        current.pop("d1_version", None)
+    require(current == state.execution_settings, "EXECUTION_SETTINGS_CHANGED")
     runner._verify_inputs(state, executing=False)
     atomic_json(checkpoint, {"version": PILOT_VERSION, "batch_id": state.batch_id})
     return state
@@ -151,9 +156,19 @@ def _inspect(runner, state, credentials):
     samples.mkdir(exist_ok=True)
     http_statuses, errors = Counter(), Counter()
     observed_calls = 0
+    reconciled_attempts, untraced_attempts, known_attempts = set(), set(), set()
     for entry in state.plan:
         for attempt in entry["attempts"]:
+            known_attempts.add(attempt["attempt_id"])
+            ledger = [call for call in state.calls if call["attempt_id"] == attempt["attempt_id"]]
+            if attempt["status"] == "cancelled_before_transport":
+                require(not ledger, "CANCELLED_ATTEMPT_HAS_LEDGER_CALLS")
+                continue
             if attempt["status"] in ("running", "uncertain", "pending"):
+                # A crash can leave an earlier settled D2 call and a later
+                # reservation without a final trace. Preserve both in the
+                # budget and report their unreconciled evidence separately.
+                untraced_attempts.add(attempt["attempt_id"])
                 continue
             trace = runner.traces.get(attempt["run_id"])
             public = trace.model_dump(mode="json")
@@ -166,7 +181,7 @@ def _inspect(runner, state, credentials):
                     "RAW_TRACE_MISMATCH")
             assert_safe(raw, credentials, allow_canary=True)
             calls = raw.get("model_calls", [])
-            ledger = [call for call in state.calls if call["attempt_id"] == attempt["attempt_id"]]
+            reconciled_attempts.add(attempt["attempt_id"])
             require(len(calls) == len(ledger) == trace.metrics.model_call_count == len(trace.model_calls),
                     "CALL_COUNT_MISMATCH")
             accounting = Accounting(runner.store.folder(state.batch_id) / "pricing.snapshot")
@@ -196,9 +211,17 @@ def _inspect(runner, state, credentials):
             # One sample per condition/case; repeated evidence stays in runs/.
             atomic_json(samples / f"{entry['source_id']}-{entry['case_id']}-{entry['condition_id']}.json",
                         {"request": public["request"], "trace": public})
-    require(observed_calls == len([c for c in state.calls if c["status"] == "settled"]),
+    require(all(call["attempt_id"] in known_attempts for call in state.calls), "ORPHAN_LEDGER_CALL")
+    traced_calls = [call for call in state.calls if call["attempt_id"] in reconciled_attempts]
+    untraced_calls = [call for call in state.calls if call["attempt_id"] in untraced_attempts]
+    require(observed_calls == len(traced_calls) and len(traced_calls) + len(untraced_calls) == len(state.calls),
             "UNRECONCILED_LEDGER_CALLS")
-    return {"reconciled_calls": observed_calls, "http_status_counts": dict(http_statuses),
+    committed = [call["committed_usd"] for call in untraced_calls]
+    return {"reconciled_calls": observed_calls, "unreconciled_calls": len(untraced_calls),
+            "unreconciled_settled_calls": sum(call["status"] == "settled" for call in untraced_calls),
+            "unreconciled_known_cost_usd": sum(call["known_cost_usd"] or 0 for call in untraced_calls),
+            "unreconciled_committed_usd": sum(committed) if all(value is not None for value in committed) else None,
+            "http_status_counts": dict(http_statuses),
             "error_counts": dict(errors), "public_canary_leak": False, "credential_leak": False}
 
 
@@ -254,7 +277,8 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
         require(not list(validator.iter_errors(public)), "BATCH_SCHEMA_MISMATCH")
         assert_safe(public, credentials)
     _read_api(settings, state, summary, report)
-    export = output / "exports" / report.evaluation_snapshot_sha256
+    # Filters and calculation versions can change without a new evaluation.
+    export = output / "exports" / report.report_version / digest(report.model_dump(mode="json"))
     if not export.exists():
         export_report(report, export)
     for path in export.iterdir():
@@ -274,6 +298,8 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
         "two_apps": ["rag_chat", "email_summary"], "budget": summary["budget"],
         "api_report_export_consistent": True, "refresh_model_calls": 0,
         "recommendation_status": report.decisions["status"], "team_agreement": "pending",
+        "report_version": report.report_version,
+        "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
         "holdout_executed": False, "evaluation_scope": "draft_rubric_manual_semantic_review_pending",
         "code_commit": state.code_commit, "implementation_sha256": state.configuration_hashes["implementation"],
         "export_path": str(export.relative_to(output)), **checks}

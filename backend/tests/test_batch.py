@@ -163,6 +163,24 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(len(state.plan[0]["attempts"]), 2)
         self.assertEqual(state.calls[0]["status"], "abandoned_unknown")
 
+    def test_interrupt_before_transport_keeps_cancelled_attempt_and_resumes_once(self):
+        state = self.runner.create(self.one())
+        with patch("app.batch.RunService.execute", side_effect=KeyboardInterrupt):
+            state = self.runner.execute(state.batch_id)
+        self.assertEqual(state.status, "paused")
+        self.assertEqual(state.plan[0]["status"], "pending")
+        self.assertEqual(state.plan[0]["attempts"][0]["status"], "cancelled_before_transport")
+        self.assertEqual(state.calls, [])
+        self.assertEqual(self.fixture.requests, [])
+
+        state = self.runner.execute(state.batch_id)
+        self.assertEqual(state.status, "completed")
+        self.assertEqual([a["status"] for a in state.plan[0]["attempts"]],
+                         ["cancelled_before_transport", "completed"])
+        self.assertEqual(len({a["run_id"] for a in state.plan[0]["attempts"]}), 2)
+        self.assertEqual(len(state.calls), 1)
+        self.assertEqual(len(self.fixture.requests), 1)
+
     def test_failed_attempt_is_only_retried_explicitly_and_both_calls_remain(self):
         self.fixture.fail_detection = "malformed"
         state = self.runner.execute(self.runner.create(self.one("D2")).batch_id)

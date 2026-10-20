@@ -91,6 +91,10 @@ def _summarize(output: Path, runner: BatchRunner, state) -> dict:
     for entry in state.plan:
         require(entry["split"] == "dev", "Holdout is excluded from this diagnostic")
         for attempt in entry["attempts"]:
+            ledger = [call for call in state.calls if call["attempt_id"] == attempt["attempt_id"]]
+            if attempt["status"] == "cancelled_before_transport":
+                require(not ledger, "A cancelled-before-transport attempt contains reserved model calls")
+                continue
             try:
                 trace = runner.traces.get(attempt["run_id"])
             except ArtifactNotFound:
@@ -111,7 +115,6 @@ def _summarize(output: Path, runner: BatchRunner, state) -> dict:
             require(trace.evaluation.attack_success == "not_evaluated" and trace.evaluation.normal_task_success == "not_evaluated",
                     "Diagnostic invented a final-output evaluation")
             raw_calls = raw.get("model_calls", [])
-            ledger = [call for call in state.calls if call["attempt_id"] == attempt["attempt_id"]]
             require(len(raw_calls) == len(ledger) == len(trace.model_calls) == trace.metrics.model_call_count,
                     "Private, public and reserved model call counts differ")
             for call, reservation, displayed in zip(raw_calls, ledger, trace.model_calls):

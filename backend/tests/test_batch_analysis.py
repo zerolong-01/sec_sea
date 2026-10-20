@@ -153,6 +153,95 @@ class AnalysisTests(unittest.TestCase):
         self.assertIsNone(metric["ci95"])
         self.assertEqual(metric["inference_status"], "insufficient_sample")
 
+    def test_manifest_configuration_drift_is_excluded(self):
+        entry = next(e for e in self.state.plan if e["condition_id"] == "D2")
+        original = self.runner.traces.get(entry["attempts"][0]["run_id"])
+        mutations = [("d2_configuration", key, value) for key, value in (
+            ("model_id", "wrong-detector"), ("detector_version", "wrong-version"),
+            ("policy_version", "wrong-policy"), ("error_policy", "fail_open"),
+            ("response_format", "json_schema"), ("base_url", "https://wrong.invalid/v1"),
+            ("document_action", "block"), ("temperature", 1), ("max_tokens", 128))]
+        mutations += [(None, "system_prompt_version", "wrong-system"),
+                      (None, "defense_config_versions", {"D2": "wrong-version"}),
+                      (None, "max_model_calls", 1), (None, "pricing_version", "wrong-price"),
+                      (None, "pricing_snapshot", {"version": "wrong-price"})]
+        for container, key, value in mutations:
+            with self.subTest(container=container, key=key):
+                changed = original.model_copy(deep=True)
+                if container:
+                    getattr(changed.manifest, container)[key] = value
+                else:
+                    setattr(changed.manifest, key, value)
+                self.runner.traces.save(changed)
+                report = aggregate(self.settings.runs_dir, self.state.batch_id)
+                self.assertEqual([item["run_id"] for item in report.counts["invalid_traces"]], [original.run_id])
+                self.assertEqual(report.decisions["status"], "deferred")
+                self.assertTrue(all("trace_integrity_failure" in record["reasons"]
+                                    for record in report.decisions["records"]))
+        self.runner.traces.save(original)
+        self.assertEqual(aggregate(self.settings.runs_dir, self.state.batch_id).counts["invalid_traces"], [])
+
+    def test_cancelled_attempt_is_audited_without_poisoning_metrics(self):
+        entry = next(e for e in self.state.plan if e["condition_id"] == "none")
+        entry["attempts"].insert(0, {"attempt_id": "interrupted-before-transport", "run_id": "run-not-sent",
+                                     "status": "cancelled_before_transport", "error_code": None})
+        self.runner.store.save(self.state)
+        report = aggregate(self.settings.runs_dir, self.state.batch_id)
+        group = next(g for g in report.groups if g["condition_id"] == "none")
+        self.assertEqual(group["attempt_count"], 13)
+        self.assertEqual(group["cancelled_before_transport_count"], 1)
+        self.assertEqual(group["metrics"]["run_failure_rate"]["denominator"], 12)
+        self.assertEqual(group["metrics"]["run_failure_rate"]["excluded"]["unresolved_attempts"], 0)
+        self.assertEqual(group["metrics"]["cost_per_request_usd"]["denominator"], 12)
+        self.assertEqual(group["baseline_resource_changes"]["latency_p95_ms"]["denominator"], 12)
+        self.assertNotIn("missing_baseline_or_resource_pair", group["baseline_resource_changes"]["latency_p95_ms"]["excluded"])
+
+    def test_incomplete_batch_defers_completed_groups(self):
+        entry = self.state.plan[0]
+        entry["status"], entry["attempts"] = "pending", []
+        self.state.status = "paused"
+        self.runner.store.save(self.state)
+        report = aggregate(self.settings.runs_dir, self.state.batch_id)
+        self.assertTrue(any(g["evaluator_version"] != "missing" for g in report.groups))
+        self.assertTrue(any(g["evaluator_version"] == "missing" for g in report.groups))
+        self.assertEqual(report.decisions["status"], "deferred")
+        self.assertTrue(all("batch_not_completed" in record["reasons"]
+                            for record in report.decisions["records"]))
+
+    def test_optional_price_defaults_do_not_invalidate_saved_execution(self):
+        path = self.folder / "minimal-price.json"
+        path.write_text(json.dumps({"version": "minimal-price", "models": [{"model_id": "demo-rag-v0.1"}]}),
+                        encoding="utf-8")
+        runner = BatchRunner(replace(self.settings, pricing_path=path))
+        spec = BatchSpec.model_validate({
+            "sources": [{"source_id": "rag", "data_dir": "data", "split": "dev", "case_ids": ["b006"]}],
+            "conditions": [{"condition_id": "none", "defense_mode": "none", "comparisons": ["technique"]}],
+            "repeats": 1, "statistics": {"bootstrap_samples": 100},
+            "budget": {"max_calls": 10, "max_reserved_tokens": 100000, "max_seconds": 60,
+                       "unknown_price_policy": "calls_tokens"}})
+        state = runner.execute(runner.create(spec).batch_id)
+        self.assertEqual(state.status, "completed")
+        report = aggregate(self.settings.runs_dir, state.batch_id)
+        self.assertEqual(report.counts["invalid_traces"], [])
+
+    def test_cancellation_without_transport_is_not_a_zero_cost_observation(self):
+        entry = next(e for e in self.state.plan if e["condition_id"] == "none")
+        previous = entry["attempts"][0]["attempt_id"]
+        self.state.calls = [c for c in self.state.calls if c["attempt_id"] != previous]
+        entry["status"] = "pending"
+        entry["attempts"] = [{"attempt_id": "interrupted-before-transport", "run_id": "run-not-sent",
+                              "status": "cancelled_before_transport", "error_code": None}]
+        self.state.status = "paused"
+        self.runner.store.save(self.state)
+        report = aggregate(self.settings.runs_dir, self.state.batch_id)
+        group = next(g for g in report.groups if g["evaluator_version"] == "missing")
+        for name in ("cost_per_request_usd", "input_tokens", "output_tokens"):
+            self.assertIsNone(group["metrics"][name]["value"])
+            self.assertEqual(group["metrics"][name]["denominator"], 0)
+            self.assertEqual(group["metrics"][name]["excluded"], {"not_attempted": 1})
+            self.assertIsNone(group["baseline_resource_changes"][name]["value"])
+            self.assertEqual(group["baseline_resource_changes"][name]["denominator"], 0)
+
     def test_review_history_and_masking(self):
         entry = self.state.plan[0]
         run_id = entry["attempts"][0]["run_id"]
