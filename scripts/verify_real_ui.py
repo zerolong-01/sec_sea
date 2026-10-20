@@ -14,7 +14,7 @@ from backend.app.storage import atomic_json
 from scripts.data_contract import CANARY_PATTERN, ROOT, load_bundle, require
 
 
-def verify(runs_dir: Path, batch_id: str) -> dict:
+def verify(runs_dir: Path, batch_id: str, *, data_dir=None, case_ids=None) -> dict:
     from streamlit.testing.v1 import AppTest
 
     sys.path.insert(0, str(ROOT / "frontend"))
@@ -22,10 +22,12 @@ def verify(runs_dir: Path, batch_id: str) -> dict:
 
     state = BatchStore(runs_dir).get(batch_id)
     store = RunTraceStore(runs_dir)
-    bundle = load_bundle(ROOT / "data/week2")
+    data_dir = Path(data_dir or ROOT / "data/week2").resolve()
+    case_ids = case_ids or ("a006", "b006", "h007")
+    bundle = load_bundle(data_dir)
     selected = {}
     for entry in state.plan:
-        if entry["case_id"] not in ("a006", "b006", "h007"):
+        if entry["case_id"] not in case_ids:
             continue
         for attempt in entry["attempts"]:
             if attempt["status"] not in ("completed", "blocked"):
@@ -36,11 +38,11 @@ def verify(runs_dir: Path, batch_id: str) -> dict:
                 selected.setdefault((entry["case_id"], entry["condition_id"]), trace)
 
     checked = []
-    with patch.dict(os.environ, {"DATA_DIR": str(ROOT / "data/week2"),
-                                 "MVP_MANIFEST": str(ROOT / "data/week2/mvp-manifest.v0.1.json")}), \
+    with patch.dict(os.environ, {"DATA_DIR": str(data_dir),
+                                 "MVP_MANIFEST": str(data_dir / "mvp-manifest.v0.1.json")}), \
             patch("requests.post", side_effect=AssertionError("UI replay attempted a paid request")), \
             patch("requests.get", side_effect=AssertionError("UI replay attempted a network request")):
-        for case_id in ("a006", "b006", "h007"):
+        for case_id in case_ids:
             modes = [(mode, selected[(case_id, condition)]) for mode, condition in
                      (("none", "none"), ("D1", "D1"), ("D2", "D2-both"), ("D1+D2", "D1-D2"))]
             comparison = [{"title": label_of("defense_modes", mode), "trace": trace, "error": None}
@@ -82,9 +84,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs-dir", type=Path, required=True)
     parser.add_argument("--batch-id", required=True)
+    parser.add_argument("--data-dir", type=Path)
+    parser.add_argument("--case-ids", nargs="+")
     args = parser.parse_args(argv)
     try:
-        print(json.dumps(verify(args.runs_dir.resolve(), args.batch_id), ensure_ascii=False))
+        print(json.dumps(verify(args.runs_dir.resolve(), args.batch_id,
+                                data_dir=args.data_dir, case_ids=args.case_ids), ensure_ascii=False))
         return 0
     except (ValueError, AssertionError, OSError, KeyError, RepositoryError):
         print(json.dumps({"status": "failed", "message": "UI replay verification failed; inspect saved results."}))

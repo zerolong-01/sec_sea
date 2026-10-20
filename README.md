@@ -377,3 +377,6 @@ python -m scripts.verify_week3 --output runs/week3-handoff
 RAG·이메일의 대표 3종×6개 고유 구성×3회, 총 108건을 로컬 HTTP fixture로 검증합니다.
 실제 모델 성능이나 최종 추천의 증빙이 아니며, 통계·서비스 정책은 팀 검토 전 draft입니다.
 실행/예산/재개·집계/API와 남은 인수 항목은 [3주차 백엔드 안내](docs/week3-backend.md)를 따릅니다.
+
+PR #38의 ablation·보호값 초안은 [3주차 실제 실행 파이프라인](docs/week3-live-pipeline.md)에서
+버전을 분리해 준비하고 두 앱 324건의 예산 제한 실행·재개·원시 출력 관측·저장 조회로 연결합니다.

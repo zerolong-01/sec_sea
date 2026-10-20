@@ -266,6 +266,12 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
     credentials = tuple({secret for secret in (settings.model_api_key, settings.d2_api_key) if secret})
     runner = BatchRunner(settings)
     state = _execute(runner, _state(output, runner), max_items)
+    return verify_saved(runner, state, credentials, output)
+
+
+def verify_saved(runner, state, credentials, output, *, version=PILOT_VERSION, extra=None, save_result=True):
+    """Shared saved-run/schema/ledger/API/export checks; never sends a model call."""
+    settings = runner.settings
     checks = _inspect(runner, state, credentials)
     summary = runner.store.summary(state)
     report = aggregate(settings.runs_dir, state.batch_id)
@@ -288,7 +294,7 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
     statuses = Counter(e["status"] for e in state.plan)
     failed = bool(statuses["failed"] or statuses["uncertain"] or summary["budget"]["unresolved_calls"])
     complete = state.status == "completed"
-    result = {"version": PILOT_VERSION,
+    result = {"version": version,
         "status": "failed" if failed else "passed" if complete else "paused",
         "execution_scope": state.execution_settings["execution_scope"],
         "real_model_verified": complete and not failed and state.execution_settings["execution_scope"] == "real",
@@ -302,9 +308,10 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
         "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
         "holdout_executed": False, "evaluation_scope": "draft_rubric_manual_semantic_review_pending",
         "code_commit": state.code_commit, "implementation_sha256": state.configuration_hashes["implementation"],
-        "export_path": str(export.relative_to(output)), **checks}
+        "export_path": str(export.relative_to(output)), **checks, **(extra or {})}
     assert_safe(result, credentials)
-    atomic_json(output / "verification-report.json", result)
+    if save_result:
+        atomic_json(output / "verification-report.json", result)
     return result
 
 
