@@ -1,9 +1,10 @@
 # 4주차 인계·저장 결과 시연 안내
 
-2026-10-20 기준이다. PR [#39](https://github.com/zerolong-01/sec_sea/pull/39)의 작업 브랜치를 사용한다.
-작성 시 PR은 **draft·base dev이며 아직 dev에 병합되지 않았다**. dev에 이미 같은 코드가 있다고 가정하지 않는다.
-`63ef871`의 [Ubuntu·Windows CI](https://github.com/zerolong-01/sec_sea/actions/runs/39428651601)는 통과했다.
-이후 commit의 결과는 해당 PR Checks에서 별도로 확인한다.
+2026-10-22 기준으로 갱신했다. PR [#39](https://github.com/zerolong-01/sec_sea/pull/39)는 dev에 병합됐고,
+PR [#44](https://github.com/zerolong-01/sec_sea/pull/44)로 main `77afde7`에도 반영됐다.
+4주차 작업은 최신 dev `0e2f35d`에서 출발한다.
+`63ef871`의 [Ubuntu·Windows CI](https://github.com/zerolong-01/sec_sea/actions/runs/39428651601)는 과거 증거다.
+이번 후보 commit의 Checks는 별도로 확인한다. 설치·재현·평가 버전 API는 [4주차 백엔드 가이드](week4-backend.md)를 따른다.
 
 [공개 실행 요약](examples/week3-completion/README.md), [수치·해시 JSON](examples/week3-completion/summary.v0.4.json),
 [대표 사례 catalog](examples/week3-completion/case-handoff.v0.4.json), [전체 요구사항 대조표](week3-completion-status.md)를 함께 인계한다.
@@ -145,6 +146,8 @@ quotation은 `http://127.0.0.1:8502`, D2는 `http://127.0.0.1:8504`, legacy는 `
 
 대시보드는 원래 저장 평가·명시적 후속 annotation을 소비한다.
 새 AI 정상 작업 검토와 posthoc paired exact overlay는 **원래 evaluation에 자동 적용하지 않았다**.
+4주차의 `/research/report`·`/research/export.csv`는 `week3-two-ai-review-v0.1`을 명시적으로 조회하는
+별도 공개 API다. 기존 대시보드 KPI를 교체하지 않으며 정상 benchmark/paired/자원·D2율의 미지원 범위는 null과 사유로 반환한다.
 현재 quotation/D2 common report의 task_success 분모는 0이고 target_exposure_rate는 null이다.
 따라서 아래 AI 수치를 대시보드가 이미 모두 보여 준다고 설명하지 않는다.
 

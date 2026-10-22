@@ -381,5 +381,10 @@
       "value": "detection",
       "label_ko": "인젝션 탐지"
     }
+  },
+  "research_api_paths": {
+    "SOURCES": "/api/v1/batches/{batch_id}/evaluation-sources",
+    "REPORT": "/api/v1/batches/{batch_id}/research/report",
+    "CSV": "/api/v1/batches/{batch_id}/research/export.csv"
   }
 }

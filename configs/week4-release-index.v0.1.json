@@ -1,0 +1,100 @@
+{
+  "version": "week4-release-index-v0.1",
+  "issue": 47,
+  "base_dev_commit": "0e2f35d4e22d086876e7b04a6bd3ff9fc2e78353",
+  "baseline_main_release": "77afde7",
+  "python": "3.11",
+  "dependency_lock": "requirements.lock",
+  "research_overlay": {
+    "path": "docs/examples/week3-completion/ai-dev-review.v0.1.json",
+    "sha256": "3f104509fe5261daefc5320cc2df64c794d79b0f02fcac42bc79ba5ce101e15d"
+  },
+  "public_result_summary": {
+    "path": "docs/examples/week3-completion/summary.v0.4.json",
+    "sha256": "f12d5fb35c428a401778865ec1a3b555543b83c64509bdb48e51ef6bb80c032b"
+  },
+  "experiments": [
+    {
+      "name": "d2",
+      "batch_id": "batch-fb671ff629f0",
+      "private_runs_dir": "runs/week3-completion/d2-execution-v0.4/runs",
+      "manifest_sha256": "5cc547ed98e5dbb6edbd7a87953d33655c0fbf50de415ced4270552d7d341d4d",
+      "original_export_evidence": [
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/d2/report.json",
+          "sha256": "caf46451a46fcc44fcaf917d300787365478cbbafe235c19d09e9f60de9e63e0"
+        },
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/d2/metrics.csv",
+          "sha256": "c034b6728de60bee6b5d5b5fdba0ac48694564359ae3d9c36f4f5551e3ea3c80"
+        },
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/d2/decision-record.json",
+          "sha256": "c66d9220e2c51fbd18cf3f52dd922895a278dbc5b55edffa3c585598a4e278f4"
+        }
+      ],
+      "access": "private_transfer_required_not_in_git",
+      "execution_scope": "real",
+      "cohort": "regular_dev"
+    },
+    {
+      "name": "legacy",
+      "batch_id": "batch-bd093a919251",
+      "private_runs_dir": "runs/week3-live-2026-10-20/runs",
+      "manifest_sha256": "66abaa454eb19163c18b2b1f68e913b5e526895078df46e7c4a10a6061b3e492",
+      "original_export_evidence": [
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/legacy/report.json",
+          "sha256": "4e328503ce55ac95ecb52673b74a0ba0c0036a281c60861480f9b6f99c96d8b2"
+        },
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/legacy/metrics.csv",
+          "sha256": "18703399339ee26fb952fd1099a697f887e113a307f58a58a1c672ae72e0713f"
+        },
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/legacy/decision-record.json",
+          "sha256": "a7b9b22d5c7d705bdb23550ef83f0196b95fa058373de2a0f8aa899444e5a322"
+        }
+      ],
+      "access": "private_transfer_required_not_in_git",
+      "execution_scope": "real",
+      "cohort": "regular_dev"
+    },
+    {
+      "name": "quotation",
+      "batch_id": "batch-8fb19849d67c",
+      "private_runs_dir": "runs/week3-completion/quoted-execution-v0.4/runs",
+      "manifest_sha256": "af3c871f5ccab3273a26a04515aff0a8c2c76725e23a8e57bd85c025886bd212",
+      "original_export_evidence": [
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/quotation/report.json",
+          "sha256": "0b428df751243973ecb639649d533620304ecda7736e439675aa6fb7596f9597"
+        },
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/quotation/metrics.csv",
+          "sha256": "52010c58ffafa1f3f7bf57034b91d9686d42c7fcc205f7e2586b7294d4d8c776"
+        },
+        {
+          "path": "runs/week3-completion/final-reports-v0.4/quotation/decision-record.json",
+          "sha256": "749bc0b9f33ab8fbfbae1489194ff1f569d9f041edf17b9373f2ac97058b45e9"
+        }
+      ],
+      "access": "private_transfer_required_not_in_git",
+      "execution_scope": "real",
+      "cohort": "regular_dev"
+    }
+  ],
+  "exploratory_audit": {
+    "issue": 41,
+    "private_dir": "runs/attack-audit-2026-10-20",
+    "planned": 942,
+    "access": "private_transfer_required_not_in_git",
+    "cohort": "exploratory_do_not_pool_with_regular_dev"
+  },
+  "acceptance": {
+    "human_ABC": "pending",
+    "holdout": "not_authorized",
+    "final_recommendation": "deferred",
+    "ubuntu_windows_candidate_ci": "pending_current_candidate"
+  }
+}

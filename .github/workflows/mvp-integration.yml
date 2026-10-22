@@ -29,10 +29,11 @@ jobs:
           cache: pip
           cache-dependency-path: |
             requirements.txt
+            requirements.lock
             backend/requirements.txt
             frontend/requirements.txt
       - name: Install dependencies
-        run: python -m pip install -r requirements.txt
+        run: python -m pip install --require-hashes -r requirements.lock
       - name: Validate committed data
         run: |
           python -m scripts.mvp check
@@ -51,3 +52,5 @@ jobs:
         run: python -m scripts.week2_data verify-handoff --output runs/week2-data-ci
       - name: Week-three two-app batch, resume and report handoff
         run: python -m scripts.verify_week3 --output runs/week3-batch-ci
+      - name: Week-four immutable replay and evaluation-source contract
+        run: python -m scripts.verify_week4 --fixture-output runs/week3-batch-ci --output runs/week4-package-ci

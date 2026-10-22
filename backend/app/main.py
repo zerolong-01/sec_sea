@@ -5,6 +5,8 @@ from fastapi import FastAPI, HTTPException, status, Response
 from .batch import BatchRunner
 from .batch_analysis import aggregate, report_csv
 from .batch_models import BatchFilters, BatchReport, BatchReview, BatchSummary
+from .research_models import ResearchFilters, ResearchReport
+from .research_reports import available_sources, research_report, research_csv
 
 from .config import Settings
 from .models import (DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
@@ -22,7 +24,7 @@ from .service import (
     UnsupportedDefenseMode,
     build_provider,
 )
-from .shared_variables import BATCH_API_PATHS, KEYS, SchemaVersion
+from .shared_variables import BATCH_API_PATHS, RESEARCH_API_PATHS, KEYS, SchemaVersion
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -40,6 +42,34 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Batch execution stays in the local CLI. These read/review endpoints never
     # cause a paid model invocation, including report/export refreshes.
     batch_runner = BatchRunner(settings)
+
+    @app.get(RESEARCH_API_PATHS["SOURCES"])
+    def evaluation_sources(batch_id: str):
+        try:
+            result = available_sources(batch_id)
+            if not result["research"]["available"]:
+                batch_runner.store.get(batch_id)
+            return result
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
+        except (ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_RESEARCH_EVIDENCE"}) from exc
+
+    @app.post(RESEARCH_API_PATHS["REPORT"], response_model=ResearchReport)
+    def get_research_report(batch_id: str, filters: ResearchFilters):
+        try:
+            return research_report(batch_id, filters)
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "RESEARCH_OVERLAY_NOT_FOUND"}) from exc
+        except (ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_RESEARCH_EVIDENCE"}) from exc
+
+    @app.post(RESEARCH_API_PATHS["CSV"])
+    def get_research_csv(batch_id: str, filters: ResearchFilters):
+        report = get_research_report(batch_id, filters)
+        return Response(research_csv(report), media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": 'attachment; filename="research-metrics.csv"',
+                                 "X-Report-SHA256": report.report_sha256})
 
     @app.get(BATCH_API_PATHS["LIST"], response_model=list[BatchSummary])
     def list_batches():

@@ -286,6 +286,10 @@ def csv_report_error(content, report):
     calculation = (report.get("provenance") or {}).get("calculation_implementation_sha256")
     if calculation:
         expected["calculation_implementation_sha256"] = calculation
+    for key in ("report_sha256", "evaluation_source"):
+        value = (report.get("provenance") or {}).get(key)
+        if value:
+            expected[key] = value
     if not all(expected.values()):
         return invalid
     try:
