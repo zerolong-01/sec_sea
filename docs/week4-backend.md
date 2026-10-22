@@ -108,7 +108,9 @@ python -m scripts.verify_week4 --output runs/week4-acceptance-v1
 report hash는 `provenance.report_sha256` 자체를 제외한 canonical JSON의 SHA256이다.
 과거 v0.4 export는 보존한다.
 
-연구용은 별도 [ResearchReport schema](../contracts/research-overlay-v0.1.schema.json)를 사용한다.
+연구용은 별도 [ResearchReport v0.2 schema](../contracts/research-overlay-v0.2.schema.json)를 사용한다.
+평가판은 `week3-two-ai-review-v0.1`을 유지하고 보고/CSV 형식만 `week4-public-overlay-v0.2`로 올렸다.
+구형 [v0.1 schema](../contracts/research-overlay-v0.1.schema.json)와 sample·산출물은 보존한다.
 API 경로는 [shared-variables](../contracts/shared-variables-v0.1.json)의 `research_api_paths`에 있다.
 
 | API | 요청/결과 |
@@ -149,6 +151,24 @@ C는 명시적인 연구 보기로 연결하고 원래 KPI/Trade-off와 혼합�
 JSON/CSV/decision record에 같은 batch·run·정책판·출처 hash를 남긴다.
 C 화면 연결과 A의 최종 보고판 선택은 각 담당자에게 인계할 인터페이스다.
 
+### 연구 CSV v0.2
+
+기존 v0.1은 JSON의 탐지 대상 gold 분포가 CSV에서 누락되고, 빈 선택에는 식별 정보가 남지 않았다.
+새 CSV는 shared-variables의 `research_export.csv_fields/csv_row_kinds`를 사용한다.
+
+| row_kind | 의미와 값 |
+| --- | --- |
+| `report_metadata` | 항상 1행. 보고서 해시·필터·counts·capabilities·검토/추천 상태. 빈 선택도 이 행을 반환 |
+| `final_output_metric` | 기존 출력 지표의 분자·분모·제외·coverage·family·CI. JSON의 같은 metric과 일치 |
+| `target_gold_count` | 그룹·stage별 `gold_label/gold_count/target_observations`. 비율·분자·분모 칸은 비워 두고 탐지 FNR/FPR로 해석하지 않음 |
+
+모든 행이 같은 평가 출처·정책판·source hash·report hash를 가진다. 응답 헤더의
+`X-Report-SHA256`, `X-Report-Version`, `X-Evaluation-Source`도 JSON과 대조할 수 있다.
+빈 숫자 칸과 `ci95=null`은 0이 아니다. `target_observations`는 대상 관측 수이며 실행 수와 다를 수 있다.
+`frontend.batch_core.research_csv_report_error(content, report)`는 별도 연구 다운로드의 식별자·지표·gold 건수와
+행 누락/중복을 검사한다. 기존 `csv_report_error`와 KPI 경로는 유지한다.
+[v0.2 sample](examples/week4/v0.2/README.md)은 출력 지표와 target gold가 함께 있는 D2-input 선택이다.
+
 ## 저장 결과를 새 패키지로 재생성
 
 공개 AI 자료는 키·네트워크·private runs 없이 재생성할 수 있다:
@@ -169,6 +189,27 @@ python -m scripts.week4_package replay batch-8fb19849d67c --source original --ru
 manifest에는 전체 원본 inventory SHA, 출력 hash, 환경, reader commit/구현 hash, 모델 호출0이 들어간다.
 `created_at/environment`와 출력 절대경로는 환경 의존 값이다. report/snapshot/filter/hash·분모·핵심 값으로 대조한다.
 모델 응답의 완전 일치는 별도 실제 모델 재실행의 재현 기준이 아니다.
+
+전달받은 패키지는 원본 store·Git·환경 설정·키·네트워크 없이 검사한다:
+
+```bash
+python -m scripts.week4_package verify runs/week4-overlay-v1
+```
+
+별도 채널로 받은 manifest의 고정 hash가 있으면 다음 옵션으로 기대하는 보고서·원본 inventory도 확인한다:
+
+```bash
+python -m scripts.week4_package verify runs/week4-overlay-v1 --expected-report-sha256 REPORT_SHA256 --expected-source-inventory-sha256 SOURCE_INVENTORY_SHA256
+```
+
+검사는 정확한 4개 파일 목록, 세 artifact의 바이트 SHA, report의 canonical SHA, manifest/JSON/CSV/decision record의
+식별·필터·값 일치를 확인한다. 누락·추가 파일·symlink·불일치 또는 검사 중 변경은 오류다.
+새 replay는 게시 전 이 검사도 실행한다. 구형 package v0.1·연구 report v0.1도 읽으며 덮어쓰지 않는다.
+기존 원평가 report 렌더러는 v0.5를 지원하고 알 수 없는 형식은 거부한다.
+검증 성공은 패키지 내부 일치의 증거다. 원본이 없는 검사이므로 `source_evidence_revalidated=false`이고,
+자체 manifest만으로 발신자나 과거 원시 자료를 인증하지 않는다. 제한 전송 후 원본 재생성은 앞의 별도 절차를 따른다.
+
+inventory는 연구 원자료뿐 아니라 완료 smoke·최초 실패·깨끗한 checkout·탐색 출처 index의 공개 참조 SHA도 확인한다.
 
 저장 UI 기동은 [cohort별 가이드](week4-handoff-demo.md)를 따른다.
 원본 외부에 로그를 쓰려면 `serve --service-logs-dir runs/week4-view-logs`도 지정한다.

@@ -12,7 +12,8 @@ from pathlib import Path
 
 from .batch import digest, file_hash
 from .repository import ArtifactNotFound
-from .research_models import RESEARCH_VERSION, ResearchFilters, ResearchReport
+from .research_models import RESEARCH_REPORT_VERSION, RESEARCH_VERSION, ResearchFilters, ResearchReport
+from .shared_variables import RESEARCH_EXPORT
 
 ROOT = Path(__file__).resolve().parents[2]
 INDEX = "configs/week4-release-index.v0.1.json"
@@ -90,7 +91,7 @@ def research_report(batch_id, filters=None, *, root=ROOT):
         "confidence_intervals": "family_independence_not_validated_small_strata",
     }.items()}
     payload = dict(batch_id=batch_id, evaluation_version=RESEARCH_VERSION,
-        evaluation_source="ai_research_overlay", report_version="week4-public-overlay-v0.1",
+        evaluation_source="ai_research_overlay", report_version=RESEARCH_REPORT_VERSION,
         schema_version="0.1", artifact_type="research_overlay_report",
         evaluation_snapshot_sha256=digest(files), filters=filters.model_dump(mode="json"),
         provenance={"source_files": files, "source_summary_sha256": files[next(iter(files))],
@@ -115,7 +116,8 @@ def research_report(batch_id, filters=None, *, root=ROOT):
     return ResearchReport(**payload, report_sha256=digest(payload))
 
 
-def research_csv(report):
+def _research_csv_v1(report):
+    """Keep the archived v0.1 rendering available for package verification."""
     stream = io.StringIO(newline="")
     fields = ["batch_id", "report_version", "report_sha256", "evaluation_version", "evaluation_snapshot_sha256",
               "filters", "source_files", "research_policy_versions", "human_review", "decision_status", "group_id", "cohort", "run_ids", "metric", "metric_source", "value", "numerator", "denominator",
@@ -136,4 +138,46 @@ def research_csv(report):
                 "metric_source": report.provenance["metric_sources"][name],
                 **{key: metric[key] for key in ("value", "numerator", "denominator", "selected_count", "unique_case_count", "recorded_family_count", "inference_status")},
                 "excluded": json.dumps(metric["excluded"], sort_keys=True), "ci95": "null"})
+    return stream.getvalue()
+
+
+def research_csv(report):
+    if report.report_version == "week4-public-overlay-v0.1":
+        return _research_csv_v1(report)
+    stream = io.StringIO(newline="")
+    writer = csv.DictWriter(stream, fieldnames=RESEARCH_EXPORT["csv_fields"])
+    writer.writeheader()
+    def encoded(value):
+        return json.dumps(value, sort_keys=True)
+    common = {"batch_id": report.batch_id, "report_version": report.report_version,
+              "report_sha256": report.report_sha256, "evaluation_source": report.evaluation_source,
+              "evaluation_version": report.evaluation_version,
+              "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
+              "filters": encoded(report.filters.model_dump(exclude_none=True)),
+              "source_files": encoded(report.provenance["source_files"]),
+              "research_policy_versions": encoded(report.provenance["research_decision"]),
+              "human_review": report.provenance["human_review"], "decision_status": report.decisions["status"],
+              "counts": encoded(report.counts), "capabilities": encoded(report.capabilities)}
+    # An empty selection still carries its identity, filters and unsupported/null
+    # dimensions. It must not become a header-only, unverifiable download.
+    writer.writerow({**common, "row_kind": "report_metadata"})
+    for group in report.groups:
+        for name, metric in group["metrics"].items():
+            writer.writerow({**common, "row_kind": "final_output_metric", "group_id": group["group_id"],
+                "cohort": encoded(group["cohort"]), "run_ids": encoded(group["run_ids"]),
+                "metric": name, "metric_source": report.provenance["metric_sources"][name],
+                **{key: metric[key] for key in ("value", "numerator", "denominator", "selected_count",
+                    "unique_case_count", "recorded_family_count", "inference_status", "coverage_status")},
+                "excluded": encoded(metric["excluded"]), "ci95": encoded(metric["ci95"])})
+    for group in report.target_gold_groups:
+        for label, count in sorted(group["fresh_ai_gold_counts"].items()):
+            # These are observed gold-label counts, not detector error rates.
+            # Keep rate/numerator/denominator fields empty rather than inventing
+            # FNR/FPR from a source that has no detector decisions.
+            writer.writerow({**common, "row_kind": "target_gold_count", "group_id": group["group_id"],
+                "cohort": encoded(group["cohort"]), "run_ids": encoded(group["run_ids"]),
+                "metric": "fresh_ai_target_gold_count", "metric_source": "ai_research_target_gold",
+                "gold_label": label, "gold_count": count, "target_observations": group["target_observations"],
+                "unique_case_count": group["unique_case_count"], "recorded_family_count": group["recorded_family_count"],
+                "ci95": "null", "inference_status": "descriptive_gold_counts_not_detector_rates"})
     return stream.getvalue()

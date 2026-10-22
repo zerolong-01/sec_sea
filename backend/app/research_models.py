@@ -4,8 +4,10 @@ from __future__ import annotations
 from typing import Literal
 
 from .batch_models import BatchModel
+from .shared_variables import RESEARCH_EXPORT
 
 RESEARCH_VERSION = "week3-two-ai-review-v0.1"
+RESEARCH_REPORT_VERSION = RESEARCH_EXPORT["report_version"]
 
 
 class ResearchFilters(BatchModel):
@@ -29,7 +31,7 @@ class ResearchFilters(BatchModel):
 class ResearchReport(BatchModel):
     schema_version: Literal["0.1"] = "0.1"
     artifact_type: Literal["research_overlay_report"] = "research_overlay_report"
-    report_version: Literal["week4-public-overlay-v0.1"] = "week4-public-overlay-v0.1"
+    report_version: Literal["week4-public-overlay-v0.1", "week4-public-overlay-v0.2"] = RESEARCH_REPORT_VERSION
     batch_id: str
     evaluation_version: Literal[RESEARCH_VERSION] = RESEARCH_VERSION
     evaluation_source: Literal["ai_research_overlay"] = "ai_research_overlay"

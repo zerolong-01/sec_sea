@@ -7,10 +7,13 @@
 2주차부터 데이터는 v0.1을 유지하고 새 실행 요청/trace는 [실행 계약 v0.2](week2-backend.md)를 사용한다.
 아래의 v0.1 실행 trace 정의는 이전 소비자·저장물의 계약이다. 새 API 응답을 strict v0.1 스키마로 검증하지 않는다.
 
-4주차 #47은 [별도 연구 overlay 계약](../contracts/research-overlay-v0.1.schema.json)과
+4주차 #47은 [별도 연구 overlay v0.2 계약](../contracts/research-overlay-v0.2.schema.json)과
 [조회·export 소비 명세](week4-backend.md)를 추가한다. 원래 실행/Batch 계약은 유지하고,
 집계 v0.5의 provenance/CSV/decision record에 report hash·평가 출처를 연결한다.
 경로 생산자와 소비자는 shared-variables의 `research_api_paths`를 사용한다.
+연구 CSV의 `research_export`는 metadata·출력 지표·target gold 건수 행을 구별한다.
+빈 필터 결과에도 metadata 행이 남으며 원래 KPI에 overlay를 자동 적용하지 않는다.
+이전 [연구 v0.1 계약](../contracts/research-overlay-v0.1.schema.json)과 파일은 보존한다.
 
 ## 언어와 키 이름 원칙
 

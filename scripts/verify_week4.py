@@ -17,7 +17,7 @@ from backend.app.research_reports import research_report, research_csv
 from scripts.data_contract import ROOT, load_bundle, require
 from scripts.mvp import services
 from scripts.verify_week3 import verify as verify_fixture
-from scripts.week4_package import inventory, replay, tree_hashes
+from scripts.week4_package import inventory, replay, tree_hashes, verify_package
 
 
 def verify(output, fixture_output=None):
@@ -33,9 +33,12 @@ def verify(output, fixture_output=None):
     original = replay(batch_id, output / "original-first", runs_dir=runs)
     repeated = replay(batch_id, output / "original-second", runs_dir=runs)
     require(original["artifacts"] == repeated["artifacts"], "Repeated saved exports differ")
+    verified_original = verify_package(output / "original-first", expected_report_sha256=original["report_sha256"],
+                                      expected_source_inventory_sha256=original["source_inventory_sha256"])
     public_id = "batch-8fb19849d67c"
     filters = {"condition_id": "none", "goal_kind": "secret_leak", "ablation_variant": "original"}
     overlay = replay(public_id, output / "overlay", source="overlay", filters=filters)
+    verified_overlay = verify_package(output / "overlay", expected_report_sha256=overlay["report_sha256"])
     expected = research_report(public_id, ResearchFilters(**filters))
     with services(load_bundle(ROOT / "data"), runs, 0, 0, demo=True, service_logs_dir=output / "service-logs") as (url, _, _, _):
         report = requests.post(f"{url}/api/v1/batches/{batch_id}/report", json={}, timeout=30)
@@ -48,6 +51,16 @@ def verify(output, fixture_output=None):
         require(response.status_code == 200 and response.text == research_csv(expected), "Research CSV differs")
         for row in csv.DictReader(io.StringIO(response.text)):
             require(row["report_sha256"] == overlay["report_sha256"], "CSV report identity lost")
+        # Cover target gold as well as the narrower final-output-only example.
+        full_report = research_report(public_id)
+        full_csv = requests.post(base + "/research/export.csv", json={}, timeout=30)
+        require(full_csv.status_code == 200 and full_csv.text == research_csv(full_report), "Full research CSV differs")
+        gold_rows = [r for r in csv.DictReader(io.StringIO(full_csv.text)) if r["row_kind"] == "target_gold_count"]
+        require(sum(int(r["gold_count"]) for r in gold_rows) == full_report.counts["target_observations"], "Target observations missing from CSV")
+        empty_csv = requests.post(base + "/research/export.csv", json={"language": "en"}, timeout=10)
+        empty_rows = list(csv.DictReader(io.StringIO(empty_csv.text)))
+        require(empty_csv.status_code == 200 and len(empty_rows) == 1 and
+                empty_rows[0]["row_kind"] == "report_metadata", "Empty research export lost metadata")
         require(requests.post(base + "/research/report", json={"family_id": "unsupported"}, timeout=10).status_code == 422, "Unsupported dimension silently accepted")
         require(requests.post(base + "/research/report", json={"language": "en"}, timeout=10).json()["counts"]["members"] == 0, "Empty cohort changed to a value")
         require(requests.get(base + "/evaluation-sources", timeout=10).json()["research"]["available"], "Missing source inventory")
@@ -58,8 +71,11 @@ def verify(output, fixture_output=None):
               "fixture": fixture, "original_report_sha256": original["report_sha256"],
               "overlay_report_sha256": overlay["report_sha256"], "api_csv_artifact_match": True,
               "repeated_export_match": True, "original_source_unchanged": True,
+              "transferred_original_package_verified": verified_original["status"] == "passed",
+              "transferred_overlay_package_verified": verified_overlay["status"] == "passed",
+              "target_gold_csv_complete": True, "empty_csv_identity_preserved": True,
               "replay_model_calls": original["model_calls"] + repeated["model_calls"] + overlay["model_calls"],
-              "saved_private_real_replay": "not_performed_private_evidence_not_in_checkout",
+              "saved_private_real_replay": "not_performed_this_command_checks_fixture_and_public_overlay_only",
               "real_model_rerun": "not_performed", "human_ABC_acceptance": "pending",
               "holdout_executed": False, "candidate_remote_CI": "check_this_commit_on_ubuntu_and_windows"}
     atomic_json(output / "release-manifest.json", inventory())

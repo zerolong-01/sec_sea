@@ -9,6 +9,25 @@
 다른 사람의 공동 인수 기록을 대신하지 않는다.
 해당 checkout의 전체 root 회귀는 215개가 통과했다. 이전 214개 기록 이후 추가된 CSV 출처 검증을 포함한다.
 
+## 후속 백엔드 보완 v0.2
+
+연구 CSV에서 JSON의 target gold 분포가 빠지던 문제와 빈 선택에서 식별 정보가 사라지던 문제를 수정했다.
+평가판은 유지하고 보고/CSV 형식만 `week4-public-overlay-v0.2`로 올렸다. 구형 파일·schema·renderer는 보존한다.
+새 `week4_package verify`는 전달받은 패키지의 파일·artifact/canonical hash·JSON/CSV/decision 일치를 검사한다.
+원본/환경/키/Git/네트워크가 필요 없으며 검사 결과는 원시 증거 재검증·발신자 인증과 구별한다.
+inventory도 완료 smoke·최초 실패·clean checkout·탐색 index의 공개 참조 hash를 확인하도록 보완했다.
+
+- 회귀: root 230개·backend 114개, 총 344개 통과. 기존 329개에 무결성·소비자 검증 15개를 추가했다.
+- 실제 로컬 API/UI 통합: metadata·출력 지표·target gold·빈 선택 및 전송 패키지 검사 통과.
+- 기존 실제108의 새 v0.2 패키지 반복 재생성: report hash `d2092568bcb00f35fa7a1adca43507237561cc3c601388539687b4c0e57f3e03`
+  유지, JSON/CSV/decision 바이트 hash 일치, 원본 불변, 모델 호출0.
+- 로컬 증빙: `runs/week4-hardening-v0.2/integration/`, `runs/week4-hardening-v0.2/saved-real/`,
+  `runs/week4-hardening-v0.2/d2-input-package/`. 공개 계약 예시는 [v0.2](examples/week4/v0.2/README.md)다.
+- 새 커밋의 Ubuntu/Windows CI는 해당 정확한 head에서 확인한다. 아래 이전 CI 기록과 구별한다.
+
+이 보완은 방어 동작·과거 평가·통계 정책을 바꾸거나 모델을 새로 호출하지 않는다.
+과거648 원시 부재·A/C 사람 인수 대기는 아래와 같이 유지한다.
+
 ## 구현·검증 범위
 
 | 항목 | 결과·증거 |

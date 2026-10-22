@@ -69,7 +69,8 @@ class ResearchContractTests(unittest.TestCase):
         rows = list(csv.DictReader(io.StringIO(content)))
         groups = {g["group_id"]: g for g in report.groups}
         saw_unresolved = False
-        for row in rows:
+        self.assertEqual(rows[0]["row_kind"], "report_metadata")
+        for row in (row for row in rows if row["row_kind"] == "final_output_metric"):
             metric = groups[row["group_id"]]["metrics"][row["metric"]]
             self.assertEqual(row["report_sha256"], report.report_sha256)
             self.assertEqual(int(row["denominator"]), metric["denominator"])
@@ -81,7 +82,7 @@ class ResearchContractTests(unittest.TestCase):
         payload = report.model_dump(mode="json")
         payload.pop("report_sha256")
         self.assertEqual(digest(payload), report.report_sha256)
-        schema = json.loads((ROOT / "contracts/research-overlay-v0.1.schema.json").read_text(encoding="utf-8"))
+        schema = json.loads((ROOT / "contracts/research-overlay-v0.2.schema.json").read_text(encoding="utf-8"))
         Draft202012Validator(schema).validate(report.model_dump(mode="json"))
         self.assertNotIn('"votes"', json.dumps(payload))
         self.assertNotIn('"reason"', json.dumps(report.members))
@@ -114,6 +115,13 @@ class ResearchContractTests(unittest.TestCase):
                 self.assertEqual(report.status_code, 200, report.text)
                 exported = client.post(base + "/research/export.csv", json={})
                 self.assertEqual(exported.headers["X-Report-SHA256"], report.json()["report_sha256"])
+                self.assertEqual(exported.headers["X-Report-Version"], report.json()["report_version"])
+                self.assertEqual(exported.headers["X-Evaluation-Source"], "ai_research_overlay")
+                empty_csv = client.post(base + "/research/export.csv", json={"language": "en"})
+                empty_rows = list(csv.DictReader(io.StringIO(empty_csv.text)))
+                self.assertEqual(len(empty_rows), 1)
+                self.assertEqual(json.loads(empty_rows[0]["counts"])["members"], 0)
+                self.assertEqual(json.loads(empty_rows[0]["filters"])["language"], "en")
                 self.assertEqual(client.post(base + "/report", json={}).status_code, 404)
                 for body in ({"label": "attack"}, {"evaluation_version": "original"}):
                     self.assertEqual(client.post(base + "/research/report", json=body).status_code, 422)

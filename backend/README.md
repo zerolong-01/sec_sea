@@ -2,6 +2,8 @@
 
 4주차 #47의 설치·버전 inventory·평가 출처 API·모델 호출 없는 결과 패키지는
 [4주차 백엔드 가이드](../docs/week4-backend.md), 검증 상태는 [기술 인수 기록](../docs/week4-backend-acceptance.md)을 참고한다.
+연구 CSV v0.2는 target gold 건수와 빈 선택 metadata를 포함하며, 전달받은 결과 패키지는 저장소 루트에서
+`python -m scripts.week4_package verify PATH`로 원본 store·API 키 없이 검사한다.
 
 고정 코퍼스 RAG와 합성 이메일을 공통 실행 엔진으로 실행한다. 2주차 #22의 D1/D2, 적용 위치, 평가 저장, 계측을 지원한다. 실제 모델 설정은 로컬 `.env`/환경 변수에서 읽으며 HTTP fixture 검증과 실제 모델 성능 검증을 구분한다.
 

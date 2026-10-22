@@ -11,8 +11,8 @@ from backend.app.research_models import ResearchFilters, ResearchReport
 def main():
     schema = TypeAdapter(Union[ResearchFilters, ResearchReport]).json_schema()
     schema.update({"$schema": "https://json-schema.org/draft/2020-12/schema",
-                   "title": "Explicit public AI research overlay v0.1"})
-    path = Path(__file__).resolve().parents[1] / "contracts/research-overlay-v0.1.schema.json"
+                   "title": "Explicit public AI research overlay v0.2 (reads archived v0.1 reports)"})
+    path = Path(__file__).resolve().parents[1] / "contracts/research-overlay-v0.2.schema.json"
     path.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 

@@ -1,5 +1,8 @@
 # 4주차 공개 계약 예시
 
+현재 연구 export 형식은 [v0.2 sample](v0.2/README.md)을 따른다. 아래 v0.1 파일들은 당시 계약 예시로 보존한다.
+v0.2는 JSON의 target gold도 CSV에 포함하고 빈 선택의 식별 정보를 유지한다.
+
 `research-report.example.json`과 `research-metrics.example.csv`는 공개된 기존 AI 연구 판정에서
 quotation batch의 none·secret_leak·original cohort를 선택한 실제 읽기 전용 결과다.
 새 모델 실행이나 사람 검토 기록이 아니다. `decision-record.example.json`도 같은 report hash를 참조한다.

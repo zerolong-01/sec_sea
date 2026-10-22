@@ -6,4 +6,7 @@
 /backend/app/research_*.py text eol=lf
 /scripts/week4_package.py text eol=lf
 /contracts/research-overlay-v0.1.schema.json text eol=lf
+/contracts/research-overlay-v0.2.schema.json text eol=lf
+/contracts/shared-variables-v0.1.json text eol=lf
 /docs/examples/week4/* text eol=lf
+/docs/examples/week4/v0.2/* text eol=lf

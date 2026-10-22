@@ -69,7 +69,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         report = get_research_report(batch_id, filters)
         return Response(research_csv(report), media_type="text/csv; charset=utf-8",
                         headers={"Content-Disposition": 'attachment; filename="research-metrics.csv"',
-                                 "X-Report-SHA256": report.report_sha256})
+                                 "X-Report-SHA256": report.report_sha256,
+                                 "X-Report-Version": report.report_version,
+                                 "X-Evaluation-Source": report.evaluation_source})
 
     @app.get(BATCH_API_PATHS["LIST"], response_model=list[BatchSummary])
     def list_batches():
