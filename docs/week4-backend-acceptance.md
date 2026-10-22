@@ -3,6 +3,11 @@
 이슈 #47, 작업 브랜치 `feat/week4-backend-reproducibility`, 기준 dev `0e2f35d`.
 2026-10-22 작업 환경은 macOS arm64/Python 3.11.17이다. 이 기록은 실제 사람 A/B/C 인수 서명이 아니다.
 
+후보 코드 `188a9f5`를 `/private/tmp/sec-sea-week4-checkout`에 별도 clone하고 키·기존 runs 없이
+새 가상환경에서 백엔드 114개 회귀와 두 앱 통합 검증을 수행했다.
+[깨끗한 checkout 증빙](examples/week4/clean-checkout-verification.v0.1.json)은 이 기술 재현 결과이며
+다른 사람의 공동 인수 기록을 대신하지 않는다.
+
 ## 구현·검증 범위
 
 | 항목 | 결과·증거 |
@@ -31,6 +36,9 @@
 
 - `runs/week4-clean-verification-v0.1/verification-report.json`: 새 lock 환경의 통합 결과.
 - `runs/week4-final-verification-v0.1/verification-report.json`: 최종 HTTP/CSV/재생성 재검증 결과.
+- `runs/week4-real/`: 고정 코드 `188a9f5`의 실제 API 대표 검증 시도. 첫 D2 요청이 HTTP401로 실패해
+  1실패·107대기이며, 원본 보존·조회/export·모델 호출0 재생성은 별도로 통과했다.
+  [안전 요약](examples/week4/real-attempt-status.v0.1.json)에 실제 시도와 비용 미확인을 기록했다.
 - 같은 디렉터리의 `release-manifest.json`, `original-first/`, `original-second/`, `overlay/`, `service-logs/`.
 - `runs/week4-verification-v0.1/fixture/verification-report.json`: 두 앱의 108 실행과 호출ledger 대조.
 - `docs/examples/week4/`: 공개 가능한 계약 예시·안전 검증 요약. 원시 모델 출력은 포함하지 않는다.
@@ -54,8 +62,9 @@ Ubuntu/Windows의 최신 후보 head Checks는 원격 브랜치/PR에서 별도 
 - 과거648 실모델 실행의 private trace/raw/store는 현재 checkout에 없다. 공개overlay 재생성과 구분하며,
   원래 실배치 재생성은 원담당자의 제한 전송 후 release index의manifest SHA부터 확인한다.
 - 다른 담당자의 새 환경 실행, A의 최종 보고판 확인, C의 실제 화면/보고서 대조와 A/B/C 사람 인수는 대기다.
-- `configs/week4-representative.batch.json`으로 별도 dev 대표 실행을 준비했다. 로컬 `.env`에 유효한 키가
-  저장되면 고정 예산으로 수행할 수 있다. 현재 원격 API 호출 성공을 주장하지 않는다.
+- `configs/week4-representative.batch.json`으로 별도 dev 대표 실행을 시도했으나 D2 인증 오류가 남았다.
+  유효한 키를 확인한 뒤 기존 attempt·예약 비용을 보존하는 명시적 재시도로 이어간다.
+  401 실패를 모델 평가 결과나 공격 방어 성공으로 집계하지 않는다.
 - 연구overlay의 정상benchmark/paired/자원·D2율은 미지원 사유와null을 반환한다. 원래 자동평가를 변경하지 않는다.
 - 추천deferred·사람 검토미실시·부족family/CI=null·holdout 미실행을 유지한다.
 - 고객 PoC·상용 운영 승인·성능 우월성·3분 데모 리허설은 이 백엔드 검증의 결과가 아니다.

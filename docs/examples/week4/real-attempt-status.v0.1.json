@@ -1,0 +1,42 @@
+{
+  "artifact_type": "week4_real_api_reproduction_attempt",
+  "candidate_commit": "188a9f542e4670ff1e7c6877e9df9bb76fbb1810",
+  "batch_id": "batch-08426b109dc1",
+  "status": "authentication_failed",
+  "http_status": 401,
+  "failed_purpose": "detection",
+  "endpoint": "https://api.openai.com/v1/chat/completions",
+  "model_id": "gpt-4.1-mini-2025-04-14",
+  "planned_runs": 108,
+  "status_counts": {
+    "failed": 1,
+    "pending": 107
+  },
+  "budget": {
+    "admitted_calls": 1,
+    "reserved_tokens": 33024,
+    "observed_input_tokens": null,
+    "observed_output_tokens": null,
+    "known_cost_usd": 0,
+    "total_cost_usd": null,
+    "committed_usd": 0.0135168,
+    "unresolved_calls": 0,
+    "elapsed_seconds": 0.5427363749986398,
+    "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+  },
+  "real_model_verified": false,
+  "holdout_executed": false,
+  "recommendation_status": "deferred",
+  "api_report_export_consistent": true,
+  "replay_model_calls": 0,
+  "source_unchanged": true,
+  "report_sha256": "636cf1e8b11331d1bf52862d24eda60159044ca89edc377487faeb071b358d5c",
+  "private_manifest": {
+    "path": "runs/week4-real/runs/batches/batch-08426b109dc1/manifest.json",
+    "sha256": "857f6e3f72764f7bdf6f1e4982bfde962d28ad5ebf314741deb04eab1119c9f4"
+  },
+  "private_audit_path": "runs/week4-real/failed-attempt-audit-v0.1",
+  "private_replay_path": "runs/week4-real/failed-attempt-replay-v0.1",
+  "required_followup": "Correct the detector API key or leave it empty to use a valid generation key; resume with an explicit retry preserving attempt and reservation history",
+  "cost_note": "total_cost_usd=null is unconfirmed; committed_usd is retained reservation, not an observed charge"
+}

@@ -96,5 +96,17 @@
     "holdout": "not_authorized",
     "final_recommendation": "deferred",
     "ubuntu_windows_candidate_ci": "pending_current_candidate"
+  },
+  "new_dev_reproduction_attempt": {
+    "path": "docs/examples/week4/real-attempt-status.v0.1.json",
+    "sha256": "0304b5557ad48207cd1fcbe5e09c6420421b26fc1faaa6c49c0fcfc6818a50bf",
+    "status": "authentication_failed",
+    "separate_from_historical_results": true
+  },
+  "clean_checkout_verification": {
+    "path": "docs/examples/week4/clean-checkout-verification.v0.1.json",
+    "sha256": "d179f48caae52fb3f6b353170bea2c68f17b6f344611e0f95886613356b6b32f",
+    "candidate_commit": "188a9f542e4670ff1e7c6877e9df9bb76fbb1810",
+    "human_acceptance": false
   }
 }

@@ -13,3 +13,6 @@ python -m scripts.week4_package replay batch-8fb19849d67c --source overlay --out
 `verification-report.json`은 macOS의 로컬 새 환경·HTTP fixture 기술 검증 요약이다.
 실제 모델 성능/Ubuntu·Windows CI/다른 사람 인수 증거와 구분한다.
 자세한 [필드/분모/미지원 계약](../../week4-backend.md), [인수 기록](../../week4-backend-acceptance.md)을 따른다.
+
+`real-attempt-status.v0.1.json`은 별도 실제 API 시도의 인증 실패 기록이다. 1실패·107대기와
+비용 미확인(null), 원본 불변·모델 호출0 조회/export 검증을 구분한다. API 키·원시 응답은 포함하지 않는다.
