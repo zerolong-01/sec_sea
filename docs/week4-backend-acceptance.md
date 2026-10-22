@@ -14,7 +14,7 @@
 | 항목 | 결과·증거 |
 | --- | --- |
 | 의존성 재현 | 새 `/private/tmp/sec-sea-week4-clean` venv에서 `pip install --require-hashes -r requirements.lock` 성공 |
-| 기존 회귀 | root 214개·backend 114개 통과, 최종 소비자/실행기/재현 관련 33개 추가 회귀 통과(중복 포함) |
+| 기존 회귀 | 깨끗한 checkout에서 root 215개·backend 114개, 총 329개 통과 |
 | 공개 연구 근거 | 출력648 + target621 =1,269 membership, 168 공개 cohort; 원자료 hash 검증 |
 | HTTP 계약 | 원평가/연구판 별도 경로, 불명판·미지원 차원422, 없는batch404, 빈cohort 명시 |
 | JSON/CSV/decision | 같은 report hash·snapshot·filter·분모·제외; CI/null/review_needed 보존 |
@@ -26,6 +26,8 @@
 | 공개 마스킹 | 공개 멤버에는 typed consensus/ID/hash만 포함, 원문·자유문 votes/reason 제외 |
 | C 소비 경계 | shared-variables/schema/sample/문서 제공, 기존 다운로드가 v0.5 report hash·평가 출처 대조 |
 | 별도 탐색 inventory | #41의 공개 근거 9파일 hash 대조, 6batch ID 확보, JSON 8파일의 CRLF/LF hash 차이 확인·별도 기록 |
+| 실제 API 대표 실행 | 2앱×3종×6조건×3반복=108개 완료: 응답90·차단18·최종실패0, 과거401 시도는 보존 |
+| 실제 저장 결과 대조 | 109시도·199호출의 raw/trace/ledger/가격 대조, API·대시보드·CSV 일치, 반복export hash 일치·추가호출0 |
 
 최초 sandbox에서는 로컬 socket bind가 거부돼 fixture가 실패했다. 허용된 로컬 실행으로 다시 검증했다.
 최초 인수 실행에서는 기존 서비스 실행기가 원본 디렉터리에 기동 로그를 추가하는 것을 발견했다.
@@ -38,9 +40,12 @@
 
 - `runs/week4-clean-verification-v0.1/verification-report.json`: 새 lock 환경의 통합 결과.
 - `runs/week4-final-verification-v0.1/verification-report.json`: 최종 HTTP/CSV/재생성 재검증 결과.
-- `runs/week4-real/`: 고정 코드 `188a9f5`의 실제 API 대표 검증 시도. 첫 D2 요청이 HTTP401로 실패해
-  1실패·107대기이며, 원본 보존·조회/export·모델 호출0 재생성은 별도로 통과했다.
-  [안전 요약](examples/week4/real-attempt-status.v0.1.json)에 실제 시도와 비용 미확인을 기록했다.
+- `runs/week4-real/`: 고정 코드 `188a9f5`의 실제 API 대표 검증. 키 수정과 명시적 재시도·잔여107개 실행 승인 후
+  108개가 종료됐다. [완료 안전 요약](examples/week4/real-reproduction.v0.3.json)은 응답90·방어차단18,
+  198회 HTTP200 및 최초 HTTP401 1회를 기록한다. 과거 [인증 실패 요약](examples/week4/real-attempt-status.v0.1.json)은 보존했다.
+- `runs/week4-real/final-audit-v0.3/complete-verification.json`: 실제 raw/trace/ledger/API 및
+  대시보드 전체·RAG·이메일의 세 필터 대조. `final-replay-v0.3-a/`와 `final-replay-v0.3-b/`의 report·CSV·decision hash가 같고,
+  검증 전후 원본 전체 파일 hash도 같다. 추가 모델 호출0이다.
 - 같은 디렉터리의 `release-manifest.json`, `original-first/`, `original-second/`, `overlay/`, `service-logs/`.
 - `runs/week4-verification-v0.1/fixture/verification-report.json`: 두 앱의 108 실행과 호출ledger 대조.
 - `docs/examples/week4/`: 공개 가능한 계약 예시·안전 검증 요약. 원시 모델 출력은 포함하지 않는다.
@@ -56,17 +61,21 @@ python -m scripts.verify_week4 --output runs/week4-final-acceptance-v1
 
 설치와 OS별 Python 경로는 [실행 가이드](week4-backend.md)를 따른다.
 CI는 `.github/workflows/mvp-integration.yml`에서 같은 lock과 기존 검증 + week4 검증을 실행한다.
-Ubuntu/Windows의 최신 후보 head Checks는 원격 브랜치/PR에서 별도 확인해야 한다.
-과거 `63ef871` 통과나 로컬 macOS 결과를 두 OS 통과로 기록하지 않는다.
+`1b1d674`의 [Ubuntu/Windows 실행](https://github.com/zerolong-01/sec_sea/actions/runs/39722841342)은 양쪽 모두 통과했다.
+이 문서·완료 요약을 추가한 다음 후보도 해당 head의 workflow 결과로 확인한다.
+과거 `63ef871` 통과나 로컬 macOS 결과를 새 후보의 두 OS 통과로 기록하지 않는다.
+
+실제 대표 실행의 확인된 추정 비용은 USD 0.041702, 누적 예약액은 USD 0.0552188이며
+승인 상한 USD 0.25·600호출·600초 안에서 끝났다(199호출·약270초).
+최초401의 사용량/비용은 미확인이므로 전체 `total_cost_usd`와 token 합계는 null을 유지한다.
+예약액을 실제 청구액으로 해석하지 않는다. 실패 시도를 지우거나 성공·방어차단으로 바꾸지 않았다.
 
 ## 별도 증거가 필요한 항목
 
-- 과거648 실모델 실행의 private trace/raw/store는 현재 checkout에 없다. 공개overlay 재생성과 구분하며,
+- 과거648 실모델 실행의 private trace/raw/store는 사용자가 현재 환경에 없다고 확인했다. 공개overlay 및 새108 smoke와 구분하며,
   원래 실배치 재생성은 원담당자의 제한 전송 후 release index의manifest SHA부터 확인한다.
 - 다른 담당자의 새 환경 실행, A의 최종 보고판 확인, C의 실제 화면/보고서 대조와 A/B/C 사람 인수는 대기다.
-- `configs/week4-representative.batch.json`으로 별도 dev 대표 실행을 시도했으나 D2 인증 오류가 남았다.
-  유효한 키를 확인한 뒤 기존 attempt·예약 비용을 보존하는 명시적 재시도로 이어간다.
-  401 실패를 모델 평가 결과나 공격 방어 성공으로 집계하지 않는다.
+- 새108 smoke는 실행·저장 재현 기술 증거이며 과거648의 원시 재생성이나 의미 판정·최종 성능을 대신하지 않는다.
 - 연구overlay의 정상benchmark/paired/자원·D2율은 미지원 사유와null을 반환한다. 원래 자동평가를 변경하지 않는다.
 - 추천deferred·사람 검토미실시·부족family/CI=null·holdout 미실행을 유지한다.
 - 고객 PoC·상용 운영 승인·성능 우월성·3분 데모 리허설은 이 백엔드 검증의 결과가 아니다.

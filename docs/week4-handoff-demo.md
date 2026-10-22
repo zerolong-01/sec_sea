@@ -28,6 +28,20 @@ PR [#44](https://github.com/zerolong-01/sec_sea/pull/44)로 main `77afde7`에도
 무시되는 로컬 `runs/`가 있어야 실제 배치를 열 수 있다. Git checkout만으로 원시 실행 자료가 생기지는 않는다.
 `.env`·키·원시 출력 파일을 화면에 출력할 필요가 없다.
 
+사용자는 과거648의 원시 자료가 현재 환경에 없다고 확인했다. 아래 과거 cohort 명령은 자료를 전달받은 후 사용한다.
+현재 로컬에서는 새 대표108개 `batch-08426b109dc1`을 조회할 수 있다. 응답90·방어차단18이며
+과거648과 합산하지 않는다. API·대시보드·CSV의 저장 재생 대조는 [완료 요약](examples/week4/real-reproduction.v0.3.json)을 따른다.
+macOS/Linux의 조회 예시는 다음과 같다. Windows에서는 Python·환경 변수 표기를 아래 해당 OS 형식으로 바꾼다.
+
+```bash
+export MVP_LOAD_DOTENV=0 MODEL_PROVIDER=demo MODEL_ID=demo-rag-v0.1
+export MODEL_BASE_URL="" D2_BASE_URL=""
+python -m scripts.mvp serve --data-dir runs/week4-real/runs/batches/batch-08426b109dc1/inputs/rag --runs-dir runs/week4-real/runs --service-logs-dir runs/week4-real-view-logs --api-port 8007 --ui-port 8508
+```
+
+가상환경 Python을 사용하고 UI의 배치 대시보드에서 위 ID를 선택한다. 배치에는 RAG·이메일 두 source가 모두 있다.
+로그는 원본 store 외부에 기록한다. 조회에는 키가 필요하지 않다.
+
 기존 8000/8501 프로세스는 그대로 둔다. 아래 명령은 **새 터미널**에서 별도 포트로 실행한다.
 포트가 사용 중이면 다른 `--api-port`·`--ui-port`를 선택한다. 실행기는 충돌 시 오류를 내며 기존 서비스를 종료하지 않는다.
 `Ctrl+C`는 이 명령으로 시작한 자식 서비스만 정리한다.

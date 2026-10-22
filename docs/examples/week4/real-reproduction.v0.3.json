@@ -1,0 +1,155 @@
+{
+  "version": "week4-real-reproduction-v0.3",
+  "status": "passed",
+  "execution_scope": "real",
+  "real_model_verified": true,
+  "batch_id": "batch-08426b109dc1",
+  "batch_status": "completed",
+  "planned_runs": 108,
+  "status_counts": {
+    "completed": 90,
+    "blocked": 18
+  },
+  "repeats": 3,
+  "unique_conditions": 6,
+  "two_apps": [
+    "rag_chat",
+    "email_summary"
+  ],
+  "budget": {
+    "admitted_calls": 199,
+    "reserved_tokens": 6594816,
+    "observed_input_tokens": null,
+    "observed_output_tokens": null,
+    "known_cost_usd": 0.04170200000000002,
+    "total_cost_usd": null,
+    "committed_usd": 0.05521880000000002,
+    "unresolved_calls": 0,
+    "elapsed_seconds": 269.6807899999949,
+    "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+  },
+  "api_report_export_consistent": true,
+  "refresh_model_calls": 0,
+  "recommendation_status": "deferred",
+  "team_agreement": "pending",
+  "report_version": "batch-cluster-summary-v0.5",
+  "evaluation_snapshot_sha256": "adee9646a987c6741db402b5bf99467aff0428a502587faf99ce07bbfa2c553a",
+  "holdout_executed": false,
+  "evaluation_scope": "draft_rubric_manual_semantic_review_pending",
+  "code_commit": "188a9f542e4670ff1e7c6877e9df9bb76fbb1810",
+  "implementation_sha256": "8082f7d8a80a22cff695e04469c6fe867c624675d1587ca726de25929f067ec8",
+  "reconciled_calls": 199,
+  "unreconciled_calls": 0,
+  "http_status_counts": {
+    "401": 1,
+    "200": 198
+  },
+  "error_counts": {
+    "MODEL_PROVIDER_ERROR": 1
+  },
+  "public_canary_leak": false,
+  "credential_leak": false,
+  "public_trace_contract": "RunService.get_trace_read_projection",
+  "privacy_correctness_evidence": "independent_backend_privacy_tests",
+  "projection_consistency_is_not_independent_masking_verification": true,
+  "artifact_type": "week4_real_api_reproduction_completed",
+  "endpoint": "https://api.openai.com/v1/chat/completions",
+  "model_id": "gpt-4.1-mini-2025-04-14",
+  "attempt_count": 109,
+  "execution_kind": "new_dev_reproduction_smoke",
+  "historical_results_pooled": false,
+  "approved_budget": {
+    "max_calls": 600,
+    "max_reserved_tokens": 20000000,
+    "max_seconds": 600.0,
+    "max_usd": 0.25,
+    "unknown_price_policy": "stop",
+    "per_call_input_token_ceiling": 32768
+  },
+  "prior_authentication_failure_preserved": true,
+  "cost_note": "known_cost_usd uses observed usage and frozen prices; total_cost_usd and observed token totals remain null because the retained HTTP 401 attempt has unknown usage/cost; committed_usd includes that retained reservation and is not an observed bill",
+  "replay": {
+    "report_sha256": "d2092568bcb00f35fa7a1adca43507237561cc3c601388539687b4c0e57f3e03",
+    "artifacts": {
+      "decision-record.json": "901d1b2e45c2478ef054be83ee36a9798223b5fe52d0ccba921101e119230e5f",
+      "metrics.csv": "cd759f36e815cec9c85436298f1614417d9ef06297936499d9b667a7f54405d6",
+      "report.json": "e1d16920a24f57e608df6379af7276906e72bef31714727644e781a0d6a4d052"
+    },
+    "source_inventory_sha256": "abc55e6869d32d8ceda5b7bb1cf6511c4afc7e6585419e694c54b505c89f4daf",
+    "source_file_count": 230,
+    "source_unchanged": true,
+    "model_calls": 0
+  },
+  "repeat_replay_identical": true,
+  "dashboard": {
+    "status": "passed",
+    "verification_kind": "saved_batch_dashboard_api_ui_replay",
+    "execution_scope": "real",
+    "real_model_verified": true,
+    "batch_id": "batch-08426b109dc1",
+    "batch_status": "completed",
+    "status_counts": {
+      "completed": 90,
+      "blocked": 18
+    },
+    "attempt_count": 109,
+    "report_version": "batch-cluster-summary-v0.5",
+    "calculation_implementation_sha256": "592dbf90bac4dc91ae0b10b2005866344e4d005c682ba1fccdb48a756fe915a1",
+    "additional_model_calls": 0,
+    "network_calls": 0,
+    "saved_batch_unchanged": true,
+    "api_aggregate_ui_json_csv_consistent": true,
+    "canary_masking_verified": true,
+    "public_trace_contract": "RunService.get_trace_read_projection",
+    "privacy_correctness_evidence": "independent_backend_privacy_tests",
+    "projection_consistency_is_not_independent_masking_verification": true,
+    "contexts": [
+      {
+        "filters": {},
+        "group_count": 24,
+        "payload_comparison_count": 0,
+        "trace_run_id": "run-08426b109dc1-entry-000073-attempt-1",
+        "family_comparison_count": 0,
+        "evaluation_snapshot_sha256": "adee9646a987c6741db402b5bf99467aff0428a502587faf99ce07bbfa2c553a"
+      },
+      {
+        "filters": {
+          "source_id": "rag"
+        },
+        "group_count": 12,
+        "payload_comparison_count": 0,
+        "trace_run_id": "run-08426b109dc1-entry-000019-attempt-1",
+        "family_comparison_count": 0,
+        "evaluation_snapshot_sha256": "a03a32aebfa32b9522559088a353c5b1da292bef592c67ee3ec76b2f7b293bbc"
+      },
+      {
+        "filters": {
+          "source_id": "email"
+        },
+        "group_count": 12,
+        "payload_comparison_count": 0,
+        "trace_run_id": "run-08426b109dc1-entry-000073-attempt-1",
+        "family_comparison_count": 0,
+        "evaluation_snapshot_sha256": "38dccb4de6e32b18779327ca1662efa0d0bed7c0ef5ea1d56e0e41ea46df0090"
+      }
+    ],
+    "read_api_requests": 13
+  },
+  "source_unchanged_across_all_verification": true,
+  "private_manifest": {
+    "path": "runs/week4-real/runs/batches/batch-08426b109dc1/manifest.json",
+    "sha256": "01956017a8c33ae021c06540e3faa497be929f0381af02149f99767efad1d26a"
+  },
+  "private_audit_path": "runs/week4-real/final-audit-v0.3",
+  "private_replay_paths": [
+    "runs/week4-real/final-replay-v0.3-a",
+    "runs/week4-real/final-replay-v0.3-b"
+  ],
+  "historical_failed_attempt_summary": "docs/examples/week4/real-attempt-status.v0.1.json",
+  "historical_private_data": {
+    "available": false,
+    "user_confirmed_absent": true,
+    "original_648_replay_verified": false
+  },
+  "human_ABC_acceptance": "pending"
+}

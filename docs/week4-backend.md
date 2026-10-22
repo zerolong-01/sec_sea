@@ -54,7 +54,8 @@ Python/OS/의존성과 release index를 연결한다. dirty이면 commit만으�
 
 private 자료는 ignored이며 checkout으로 생성되지 않는다. 원래 실행 담당자에게 접근 제한된
 팀 내 파일 전송으로 디렉터리 전체를 받고 index의 manifest hash를 대조한다.
-현재 checkout에는 이 전송 자료가 없다. 실제 제공되지 않은 공유 URL이나 접근 권한을 기재하지 않는다.
+사용자가 현재 환경에 과거 원시 자료가 없다고 확인했다. 과거648의 원시 재생성은 미검증이다.
+실제 제공되지 않은 공유 URL이나 접근 권한을 기재하지 않는다.
 공개 JSON/CSV/연구 판정과 원문이 포함된 private archive는 분리해서 전달한다.
 archive에는 `.env`·API 키·보호값 대응표를 동봉하지 않고 필요한 합성 원문·판정 증거만 제한 공유한다.
 
@@ -80,6 +81,15 @@ RAG의 attack/benign/hard-negative와 네 모드를 선택할 수 있다. fixtur
 정확도 검증이 아니다. 기동 터미널의 Ctrl+C로 종료한다. 포트 충돌 시 8003/8504 등으로 바꾼다.
 기존 프로세스는 종료하지 않는다. PowerShell 환경 변수는 `$env:NAME = "value"`,
 Git Bash/macOS/Linux에서는 `export NAME=value`를 사용한다.
+
+이메일 단건 UI는 별도 source와 포트로 연다:
+
+```bash
+python -m scripts.week2_data prepare-email --output runs/week4-email-demo-data
+python -m scripts.mvp serve --fixture-model --data-dir runs/week4-email-demo-data --runs-dir runs/week4-email-demo --api-port 8003 --ui-port 8504
+```
+
+이미 준비한 데이터 경로가 있으면 그 경로를 재사용한다.
 
 2앱×대표3종×6고유조건×3반복 HTTP fixture, 중단/재개, 저장 조회, 집계/CSV와 API/UI 기동을 검증한다:
 
@@ -200,6 +210,11 @@ PowerShell은 `$env:PRICING_FILE = "configs/pricing-openai-2026-10-20.json"`과
 의미 판정이 없는 원래 평가 항목은 미평가로 남긴다. smoke 통과를 최종 성능·사람 검토·인수로 바꾸지 않는다.
 
 ## 검증과 남은 인계
+
+실제 API 대표108개는 응답90·차단18로 완료됐으며, 최초401 실패 이력을 포함한109시도·199호출을 보존했다.
+[완료 요약](examples/week4/real-reproduction.v0.3.json)에 관측 사용량 기반 추정 비용 USD0.041702와
+누적 예약액 USD0.0552188, API·대시보드·CSV 대조 및 모델 호출0 반복 재생성 증거를 기록했다.
+최초401 비용 미확인 때문에 전체 비용은 null이다. 이 smoke는 과거648 재생성·사람 의미 검토와 구분한다.
 
 [기술 검증 기록](week4-backend-acceptance.md), [공개 sample](examples/week4/README.md)을 참조한다.
 CI는 이번 후보 commit의 Ubuntu/Windows Checks를 확인한다. 과거 head의 pass를 옮기지 않는다.

@@ -112,7 +112,7 @@
     "human_ABC": "pending",
     "holdout": "not_authorized",
     "final_recommendation": "deferred",
-    "ubuntu_windows_candidate_ci": "pending_current_candidate"
+    "ubuntu_windows_candidate_ci": "verify_exact_selected_head_in_MVP_integration_workflow"
   },
   "new_dev_reproduction_attempt": {
     "path": "docs/examples/week4/real-attempt-status.v0.1.json",
@@ -125,5 +125,25 @@
     "sha256": "d179f48caae52fb3f6b353170bea2c68f17b6f344611e0f95886613356b6b32f",
     "candidate_commit": "188a9f542e4670ff1e7c6877e9df9bb76fbb1810",
     "human_acceptance": false
+  },
+  "new_dev_reproduction_completed": {
+    "path": "docs/examples/week4/real-reproduction.v0.3.json",
+    "sha256": "6ab2b667ca84a0254e54d8ff18fd263377973d8d0ab63c4acc5066ddc50220a9",
+    "status": "passed",
+    "batch_id": "batch-08426b109dc1",
+    "separate_from_historical_results": true,
+    "real_model_verified": true
+  },
+  "historical_private_availability": {
+    "available_in_current_environment": false,
+    "user_confirmed_absent": true,
+    "original_648_replay_verified": false,
+    "required_for_original_replay": "restricted_transfer_of_original_stores_with_manifest_hash_match"
+  },
+  "prior_candidate_ci": {
+    "candidate_commit": "1b1d67454aa476ab9af787e5c746cc54c81a209a",
+    "url": "https://github.com/zerolong-01/sec_sea/actions/runs/39722841342",
+    "ubuntu": "success",
+    "windows": "success"
   }
 }
