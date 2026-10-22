@@ -286,6 +286,10 @@ def csv_report_error(content, report):
     calculation = (report.get("provenance") or {}).get("calculation_implementation_sha256")
     if calculation:
         expected["calculation_implementation_sha256"] = calculation
+    for key in ("report_sha256", "evaluation_source"):
+        value = (report.get("provenance") or {}).get(key)
+        if value:
+            expected[key] = value
     if not all(expected.values()):
         return invalid
     try:
@@ -304,6 +308,66 @@ def csv_report_error(content, report):
         # 빈 리포트에는 내보내기를 제공하지 않으므로 헤더만 있는 응답도 유효하지 않다.
         return None if found else invalid
     except (UnicodeError, csv.Error, ValueError, TypeError):
+        return invalid
+
+
+def research_csv_report_error(content, report):
+    """Validate the explicit v0.2 research download without changing original KPIs."""
+    invalid = api_error(code="INVALID_RESPONSE", message="연구 CSV 계약을 확인할 수 없습니다.")
+    mismatch = api_error(code="SNAPSHOT_MISMATCH", message="연구 보고서와 CSV의 버전·필터·근거 또는 값이 다릅니다.")
+    contract = SHARED["research_export"]
+    if report.get("report_version") != contract["report_version"]:
+        return invalid
+    try:
+        reader = csv.DictReader(io.StringIO(content.decode("utf-8-sig"), newline=""), strict=True)
+        if reader.fieldnames != contract["csv_fields"]:
+            return invalid
+        expected = {("report_metadata", "", "", ""): None}
+        for group in report["groups"]:
+            for name, metric in group["metrics"].items():
+                expected[("final_output_metric", group["group_id"], name, "")] = (group, metric)
+        for group in report["target_gold_groups"]:
+            for label, count in group["fresh_ai_gold_counts"].items():
+                expected[("target_gold_count", group["group_id"], "fresh_ai_target_gold_count", label)] = (group, count)
+        seen = set()
+        for row in reader:
+            if None in row or any(value is None for value in row.values()):
+                return invalid
+            identity = tuple(row[k] for k in ("row_kind", "group_id", "metric", "gold_label"))
+            if identity not in expected or identity in seen:
+                return mismatch
+            seen.add(identity)
+            if (any(row[k] != report[k] for k in ("batch_id", "report_version", "report_sha256",
+                    "evaluation_source", "evaluation_version", "evaluation_snapshot_sha256")) or
+                    json.loads(row["filters"]) != {k: v for k, v in report["filters"].items() if v is not None} or
+                    json.loads(row["counts"]) != report["counts"] or
+                    json.loads(row["capabilities"]) != report["capabilities"] or
+                    json.loads(row["source_files"]) != report["provenance"]["source_files"] or
+                    json.loads(row["research_policy_versions"]) != report["provenance"]["research_decision"] or
+                    row["human_review"] != report["provenance"]["human_review"] or
+                    row["decision_status"] != report["decisions"]["status"]):
+                return mismatch
+            if identity[0] == "report_metadata":
+                continue
+            group, value = expected[identity]
+            if (json.loads(row["cohort"]) != group["cohort"] or json.loads(row["run_ids"]) != group["run_ids"]):
+                return mismatch
+            if identity[0] == "final_output_metric":
+                if any(row[k] != (str(value[k]) if value[k] is not None else "") for k in
+                       ("value", "numerator", "denominator", "selected_count", "unique_case_count",
+                        "recorded_family_count", "coverage_status", "inference_status")):
+                    return mismatch
+                if (json.loads(row["excluded"]) != value["excluded"] or json.loads(row["ci95"]) != value["ci95"] or
+                        row["metric_source"] != report["provenance"]["metric_sources"][identity[2]]):
+                    return mismatch
+            elif (row["gold_count"] != str(value) or row["target_observations"] != str(group["target_observations"]) or
+                  any(row[k] for k in ("value", "numerator", "denominator")) or
+                  any(row[k] != str(group[k]) for k in ("unique_case_count", "recorded_family_count")) or
+                  row["ci95"] != "null" or
+                  row["metric_source"] != "ai_research_target_gold"):
+                return mismatch
+        return None if seen == set(expected) else mismatch
+    except (UnicodeError, csv.Error, ValueError, TypeError, KeyError):
         return invalid
 
 

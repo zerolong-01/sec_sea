@@ -57,6 +57,16 @@ class ExportSnapshotTest(unittest.TestCase):
         self.assertEqual(batch_core.csv_report_error(different, report)["code"], "SNAPSHOT_MISMATCH")
         self.assertEqual(batch_core.csv_report_error(csv_bytes(REPORT), report)["code"], "INVALID_RESPONSE")
 
+    def test_v05_report_hash_and_source_are_checked_with_legacy_compatibility(self):
+        report = copy.deepcopy(REPORT)
+        metadata = {"report_sha256": "report-a", "evaluation_source": "original_saved_evaluation"}
+        report["provenance"].update(metadata)
+        self.assertIsNone(batch_core.csv_report_error(csv_bytes(report, metadata), report))
+        for key in metadata:
+            changed = dict(metadata, **{key: "other"})
+            self.assertEqual(batch_core.csv_report_error(csv_bytes(report, changed), report)["code"], "SNAPSHOT_MISMATCH")
+        self.assertEqual(batch_core.csv_report_error(csv_bytes(REPORT), report)["code"], "INVALID_RESPONSE")
+
     def test_rejects_header_only_missing_metadata_and_malformed_content(self):
         header_only = csv_bytes(REPORT).splitlines(keepends=True)[0]
         contents = [header_only, b"group_id,metric\ngroup-1,asr\n", b"\xff",

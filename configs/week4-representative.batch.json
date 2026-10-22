@@ -1,0 +1,47 @@
+{
+  "schema_version": "0.1",
+  "artifact_type": "batch_spec",
+  "sources": [
+    {
+      "source_id": "rag",
+      "data_dir": "data/week2",
+      "split": "dev",
+      "case_ids": [
+        "a006",
+        "b006",
+        "h007"
+      ]
+    },
+    {
+      "source_id": "email",
+      "data_dir": "runs/week4-prepared/email",
+      "split": "dev",
+      "case_ids": [
+        "email-attack-001",
+        "email-benign-001",
+        "email-hard-negative-001"
+      ]
+    }
+  ],
+  "repeats": 3,
+  "random_seed": 2026,
+  "budget": {
+    "max_calls": 600,
+    "max_reserved_tokens": 20000000,
+    "max_seconds": 600,
+    "max_usd": 0.25,
+    "unknown_price_policy": "stop",
+    "per_call_input_token_ceiling": 32768
+  },
+  "statistics": {
+    "version": "family-cluster-percentile-bootstrap-v0.2-research",
+    "status": "draft",
+    "reviewed_by": [],
+    "bootstrap_samples": 10000,
+    "seed": 2026,
+    "minimum_families": 20,
+    "minimum_evaluated_runs": 60
+  },
+  "evaluation_policy_file": "configs/week3-evaluation-policy.json",
+  "common_policy_file": "configs/week3-common-policy.txt"
+}

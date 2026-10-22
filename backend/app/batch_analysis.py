@@ -21,7 +21,7 @@ from .detector_evaluation import report as detector_report
 from .prompts import D1_VERSION
 from .repository import ArtifactNotFound, RunTraceStore
 
-REPORT_VERSION = "batch-cluster-summary-v0.4"
+REPORT_VERSION = "batch-cluster-summary-v0.5"
 VERSION_FILTERS = {"model_id", "evaluator_version", "evaluation_policy_version", "pricing_version"}
 
 
@@ -786,12 +786,14 @@ def aggregate(runs_dir, batch_id, filters=None):
         for record in report.decisions["records"]:
             record["status"] = "deferred"
             record["reasons"] = sorted(set(record["reasons"] + deferrals))
+    report.provenance["evaluation_source"] = "original_saved_evaluation"
+    report.provenance["report_sha256"] = digest(report.model_dump(mode="json"))
     return report
 
 
 def report_csv(report):
     stream = io.StringIO(newline="")
-    writer = csv.DictWriter(stream, fieldnames=["batch_id", "report_version", "evaluation_snapshot_sha256", "filters", "code_commit",
+    writer = csv.DictWriter(stream, fieldnames=["batch_id", "report_version", "report_sha256", "evaluation_source", "evaluation_snapshot_sha256", "filters", "code_commit",
         "execution_scope", "configuration_sha256", "calculation_implementation_sha256", "group_id", "source_id", "dataset_version", "corpus_version",
         "evaluator_version", "evaluation_policy_version", "pricing_version", "condition_id", "condition", "run_ids", "scenario",
         "language", "split", "ablation_variant", "goal_kind", "model_id", "metric", "value", "numerator", "denominator", "family_count", "unique_case_count", "repeat_count", "evaluated_count", "excluded_count", "ci95_low", "ci95_high", "excluded"])
@@ -799,6 +801,8 @@ def report_csv(report):
     for group in report.groups:
         for name, metric in group["metrics"].items():
             writer.writerow({"batch_id": report.batch_id, "report_version": report.report_version,
+                "report_sha256": report.provenance.get("report_sha256"),
+                "evaluation_source": report.provenance.get("evaluation_source", "original_saved_evaluation"),
                 "filters": json.dumps(report.filters.model_dump(exclude_none=True), sort_keys=True),
                 "code_commit": report.provenance["code_commit"], "configuration_sha256": digest(report.provenance["configuration_hashes"]),
                 "execution_scope": report.provenance["execution_settings"]["execution_scope"],
@@ -821,5 +825,6 @@ def export_report(report, output):
     atomic_json(output / "report.json", report.model_dump(mode="json"))
     (output / "metrics.csv").write_text(report_csv(report), encoding="utf-8-sig", newline="")
     atomic_json(output / "decision-record.json", {"batch_id": report.batch_id,
+                "report_version": report.report_version, "report_sha256": report.provenance.get("report_sha256"),
                 "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
                 "provenance": report.provenance, "filters": report.filters.model_dump(mode="json"), **report.decisions})
