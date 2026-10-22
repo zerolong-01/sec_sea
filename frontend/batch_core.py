@@ -339,7 +339,7 @@ def research_csv_report_error(content, report):
             seen.add(identity)
             if (any(row[k] != report[k] for k in ("batch_id", "report_version", "report_sha256",
                     "evaluation_source", "evaluation_version", "evaluation_snapshot_sha256")) or
-                    json.loads(row["filters"]) != clean_filters(report["filters"]) or
+                    json.loads(row["filters"]) != {k: v for k, v in report["filters"].items() if v is not None} or
                     json.loads(row["counts"]) != report["counts"] or
                     json.loads(row["capabilities"]) != report["capabilities"] or
                     json.loads(row["source_files"]) != report["provenance"]["source_files"] or

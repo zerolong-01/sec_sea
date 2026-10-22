@@ -53,17 +53,19 @@ class ResearchExportIntegrityTests(unittest.TestCase):
             self.assertIsNone(batch_core.research_csv_report_error(research_csv(report).encode(), report.model_dump(mode="json")))
 
     def test_empty_selection_keeps_filter_report_identity_and_unsupported_dimensions(self):
-        report = research_report(QUOTE, ResearchFilters(language="en"))
-        rows = list(csv.DictReader(io.StringIO(research_csv(report))))
-        self.assertEqual(len(rows), 1)
-        row = rows[0]
-        self.assertEqual(row["row_kind"], "report_metadata")
-        self.assertEqual(row["report_sha256"], report.report_sha256)
-        self.assertEqual(json.loads(row["filters"])["language"], "en")
-        self.assertEqual(json.loads(row["counts"]), report.counts)
-        self.assertEqual(json.loads(row["capabilities"]), report.capabilities)
-        self.assertTrue(all(c["value"] is None for c in json.loads(row["capabilities"]).values()))
-        self.assertIsNone(batch_core.research_csv_report_error(research_csv(report).encode("utf-8-sig"), report.model_dump(mode="json")))
+        for selected in ({"language": "en"}, {"condition_id": ""}):
+            with self.subTest(selected=selected):
+                report = research_report(QUOTE, ResearchFilters(**selected))
+                rows = list(csv.DictReader(io.StringIO(research_csv(report))))
+                self.assertEqual(len(rows), 1)
+                row = rows[0]
+                self.assertEqual(row["row_kind"], "report_metadata")
+                self.assertEqual(row["report_sha256"], report.report_sha256)
+                self.assertTrue(selected.items() <= json.loads(row["filters"]).items())
+                self.assertEqual(json.loads(row["counts"]), report.counts)
+                self.assertEqual(json.loads(row["capabilities"]), report.capabilities)
+                self.assertTrue(all(c["value"] is None for c in json.loads(row["capabilities"]).values()))
+                self.assertIsNone(batch_core.research_csv_report_error(research_csv(report).encode("utf-8-sig"), report.model_dump(mode="json")))
 
     def test_consumer_rejects_missing_duplicate_or_changed_gold_rows_and_stale_identity(self):
         report = research_report(QUOTE)
