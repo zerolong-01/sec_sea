@@ -25,6 +25,11 @@ inventory도 완료 smoke·최초 실패·clean checkout·탐색 index의 공개
   `runs/week4-hardening-v0.2/d2-input-package/`. 공개 계약 예시는 [v0.2](examples/week4/v0.2/README.md)다.
 - 새 커밋의 Ubuntu/Windows CI는 해당 정확한 head에서 확인한다. 아래 이전 CI 기록과 구별한다.
 
+후속 최초 CI `2d346f1`의 Ubuntu는 통과했으나 Windows에서는 추가 테스트 4개의 JSON 읽기가
+기본 cp1252를 사용해 실패했다([실행 기록](https://github.com/zerolong-01/sec_sea/actions/runs/39728858509)).
+해당 테스트의 텍스트 인코딩을 UTF-8로 명시했다. 기본 로케일 US-ASCII·UTF-8 mode=0에서
+집중 검증 23개가 통과했으며 수정 후보의 두 OS CI도 확인한다.
+
 이 보완은 방어 동작·과거 평가·통계 정책을 바꾸거나 모델을 새로 호출하지 않는다.
 과거648 원시 부재·A/C 사람 인수 대기는 아래와 같이 유지한다.
 

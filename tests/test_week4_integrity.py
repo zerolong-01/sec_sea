@@ -91,10 +91,10 @@ class ResearchExportIntegrityTests(unittest.TestCase):
 
     def test_v1_samples_remain_readable_and_new_schema_accepts_both_versions(self):
         archived = ROOT / "docs/examples/week4"
-        report = ResearchReport.model_validate_json((archived / "research-report.example.json").read_text())
+        report = ResearchReport.model_validate_json((archived / "research-report.example.json").read_text(encoding="utf-8"))
         self.assertEqual(report.report_version, "week4-public-overlay-v0.1")
         self.assertEqual(research_csv(report).replace("\r\n", "\n"), (archived / "research-metrics.example.csv").read_text(encoding="utf-8-sig"))
-        schema = json.loads((ROOT / "contracts/research-overlay-v0.2.schema.json").read_text())
+        schema = json.loads((ROOT / "contracts/research-overlay-v0.2.schema.json").read_text(encoding="utf-8"))
         validator = Draft202012Validator(schema)
         validator.validate(report.model_dump(mode="json"))
         validator.validate(research_report(QUOTE).model_dump(mode="json"))
@@ -141,7 +141,7 @@ class TransferredPackageTests(unittest.TestCase):
 
     def test_rehashed_decision_cannot_claim_an_approved_recommendation(self):
         path = self.package / "decision-record.json"
-        decision = json.loads(path.read_text())
+        decision = json.loads(path.read_text(encoding="utf-8"))
         decision["status"] = "recommended_candidate"
         atomic_json(path, decision)
         self.rehash_artifact("decision-record.json")
@@ -150,7 +150,7 @@ class TransferredPackageTests(unittest.TestCase):
 
     def test_rehashed_report_still_needs_its_canonical_report_hash(self):
         path = self.package / "report.json"
-        report = json.loads(path.read_text())
+        report = json.loads(path.read_text(encoding="utf-8"))
         report["counts"]["members"] = 999
         atomic_json(path, report)
         self.rehash_artifact("report.json")
@@ -168,7 +168,7 @@ class TransferredPackageTests(unittest.TestCase):
 
     def test_unexpected_files_and_external_artifact_paths_are_rejected(self):
         unexpected = self.package / ".env"
-        unexpected.write_text("private sentinel")
+        unexpected.write_text("private sentinel", encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "unexpected files"):
             verify_package(self.package)
         unexpected.unlink()
@@ -195,7 +195,7 @@ class TransferredPackageTests(unittest.TestCase):
                                ("research-metrics.example.csv", "metrics.csv"),
                                ("decision-record.example.json", "decision-record.json")):
             shutil.copyfile(old / source, self.package / target)
-        report = json.loads((self.package / "report.json").read_text())
+        report = json.loads((self.package / "report.json").read_text(encoding="utf-8"))
         for key in ("batch_id", "report_version", "report_sha256", "evaluation_snapshot_sha256", "filters"):
             self.manifest[key] = report[key]
         self.manifest["version"] = "week4-reproduction-package-v0.1"
@@ -218,7 +218,7 @@ class TransferredPackageTests(unittest.TestCase):
 
 class ReleaseEvidenceTests(unittest.TestCase):
     def test_completed_smoke_and_audit_index_are_pinned_too(self):
-        index = json.loads((ROOT / "configs/week4-release-index.v0.1.json").read_text())
+        index = json.loads((ROOT / "configs/week4-release-index.v0.1.json").read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             expected = release_evidence(ROOT, index)
