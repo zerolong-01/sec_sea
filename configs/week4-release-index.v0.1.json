@@ -89,7 +89,24 @@
     "private_dir": "runs/attack-audit-2026-10-20",
     "planned": 942,
     "access": "private_transfer_required_not_in_git",
-    "cohort": "exploratory_do_not_pool_with_regular_dev"
+    "cohort": "exploratory_do_not_pool_with_regular_dev",
+    "source_index": {
+      "path": "docs/examples/week4/exploratory-audit-index.v0.1.json",
+      "sha256": "acfca385b153689375dfe80b0ac5476dd203c65b9f5aee7b534332ba96d01f91"
+    },
+    "public_evidence_commit": "79a4a26e03dc496329fbab6fe79a430cfcbe1f47",
+    "execution_code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+    "batch_ids": [
+      "batch-12f3f8027f48",
+      "batch-6450c31dd6a7",
+      "batch-61fce8219c05",
+      "batch-eaab44a61d26",
+      "batch-e06e60d7eb4b",
+      "batch-2e60822e5d58"
+    ],
+    "public_report_git_blob_sha256": "430faabc361b4ebb7847a7e43e3531191513a58b4a2e0d5c6b00495e39326a85",
+    "original_declared_report_sha256": "da5281474cc1f891497ad0b43f4540b42dfb19119ecc284b053d8f54958600f4",
+    "hash_note": "original JSON hashes refer to CRLF worktree bytes; Git LF hashes are pinned separately"
   },
   "acceptance": {
     "human_ABC": "pending",

@@ -62,6 +62,13 @@ archive에는 `.env`·API 키·보호값 대응표를 동봉하지 않고 필요
 raw는 원출력·관측 사용량 독립 대조와 완전한 보존 감사에 필요하고 ledger는 원manifest에 있다.
 본문을 공개할 필요는 없다. 전체 저장 파일의 SHA를 재생 전후 대조하고 과거 export도 보존한다.
 
+별도 탐색 #41의 [출처 index](examples/week4/exploratory-audit-index.v0.1.json)는 공개 근거 커밋
+`79a4a26`의 6개 batch ID와 보고서·검증·성공 근거 SHA를 연결한다. 원래 artifact manifest의
+JSON hash 8개는 Windows CRLF 작업 파일 기준이며 Git blob의 LF 바이트 hash와 다르다.
+CRLF로 복원하면 선언 hash와 일치함을 확인했고, 원래 hash와 Git hash를 모두 보존했다.
+이는 공개 자료의 바이트 대조이며 private 원시 943시도를 새로 검증한 기록이 아니다.
+전달받은 원시 archive는 줄바꿈을 변환하지 않고 원래 hash로 확인한다.
+
 ## API/UI 기동과 외부 모델 없는 통합 검증
 
 ```bash

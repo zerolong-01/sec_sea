@@ -16,3 +16,6 @@ python -m scripts.week4_package replay batch-8fb19849d67c --source overlay --out
 
 `real-attempt-status.v0.1.json`은 별도 실제 API 시도의 인증 실패 기록이다. 1실패·107대기와
 비용 미확인(null), 원본 불변·모델 호출0 조회/export 검증을 구분한다. API 키·원시 응답은 포함하지 않는다.
+
+`exploratory-audit-index.v0.1.json`은 #41의 별도 탐색 출처다. 6batch ID·고정 공개 근거 커밋과
+파일별 Git LF/원래 CRLF hash를 함께 제공한다. regular dev 및 새로운 smoke 결과와 합산하지 않는다.

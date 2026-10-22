@@ -7,6 +7,7 @@
 새 가상환경에서 백엔드 114개 회귀와 두 앱 통합 검증을 수행했다.
 [깨끗한 checkout 증빙](examples/week4/clean-checkout-verification.v0.1.json)은 이 기술 재현 결과이며
 다른 사람의 공동 인수 기록을 대신하지 않는다.
+해당 checkout의 전체 root 회귀는 215개가 통과했다. 이전 214개 기록 이후 추가된 CSV 출처 검증을 포함한다.
 
 ## 구현·검증 범위
 
@@ -24,6 +25,7 @@
 | 예산/재개 | 2앱×3종×6조건×3반복=108 fixture 실행, 7건 중단 후 재개·중복호출0 |
 | 공개 마스킹 | 공개 멤버에는 typed consensus/ID/hash만 포함, 원문·자유문 votes/reason 제외 |
 | C 소비 경계 | shared-variables/schema/sample/문서 제공, 기존 다운로드가 v0.5 report hash·평가 출처 대조 |
+| 별도 탐색 inventory | #41의 공개 근거 9파일 hash 대조, 6batch ID 확보, JSON 8파일의 CRLF/LF hash 차이 확인·별도 기록 |
 
 최초 sandbox에서는 로컬 socket bind가 거부돼 fixture가 실패했다. 허용된 로컬 실행으로 다시 검증했다.
 최초 인수 실행에서는 기존 서비스 실행기가 원본 디렉터리에 기동 로그를 추가하는 것을 발견했다.

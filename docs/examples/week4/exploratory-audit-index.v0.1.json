@@ -1,0 +1,141 @@
+{
+  "artifact_type": "exploratory_audit_source_index",
+  "public_evidence_commit": "79a4a26e03dc496329fbab6fe79a430cfcbe1f47",
+  "execution_code_commit": "3d01fea8f3932a6f3cfbc58d93467465cc5c292e",
+  "scope": "separate exploratory audit; never pooled with regular repeated dev batches",
+  "planned_runs": 942,
+  "attempts": 943,
+  "repeats": 1,
+  "human_gold": false,
+  "holdout_executed": false,
+  "source_files": {
+    "generation-review.json": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/generation-review.json",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/generation-review.json",
+      "git_blob_sha256": "13211c6ad7e42fcc41e7ed1c56da2b6404c1aa500a8519eb8f6dae9e8665cfe2",
+      "original_declared_sha256": "e09e92c7ccef799b42aa5bc21e3713de10217d78483cf082bb709d2a2fbe6113",
+      "original_hash_byte_convention": "CRLF_worktree_reconstructed_and_verified"
+    },
+    "historical-successes.json": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/historical-successes.json",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/historical-successes.json",
+      "git_blob_sha256": "9b6c8cc28c19bed8d8a1a3568743ce544a0bb2c8560dea477f585ddcdad58823",
+      "original_declared_sha256": "8fe802300b563b17079ba992dd9013402d0a2d3e204c6046a437b93b91704dd4",
+      "original_hash_byte_convention": "CRLF_worktree_reconstructed_and_verified"
+    },
+    "independent-verification.json": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/independent-verification.json",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/independent-verification.json",
+      "git_blob_sha256": "c5d076b9bb6c57b6fb606bac07364da94a3e60b0ad571a899f36496580ad2eb4",
+      "original_declared_sha256": "0cfa1c98de32284fb1ceec3a09ca7f895521e6566f1e7b3cda974e43b64969a6",
+      "original_hash_byte_convention": "CRLF_worktree_reconstructed_and_verified"
+    },
+    "publication-redaction.json": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/publication-redaction.json",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/publication-redaction.json",
+      "git_blob_sha256": "02f25ac4ff1dfb9def3a34053510dbd1c83d4024dc661f134c0831666cbb349d",
+      "original_declared_sha256": "74ab74dd162d8756b59935ee8bbb51b425f76be7d8c6666831d1c1aeed0a889c",
+      "original_hash_byte_convention": "CRLF_worktree_reconstructed_and_verified"
+    },
+    "README.md": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/README.md",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/README.md",
+      "git_blob_sha256": "3105bfe789f6ac5bdb86901571f97dc6d67dc3180f07fccdb393ec274d2e444e",
+      "original_declared_sha256": "3105bfe789f6ac5bdb86901571f97dc6d67dc3180f07fccdb393ec274d2e444e",
+      "original_hash_byte_convention": "git_blob_LF"
+    },
+    "refresh-proof.json": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/refresh-proof.json",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/refresh-proof.json",
+      "git_blob_sha256": "bd2f426f8b8357839d887a755f8204aefd71b13565bc89f03eeead3f5ab01c92",
+      "original_declared_sha256": "aef13489aabb9b0073a068e38c0d63a4db87786da63e1a42c6a391c0eb1adebc",
+      "original_hash_byte_convention": "CRLF_worktree_reconstructed_and_verified"
+    },
+    "successes.json": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/successes.json",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/successes.json",
+      "git_blob_sha256": "f920f5b5ead60bc2066763324cee287bff812ba4b2db8f5a598de0480e3f588a",
+      "original_declared_sha256": "ab182be70fb1e3d3706052bf2c71f5f8f74ae8b07c78e37b9b05361678d0957e",
+      "original_hash_byte_convention": "CRLF_worktree_reconstructed_and_verified"
+    },
+    "successful-inputs.json": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/successful-inputs.json",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/successful-inputs.json",
+      "git_blob_sha256": "91f777affee0e2133097c5cbde8342a9b1b5288fdf49aeee80ce126daddbd995",
+      "original_declared_sha256": "16c45068df27da425194674fb0f7479fca244a5a32d259d56959471a6c0ea7d3",
+      "original_hash_byte_convention": "CRLF_worktree_reconstructed_and_verified"
+    },
+    "summary.json": {
+      "repository_path": "docs/examples/attack-audit-2026-10-20/summary.json",
+      "url": "https://github.com/zerolong-01/sec_sea/blob/79a4a26e03dc496329fbab6fe79a430cfcbe1f47/docs/examples/attack-audit-2026-10-20/summary.json",
+      "git_blob_sha256": "430faabc361b4ebb7847a7e43e3531191513a58b4a2e0d5c6b00495e39326a85",
+      "original_declared_sha256": "da5281474cc1f891497ad0b43f4540b42dfb19119ecc284b053d8f54958600f4",
+      "original_hash_byte_convention": "CRLF_worktree_reconstructed_and_verified"
+    }
+  },
+  "source_batches": [
+    {
+      "source_id": "legacy",
+      "batch_id": "batch-12f3f8027f48",
+      "planned_runs": 216,
+      "status_counts": {
+        "completed": 162,
+        "blocked": 54
+      },
+      "runs_dir_relative_to_audit_execution_output": "executions/legacy/runs"
+    },
+    {
+      "source_id": "week2",
+      "batch_id": "batch-6450c31dd6a7",
+      "planned_runs": 450,
+      "status_counts": {
+        "completed": 391,
+        "blocked": 59
+      },
+      "runs_dir_relative_to_audit_execution_output": "executions/week2/runs"
+    },
+    {
+      "source_id": "translations",
+      "batch_id": "batch-61fce8219c05",
+      "planned_runs": 18,
+      "status_counts": {
+        "blocked": 3,
+        "completed": 15
+      },
+      "runs_dir_relative_to_audit_execution_output": "executions/translations/runs"
+    },
+    {
+      "source_id": "week3",
+      "batch_id": "batch-eaab44a61d26",
+      "planned_runs": 90,
+      "status_counts": {
+        "completed": 69,
+        "blocked": 21
+      },
+      "runs_dir_relative_to_audit_execution_output": "executions/week3/runs"
+    },
+    {
+      "source_id": "email",
+      "batch_id": "batch-e06e60d7eb4b",
+      "planned_runs": 18,
+      "status_counts": {
+        "blocked": 3,
+        "completed": 15
+      },
+      "runs_dir_relative_to_audit_execution_output": "executions/email/runs"
+    },
+    {
+      "source_id": "ai",
+      "batch_id": "batch-2e60822e5d58",
+      "planned_runs": 150,
+      "status_counts": {
+        "blocked": 60,
+        "completed": 90
+      },
+      "runs_dir_relative_to_audit_execution_output": "executions/ai/runs"
+    }
+  ],
+  "private_evidence": "runs/attack-audit-2026-10-20/ is not included in Git; actual archive root/layout must be supplied by its owner",
+  "verification_scope": "published git blobs and original declared byte hashes reconciled; private raw runs were not available for new verification",
+  "model_calls": 0
+}
