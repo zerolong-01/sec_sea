@@ -303,9 +303,10 @@ def csv_report_error(content, report):
             if not isinstance(filters, dict):
                 return invalid
             if (any(row[key] != value for key, value in expected.items()) or
-                    clean_filters(filters) != clean_filters(report.get("filters"))):
+                    {k: v for k, v in filters.items() if v is not None} !=
+                    {k: v for k, v in (report.get("filters") or {}).items() if v is not None}):
                 return api_error(code="SNAPSHOT_MISMATCH", message="화면과 CSV의 평가 스냅샷·버전 또는 필터가 다릅니다. 배치 목록을 새로고침한 뒤 CSV를 다시 준비하세요.")
-        # 빈 리포트에는 내보내기를 제공하지 않으므로 헤더만 있는 응답도 유효하지 않다.
+        # v0.6의 빈 선택도 metadata 행에 출처를 남긴다. 헤더만으로는 검증할 수 없다.
         return None if found else invalid
     except (UnicodeError, csv.Error, ValueError, TypeError):
         return invalid

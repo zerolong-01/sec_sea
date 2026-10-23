@@ -35,6 +35,9 @@ def verify(output, fixture_output=None):
     require(original["artifacts"] == repeated["artifacts"], "Repeated saved exports differ")
     verified_original = verify_package(output / "original-first", expected_report_sha256=original["report_sha256"],
                                       expected_source_inventory_sha256=original["source_inventory_sha256"])
+    empty_filters = {"condition_id": ""}
+    empty_original = replay(batch_id, output / "original-empty", runs_dir=runs, filters=empty_filters)
+    verify_package(output / "original-empty", expected_report_sha256=empty_original["report_sha256"])
     public_id = "batch-8fb19849d67c"
     filters = {"condition_id": "none", "goal_kind": "secret_leak", "ablation_variant": "original"}
     overlay = replay(public_id, output / "overlay", source="overlay", filters=filters)
@@ -44,6 +47,21 @@ def verify(output, fixture_output=None):
         report = requests.post(f"{url}/api/v1/batches/{batch_id}/report", json={}, timeout=30)
         require(report.status_code == 200, "Original HTTP report failed")
         require(report.json() == json.loads((output / "original-first/report.json").read_text(encoding="utf-8")), "Original API/artifact mismatch")
+        original_csv = requests.post(f"{url}/api/v1/batches/{batch_id}/export.csv", json={}, timeout=30)
+        require(original_csv.status_code == 200 and original_csv.headers.get("X-Report-SHA256") ==
+                original["report_sha256"], "Original CSV report identity header lost")
+        require(original_csv.text.replace("\r\n", "\n") ==
+                (output / "original-first/metrics.csv").read_text(encoding="utf-8-sig"), "Original CSV/API artifact mismatch")
+        empty_original_csv = requests.post(f"{url}/api/v1/batches/{batch_id}/export.csv", json=empty_filters, timeout=30)
+        empty_original_rows = list(csv.DictReader(io.StringIO(empty_original_csv.text)))
+        require(empty_original_csv.status_code == 200 and len(empty_original_rows) == 1,
+                "Empty original export lost metadata")
+        empty_metadata = empty_original_rows[0]
+        require(empty_metadata["metric"] == "report_metadata" and
+                empty_metadata["report_sha256"] == empty_original["report_sha256"] and
+                json.loads(empty_metadata["filters"]) == empty_filters and
+                all(empty_metadata[key] == "" for key in ("value", "numerator", "denominator")),
+                "Empty original export changed identity, filters or unknown values")
         base = f"{url}/api/v1/batches/{public_id}"
         response = requests.post(base + "/research/report", json=filters, timeout=30)
         require(response.status_code == 200 and response.json() == expected.model_dump(mode="json"), "Research HTTP report differs")
@@ -74,7 +92,8 @@ def verify(output, fixture_output=None):
               "transferred_original_package_verified": verified_original["status"] == "passed",
               "transferred_overlay_package_verified": verified_overlay["status"] == "passed",
               "target_gold_csv_complete": True, "empty_csv_identity_preserved": True,
-              "replay_model_calls": original["model_calls"] + repeated["model_calls"] + overlay["model_calls"],
+              "empty_original_csv_identity_preserved": True, "original_csv_headers_match": True,
+              "replay_model_calls": original["model_calls"] + repeated["model_calls"] + overlay["model_calls"] + empty_original["model_calls"],
               "saved_private_real_replay": "not_performed_this_command_checks_fixture_and_public_overlay_only",
               "real_model_rerun": "not_performed", "human_ABC_acceptance": "pending",
               "holdout_executed": False, "candidate_remote_CI": "check_this_commit_on_ubuntu_and_windows"}

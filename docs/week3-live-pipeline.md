@@ -25,6 +25,30 @@ python -m scripts.week3_prepare --output runs/week3-prepared
 python -m scripts.mvp check --data-dir runs/week3-prepared/rag
 ```
 
+## 실행 세션·저장 조회·동시 실행
+
+통합 파이프라인·생성 파일럿·탐지 진단은 한 배치 실행 세션에서 진행하고 첫 실패/uncertain 항목에서
+다음 항목 실행을 멈춘다. 호출 전 예약·개별 시도·시간/호출/토큰/금액 상한·명시적 재시도 계약은 유지한다.
+세션마다 입력 전체를 검증하고 소스별 repository를 공유한다. 데이터 조회는 실제 파일 바이트를 확인하며,
+동결 해시와 다르면 변경된 데이터를 모델에 전달하기 전에 실패한다. 일반 API의 데이터 변경도 파일 크기·mtime과 무관하게 반영한다.
+호출자에게는 복사한 모델을 반환하므로 반환값 수정으로 인덱스가 바뀌지 않는다.
+
+같은 `--output`은 준비·배치 생성·checkpoint·실행·검증 전체를 `.pipeline.lock`의 OS 잠금으로 보호한다.
+다른 프로세스의 동시 요청은 `PIPELINE_ALREADY_RUNNING`으로 거부한다. 프로세스가 종료되면 잠금은 해제되며,
+잠금 파일이 남아 있다는 이유로 실행을 막거나 예전 유료 요청을 재전송하지 않는다.
+`--report-only`도 같은 출력의 파생 파일을 갱신하므로 이 잠금을 사용한다.
+
+공개 trace의 마스킹은 `backend/app/privacy.py`가 담당한다. 한 공개 응답의 모든 필드가 같은 보호값 패턴을
+공유하며, 요청을 넘나드는 보호값/인증정보 캐시는 만들지 않는다. 원문·혼합 URL·공백·Base64 변형과
+문맥을 포함한 Base64 검사는 유지한다. 과거 검토 스크립트의 `RunService._mask_value` 진입점도 지원한다.
+
+기존 export를 재사용할 때는 JSON·CSV·판정 기록을 현재 보고서와 대조한다. 불일치는
+`EXPORT_ARTIFACT_MISMATCH`로 거부하며 손상 파일을 덮어쓰지 않는다. 파이프라인·파일럿·탐지 진단의
+재검증 중 예외나 중단이 발생하면 `verification-report.json`을 실패 상태로 기록한다. 원래 trace·ledger·checkpoint는
+유지하며, 검증에 실패한 현재 요청을 과거의 성공 기록으로 표시하지 않는다.
+
+전후 성능 수치와 증거는 [4주차 검증 기록](week4-backend-acceptance.md)에 정리한다.
+
 ## 데이터와 판정 경계
 
 - 원본 계약 검사를 위해 기존 RAG 84건을 새 버전으로 복제하고 파생 15건을 추가한다. 실제 배치는 명시적으로 새 15건만 선택한다. 기존 대표 manifest와 holdout는 실행 대상으로 확장하지 않는다.
@@ -39,6 +63,7 @@ python -m scripts.mvp check --data-dir runs/week3-prepared/rag
 
 | 경로 | 내용 |
 | --- | --- |
+| `.pipeline.lock` | 출력 전체의 OS 잠금. 파일 존재는 실행 중이라는 증거가 아님 |
 | `prepared/preparation.json` | 원본/생성 파일 SHA256, 파생 관계·라벨 초안·측정 목표. 합성 목표값이 있으므로 로컬 전용 |
 | `prepared/rag`, `prepared/email` | API·UI가 읽는 실행 데이터와 manifest |
 | `prepared/evaluation-rules.json`, `prepared/batch-spec.json` | 버전별 평가 규칙과 고정 선택·구성·예산 |
@@ -73,7 +98,7 @@ python -m scripts.mvp serve --pipeline-output runs/week3-live-2026-10-20
 추가 통합 회귀는 다음 명령으로 실행한다.
 
 ```text
-python -m unittest tests.test_pipeline_services tests.test_week3_offline_replay tests.test_verify_batch_ui
+python -m unittest tests.test_pipeline_state tests.test_pipeline_services tests.test_week3_offline_replay tests.test_verify_batch_ui
 ```
 
 키와 현재 설정이 없는 재검증, 손상된 snapshot 거절, 대시보드의 실제 v0.3 API/CSV/trace 경로와 서버 환경 연결을 검사한다. [프론트엔드 통합 기록](../frontend/verification/week3-pipeline-integration.md)을 참고한다.

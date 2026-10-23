@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import http.client
 import time
 import urllib.error
 import urllib.request
@@ -95,7 +96,9 @@ class OpenAICompatibleProvider:
             if not isinstance(text, str):
                 raise TypeError("Response content must be text")
             call.response_text = text
-            usage = body.get("usage") or {}
+            usage = body.get("usage")
+            if usage is None:
+                usage = {}
             if not isinstance(usage, dict):
                 raise TypeError("Usage must be an object")
             for key in ("prompt_tokens", "completion_tokens"):
@@ -104,7 +107,7 @@ class OpenAICompatibleProvider:
             call.input_tokens, call.output_tokens = usage.get("prompt_tokens"), usage.get("completion_tokens")
             call.usage_source = (UsageSource.OBSERVED if call.input_tokens is not None and call.output_tokens is not None
                                  else UsageSource.UNKNOWN)
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        except (urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException) as exc:
             if isinstance(exc, urllib.error.HTTPError):
                 call.http_status = exc.code
                 exc.close()

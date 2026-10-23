@@ -9,7 +9,9 @@
 
 4주차 #47은 [별도 연구 overlay v0.2 계약](../contracts/research-overlay-v0.2.schema.json)과
 [조회·export 소비 명세](week4-backend.md)를 추가한다. 원래 실행/Batch 계약은 유지하고,
-집계 v0.5의 provenance/CSV/decision record에 report hash·평가 출처를 연결한다.
+집계 v0.6의 provenance/CSV/decision record에 report hash·평가 출처를 연결한다.
+원평가의 빈 CSV는 `metric=report_metadata` 1행으로 필터·출처를 보존하고 지표 숫자는 비운다.
+원평가 CSV 응답 헤더에도 report hash·버전·평가 출처를 제공하며 v0.5 저장 패키지는 계속 읽는다.
 경로 생산자와 소비자는 shared-variables의 `research_api_paths`를 사용한다.
 연구 CSV의 `research_export`는 metadata·출력 지표·target gold 건수 행을 구별한다.
 빈 필터 결과에도 metadata 행이 남으며 원래 KPI에 overlay를 자동 적용하지 않는다.

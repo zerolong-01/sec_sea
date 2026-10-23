@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, status, Response
+from typing import Annotated
+
+from fastapi import FastAPI, HTTPException, Path, status, Response
+from fastapi.responses import JSONResponse
 
 from .batch import BatchRunner
 from .batch_analysis import aggregate, report_csv
@@ -9,7 +12,7 @@ from .research_models import ResearchFilters, ResearchReport
 from .research_reports import available_sources, research_report, research_csv
 
 from .config import Settings
-from .models import (DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
+from .models import (RUN_ID_PATTERN, DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
                      EvaluationUpdate, RunRequest, RunResponse, RunTrace)
 from .repository import (
     ArtifactNotFound,
@@ -25,6 +28,8 @@ from .service import (
     build_provider,
 )
 from .shared_variables import BATCH_API_PATHS, RESEARCH_API_PATHS, KEYS, SchemaVersion
+
+RunId = Annotated[str, Path(pattern=RUN_ID_PATTERN)]
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -42,6 +47,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Batch execution stays in the local CLI. These read/review endpoints never
     # cause a paid model invocation, including report/export refreshes.
     batch_runner = BatchRunner(settings)
+
+    @app.exception_handler(ArtifactValidationError)
+    async def invalid_trace(_request, _exc):
+        # Never include raw validation input, private evidence or file contents
+        # in an error response. The same rule applies to review/report routes.
+        return JSONResponse(status_code=500, content={"detail": {"code": "INVALID_TRACE"}})
 
     @app.get(RESEARCH_API_PATHS["SOURCES"])
     def evaluation_sources(batch_id: str):
@@ -75,7 +86,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get(BATCH_API_PATHS["LIST"], response_model=list[BatchSummary])
     def list_batches():
-        return batch_runner.store.list()
+        try:
+            return batch_runner.store.list()
+        except (ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_BATCH_LIST"}) from exc
 
     @app.get(BATCH_API_PATHS["GET"], response_model=BatchSummary)
     def get_batch(batch_id: str):
@@ -83,7 +97,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return batch_runner.store.summary(batch_runner.store.get(batch_id))
         except ArtifactNotFound as exc:
             raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
-        except ValueError as exc:
+        except (ValueError, OSError, KeyError) as exc:
             raise HTTPException(422, detail={"code": "INVALID_BATCH"}) from exc
 
     @app.post(BATCH_API_PATHS["REPORT"], response_model=BatchReport)
@@ -92,16 +106,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return aggregate(settings.runs_dir, batch_id, filters)
         except ArtifactNotFound as exc:
             raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
-        except (ValueError, OSError) as exc:
+        except (ValueError, OSError, ArtifactValidationError) as exc:
             raise HTTPException(422, detail={"code": "INVALID_BATCH_REPORT"}) from exc
 
     @app.post(BATCH_API_PATHS["CSV"])
     def batch_csv(batch_id: str, filters: BatchFilters):
-        return Response(report_csv(batch_report(batch_id, filters)), media_type="text/csv; charset=utf-8",
-                        headers={"Content-Disposition": 'attachment; filename="batch-metrics.csv"'})
+        report = batch_report(batch_id, filters)
+        return Response(report_csv(report), media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": 'attachment; filename="batch-metrics.csv"',
+                                 "X-Report-SHA256": report.provenance["report_sha256"],
+                                 "X-Report-Version": report.report_version,
+                                 "X-Evaluation-Source": report.provenance["evaluation_source"]})
 
     @app.put(BATCH_API_PATHS["REVIEW"])
-    def batch_review(batch_id: str, run_id: str, review: BatchReview):
+    def batch_review(batch_id: str, run_id: RunId, review: BatchReview):
         try:
             return batch_runner.review(batch_id, run_id, review)
         except ArtifactNotFound as exc:
@@ -118,7 +136,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         }
 
     @app.put("/api/v1/runs/{run_id}/detector-gold", response_model=RunTrace)
-    def put_detector_gold(run_id: str, update: DetectorGoldUpdate) -> RunTrace:
+    def put_detector_gold(run_id: RunId, update: DetectorGoldUpdate) -> RunTrace:
         try:
             return service.update_detector_gold(run_id, update)
         except ArtifactNotFound as exc:
@@ -134,7 +152,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
 
     @app.put("/api/v1/runs/{run_id}/evaluation", response_model=RunTrace)
-    def put_evaluation(run_id: str, update: EvaluationUpdate) -> RunTrace:
+    def put_evaluation(run_id: RunId, update: EvaluationUpdate) -> RunTrace:
         try:
             return service.update_evaluation(run_id, update)
         except ArtifactNotFound as exc:
@@ -182,7 +200,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     @app.get("/api/v1/runs/{run_id}", response_model=RunTrace)
-    def get_run(run_id: str) -> RunTrace:
+    def get_run(run_id: RunId) -> RunTrace:
         try:
             return service.get_trace(run_id)
         except ArtifactNotFound as exc:

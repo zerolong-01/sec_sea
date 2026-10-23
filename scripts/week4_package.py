@@ -17,7 +17,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from backend.app.batch import digest, file_hash
-from backend.app.batch_analysis import aggregate, export_report, report_csv
+from backend.app.batch_analysis import aggregate, batch_decision_record, export_report, report_csv
 from backend.app.batch_models import BatchFilters, BatchReport
 from backend.app.repository import RepositoryError
 from backend.app.research_models import ResearchFilters, ResearchReport
@@ -89,6 +89,8 @@ def inventory(*, root=ROOT):
 
 
 def decision_record(report, source):
+    if source == "original":
+        return batch_decision_record(report)
     result = {"batch_id": report.batch_id, "report_version": report.report_version,
               "report_sha256": report.report_sha256 if source == "overlay" else report.provenance["report_sha256"],
               "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
@@ -137,7 +139,7 @@ def verify_package(package, *, expected_report_sha256=None, expected_source_inve
         expected_csv = research_csv(report)
     elif source == "original":
         report = BatchReport.model_validate(payload)
-        if report.report_version != "batch-cluster-summary-v0.5":
+        if report.report_version not in ("batch-cluster-summary-v0.5", "batch-cluster-summary-v0.6"):
             raise ValueError("Unsupported original report rendering version")
         calculated = {**payload, "provenance": dict(payload["provenance"])}
         report_hash = calculated["provenance"].pop("report_sha256")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import http.client
 import urllib.error
 import unittest
 from unittest.mock import patch
@@ -70,6 +71,45 @@ class OpenAICompatibleProviderTests(unittest.TestCase):
 
         with self.assertRaises(ProviderError):
             self.provider.generate("What does the document say?", [self.document])
+
+
+    @patch("app.providers.urllib.request.urlopen")
+    def test_truncated_http_response_retains_failed_call_and_settles_once(self, mocked_urlopen):
+        from unittest.mock import Mock
+        response = FakeHttpResponse({})
+        response.read = Mock(side_effect=http.client.IncompleteRead(b"partial", 20))
+        mocked_urlopen.return_value = response
+        observer = Mock()
+        observer.before.return_value = {"index": 0, "timeout_seconds": 5}
+        self.provider.observer = observer
+        with self.assertRaises(ProviderError) as caught:
+            self.provider.generate("Question", [self.document])
+        self.assertEqual(caught.exception.code, "MODEL_PROVIDER_ERROR")
+        self.assertEqual(caught.exception.call.http_status, 200)
+        self.assertIsNone(caught.exception.call.input_tokens)
+        observer.after.assert_called_once_with(observer.before.return_value, caught.exception.call)
+        self.assertEqual(mocked_urlopen.call_count, 1)
+
+    @patch("app.providers.urllib.request.urlopen")
+    def test_falsey_malformed_usage_is_not_treated_as_missing(self, mocked_urlopen):
+        for usage in ([], "", 0, False):
+            with self.subTest(usage=usage):
+                mocked_urlopen.return_value = FakeHttpResponse({
+                    "choices": [{"message": {"content": "Answer"}}], "usage": usage})
+                with self.assertRaises(ProviderError) as caught:
+                    self.provider.generate("Question", [self.document])
+                self.assertEqual(caught.exception.code, "INVALID_MODEL_RESPONSE")
+
+    @patch("app.providers.urllib.request.urlopen")
+    def test_null_or_missing_usage_remains_unknown(self, mocked_urlopen):
+        for extra in ({}, {"usage": None}):
+            with self.subTest(extra=extra):
+                mocked_urlopen.return_value = FakeHttpResponse({
+                    "choices": [{"message": {"content": "Answer"}}], **extra})
+                result = self.provider.generate("Question", [self.document])
+                self.assertEqual(result.text, "Answer")
+                self.assertIsNone(result.input_tokens)
+                self.assertIsNone(result.output_tokens)
 
 
 if __name__ == "__main__":

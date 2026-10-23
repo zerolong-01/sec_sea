@@ -103,10 +103,16 @@ python -m scripts.verify_week4 --output runs/week4-acceptance-v1
 ## 평가 출처를 명시하는 계약
 
 기존 `/report`는 저장된 원래 평가와 명시적인 기존 annotation을 읽는다.
-`batch-cluster-summary-v0.5`는 산식을 유지하면서 provenance/CSV/decision record에
+`batch-cluster-summary-v0.6`는 산식을 유지하면서 provenance/CSV/decision record에
 `evaluation_source=original_saved_evaluation`과 `report_sha256`을 추가했다.
 report hash는 `provenance.report_sha256` 자체를 제외한 canonical JSON의 SHA256이다.
-과거 v0.4 export는 보존한다.
+과거 v0.4/v0.5 export는 보존한다.
+
+원평가 CSV도 일치하는 그룹이 없으면 `metric=report_metadata` 1행에 batch/report/hash·평가 출처·
+필터·코드/설정 출처를 남긴다. 이 행의 지표 값·분자·분모는 빈 칸이며 0이 아니다.
+그룹이 있는 CSV의 열·지표 행 구조는 유지한다. 명시적 빈 문자열 필터와 필터 생략을 구별한다.
+`/export.csv` 응답에는 연구 CSV와 같은 `X-Report-SHA256`, `X-Report-Version`,
+`X-Evaluation-Source` 헤더가 있다. v0.5 렌더러는 기존 빈 CSV까지 그대로 읽는다.
 
 연구용은 별도 [ResearchReport v0.2 schema](../contracts/research-overlay-v0.2.schema.json)를 사용한다.
 평가판은 `week3-two-ai-review-v0.1`을 유지하고 보고/CSV 형식만 `week4-public-overlay-v0.2`로 올렸다.
@@ -205,7 +211,7 @@ python -m scripts.week4_package verify runs/week4-overlay-v1 --expected-report-s
 검사는 정확한 4개 파일 목록, 세 artifact의 바이트 SHA, report의 canonical SHA, manifest/JSON/CSV/decision record의
 식별·필터·값 일치를 확인한다. 누락·추가 파일·symlink·불일치 또는 검사 중 변경은 오류다.
 새 replay는 게시 전 이 검사도 실행한다. 구형 package v0.1·연구 report v0.1도 읽으며 덮어쓰지 않는다.
-기존 원평가 report 렌더러는 v0.5를 지원하고 알 수 없는 형식은 거부한다.
+기존 원평가 report 렌더러는 v0.5/v0.6을 지원하고 알 수 없는 형식은 거부한다.
 검증 성공은 패키지 내부 일치의 증거다. 원본이 없는 검사이므로 `source_evidence_revalidated=false`이고,
 자체 manifest만으로 발신자나 과거 원시 자료를 인증하지 않는다. 제한 전송 후 원본 재생성은 앞의 별도 절차를 따른다.
 
@@ -251,6 +257,18 @@ PowerShell은 `$env:PRICING_FILE = "configs/pricing-openai-2026-10-20.json"`과
 의미 판정이 없는 원래 평가 항목은 미평가로 남긴다. smoke 통과를 최종 성능·사람 검토·인수로 바꾸지 않는다.
 
 ## 검증과 남은 인계
+
+실행/저장 오류 처리도 다음과 같이 검증한다.
+
+- 모델 HTTP 응답이 중간에 끊기거나 프로토콜 오류가 나면 실패 호출·HTTP 상태·미확인 사용량/비용을
+  trace와 예약 ledger에 남긴다. 자동 재호출하지 않는다. `usage` 생략/null은 미확인으로,
+  배열·문자열·숫자·bool은 잘못된 응답으로 구분한다.
+- 저장소와 HTTP 경로는 실행 trace의 ID 형식을 검사한다. 파일의 run ID와 파일명,
+  manifest의 batch ID와 디렉터리 이름이 다르면 조회·집계에 사용하지 않는다.
+- trace/raw/평가 이력의 잘못된 UTF-8·JSON·자료형과 실행 파일 symlink를 거부한다.
+  손상된 기존 파일을 덮어쓰지 않는다. 실행 조회·검토·탐지 보고는 `500/INVALID_TRACE`,
+  배치 목록·조회·집계는 `422`와 `INVALID_BATCH_LIST`/`INVALID_BATCH`/`INVALID_BATCH_REPORT`를
+  반환하며 원시 본문은 노출하지 않는다.
 
 실제 API 대표108개는 응답90·차단18로 완료됐으며, 최초401 실패 이력을 포함한109시도·199호출을 보존했다.
 [완료 요약](examples/week4/real-reproduction.v0.3.json)에 관측 사용량 기반 추정 비용 USD0.041702와

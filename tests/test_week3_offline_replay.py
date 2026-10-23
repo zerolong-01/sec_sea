@@ -102,6 +102,18 @@ class Week3OfflineReplayTests(unittest.TestCase):
                 verify(self.output, report_only=True)
         calls.assert_not_called()
 
+    def test_existing_export_corruption_fails_refresh_and_invalidates_old_success_record(self):
+        previous = json.loads((self.output / "verification-report.json").read_text(encoding="utf-8"))
+        path = self.output / previous["export_path"] / "metrics.csv"
+        path.write_text("safe-looking-but-wrong-metrics\n", encoding="utf-8")
+        with patch.object(OpenAICompatibleProvider, "complete", side_effect=AssertionError("model called")) as calls:
+            with self.assertRaisesRegex(VerificationError, "EXPORT_ARTIFACT_MISMATCH"):
+                verify(self.output, report_only=True)
+        calls.assert_not_called()
+        result = json.loads((self.output / "verification-report.json").read_text(encoding="utf-8"))
+        self.assertEqual((result["status"], result["error"]), ("failed", "EXPORT_ARTIFACT_MISMATCH"))
+        self.assertEqual(path.read_text(encoding="utf-8"), "safe-looking-but-wrong-metrics\n")
+
     def test_legacy_projection_matches_http_with_no_current_rules_and_preserves_original_evidence(self):
         # Simulate a pre-privacy-fix display field, not a new model observation.
         # The frozen rule is deliberately absent from current reader settings.

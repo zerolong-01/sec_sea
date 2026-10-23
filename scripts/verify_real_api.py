@@ -22,28 +22,20 @@ from jsonschema import Draft202012Validator
 
 from backend.app.accounting import Accounting
 from backend.app.batch import BatchRunner, digest, public_settings
-from backend.app.batch_analysis import aggregate, export_report, report_csv
+from backend.app.batch_analysis import aggregate, export_report, report_csv, validate_report_export
 from backend.app.batch_models import BatchSpec
 from backend.app.config import Settings
 from backend.app.models import ModelCall
 from backend.app.providers import OpenAICompatibleProvider
 from backend.app.storage import atomic_json
 from scripts.data_contract import CANARY_PATTERN, ROOT, load_bundle
+from scripts.pipeline_state import VerificationError, locked_output, record_verification_failure, require
 from scripts.week2_data import prepare
 
 PILOT_VERSION = "real-api-dev-pilot-v0.1"
 MODEL_ID = "gpt-4.1-mini-2025-04-14"
 ENDPOINT = "https://api.openai.com/v1"
 DEFAULT_OUTPUT = ROOT / "runs/real-api-2026-10-20"
-
-
-class VerificationError(Exception):
-    """Only an identifier written by this module may reach CLI output."""
-
-
-def require(condition, code):
-    if not condition:
-        raise VerificationError(code)
 
 
 def assert_safe(value, credentials=(), *, allow_canary=False):
@@ -98,7 +90,7 @@ def _spec(email):
 def _state(output, runner):
     marker = output / "pilot.json"
     if not marker.exists():
-        require(not output.exists() or not any(output.iterdir()), "OUTPUT_DIRECTORY_NOT_OWNED")
+        require(not output.exists() or not any(p.name != ".pipeline.lock" for p in output.iterdir()), "OUTPUT_DIRECTORY_NOT_OWNED")
         output.mkdir(parents=True, exist_ok=True)
         atomic_json(marker, {"version": PILOT_VERSION})
     require(json.loads(marker.read_text(encoding="utf-8")).get("version") == PILOT_VERSION,
@@ -134,21 +126,11 @@ def _state(output, runner):
 
 
 def _execute(runner, state, max_items):
-    processed = 0
-    while any(entry["status"] in ("pending", "running") for entry in state.plan):
-        # No automatic retry after provider errors or an uncertain paid call.
-        # One item per step stops an invalid key/model from causing 108 errors.
-        if any(entry["status"] in ("failed", "uncertain") for entry in state.plan):
-            break
-        if max_items is not None and processed >= max_items:
-            break
-        before = sum(len(e["attempts"]) for e in state.plan)
-        state = runner.execute(state.batch_id, max_items=1)
-        after = sum(len(e["attempts"]) for e in state.plan)
-        processed += after - before
-        if after == before or state.reason not in (None, "operator_item_limit"):
-            break
-    return state
+    # One writer session validates the frozen batch once and stops before the
+    # next item on any failed/uncertain attempt. No automatic paid retry.
+    if not any(e["status"] in ("pending", "running") for e in state.plan):
+        return state
+    return runner.execute(state.batch_id, max_items=max_items, stop_on_error=True)
 
 
 def _inspect(runner, state, credentials, *, output=None):
@@ -157,14 +139,19 @@ def _inspect(runner, state, credentials, *, output=None):
     samples = Path(output or runner.settings.runs_dir.parent) / "public-samples"
     samples.mkdir(parents=True, exist_ok=True)
     reader = public_trace_reader(runner.settings)
+    calls_by_attempt = {}
+    for call in state.calls:
+        calls_by_attempt.setdefault(call["attempt_id"], []).append(call)
+    accounting = Accounting(runner.store.folder(state.batch_id) / "pricing.snapshot")
     projection_hashes = []
+    selected_samples = {}
     http_statuses, errors = Counter(), Counter()
     observed_calls = 0
     reconciled_attempts, untraced_attempts, known_attempts = set(), set(), set()
     for entry in state.plan:
         for attempt in entry["attempts"]:
             known_attempts.add(attempt["attempt_id"])
-            ledger = [call for call in state.calls if call["attempt_id"] == attempt["attempt_id"]]
+            ledger = calls_by_attempt.get(attempt["attempt_id"], [])
             if attempt["status"] == "cancelled_before_transport":
                 require(not ledger, "CANCELLED_ATTEMPT_HAS_LEDGER_CALLS")
                 continue
@@ -189,7 +176,6 @@ def _inspect(runner, state, credentials, *, output=None):
             reconciled_attempts.add(attempt["attempt_id"])
             require(len(calls) == len(ledger) == trace.metrics.model_call_count == len(trace.model_calls),
                     "CALL_COUNT_MISMATCH")
-            accounting = Accounting(runner.store.folder(state.batch_id) / "pricing.snapshot")
             for call, saved, public_call in zip(calls, ledger, trace.model_calls):
                 observed_calls += 1
                 http_statuses[str(call.get("http_status"))] += 1
@@ -217,13 +203,15 @@ def _inspect(runner, state, credentials, *, output=None):
                 "stored_trace_model_sha256": digest(stored), "public_projection_sha256": digest(public),
                 "projection_changed": stored != public})
             # One sample per condition/case; repeated evidence stays in runs/.
-            atomic_json(samples / f"{entry['source_id']}-{entry['case_id']}-{entry['condition_id']}.json",
-                        {"request": public["request"], "trace": public})
+            selected_samples[f"{entry['source_id']}-{entry['case_id']}-{entry['condition_id']}.json"] = {
+                "request": public["request"], "trace": public}
     require(all(call["attempt_id"] in known_attempts for call in state.calls), "ORPHAN_LEDGER_CALL")
     traced_calls = [call for call in state.calls if call["attempt_id"] in reconciled_attempts]
     untraced_calls = [call for call in state.calls if call["attempt_id"] in untraced_attempts]
     require(observed_calls == len(traced_calls) and len(traced_calls) + len(untraced_calls) == len(state.calls),
             "UNRECONCILED_LEDGER_CALLS")
+    for name, sample in selected_samples.items():
+        atomic_json(samples / name, sample)
     committed = [call["committed_usd"] for call in untraced_calls]
     return {"reconciled_calls": observed_calls, "unreconciled_calls": len(untraced_calls),
             "unreconciled_settled_calls": sum(call["status"] == "settled" for call in untraced_calls),
@@ -285,9 +273,10 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
     output = Path(output).resolve()
     settings = _settings(output, settings, allow_fixture)
     credentials = tuple({secret for secret in (settings.model_api_key, settings.d2_api_key) if secret})
-    runner = BatchRunner(settings)
-    state = _execute(runner, _state(output, runner), max_items)
-    return verify_saved(runner, state, credentials, output)
+    with locked_output(output, "pilot.json"), record_verification_failure(output, PILOT_VERSION, marker="pilot.json"):
+        runner = BatchRunner(settings)
+        state = _execute(runner, _state(output, runner), max_items)
+        return verify_saved(runner, state, credentials, output)
 
 
 def verify_saved(runner, state, credentials, output, *, version=PILOT_VERSION, extra=None, save_result=True):
@@ -308,6 +297,10 @@ def verify_saved(runner, state, credentials, output, *, version=PILOT_VERSION, e
     export = output / "exports" / report.report_version / digest(report.model_dump(mode="json"))
     if not export.exists():
         export_report(report, export)
+    try:
+        validate_report_export(report, export)
+    except (ValueError, OSError) as exc:
+        raise VerificationError("EXPORT_ARTIFACT_MISMATCH") from exc
     for path in export.iterdir():
         assert_safe(path.read_text(encoding="utf-8-sig"), credentials)
     atomic_json(output / "batch-summary.real.json", summary)

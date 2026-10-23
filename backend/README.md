@@ -4,6 +4,10 @@
 [4주차 백엔드 가이드](../docs/week4-backend.md), 검증 상태는 [기술 인수 기록](../docs/week4-backend-acceptance.md)을 참고한다.
 연구 CSV v0.2는 target gold 건수와 빈 선택 metadata를 포함하며, 전달받은 결과 패키지는 저장소 루트에서
 `python -m scripts.week4_package verify PATH`로 원본 store·API 키 없이 검사한다.
+원평가 집계 v0.6은 빈 CSV에도 보고서 해시·필터를 남기며 기존 v0.5 패키지도 검증한다.
+저장 파일의 ID 불일치·손상과 끊긴 모델 응답 처리도 [4주차 가이드](../docs/week4-backend.md)에 정리했다.
+마스킹 패턴 재사용·바이트 기준 데이터 인덱스·배치 실행 세션과 파이프라인 출력 잠금은
+[통합 파이프라인 가이드](../docs/week3-live-pipeline.md#실행-세션저장-조회동시-실행)를 따른다.
 
 고정 코퍼스 RAG와 합성 이메일을 공통 실행 엔진으로 실행한다. 2주차 #22의 D1/D2, 적용 위치, 평가 저장, 계측을 지원한다. 실제 모델 설정은 로컬 `.env`/환경 변수에서 읽으며 HTTP fixture 검증과 실제 모델 성능 검증을 구분한다.
 
