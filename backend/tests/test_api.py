@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
+from app.repository import RunTraceStore
 
 
 class ApiTests(unittest.TestCase):
@@ -187,7 +188,7 @@ class ApiTests(unittest.TestCase):
                 self.assertEqual(response.json()["detail"]["code"], "INVALID_TRACE")
         self.assertEqual(path.read_bytes(), b"\xff")
 
-    @patch("app.providers.urllib.request.urlopen")
+    @patch("app.providers.MODEL_HTTP.open")
     def test_truncated_provider_response_persists_retrievable_failed_trace(self, mocked_urlopen):
         from dataclasses import replace
         from unittest.mock import MagicMock
@@ -208,6 +209,25 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(trace["metrics"]["model_call_count"], 1)
         self.assertIsNone(trace["metrics"]["estimated_cost_usd"])
         self.assertEqual(mocked_urlopen.call_count, 1)
+
+    def test_independent_app_cannot_overwrite_a_review_in_progress_and_can_retry(self):
+        trace = self.client.post("/api/v1/runs", json=self.request_body()).json()["trace"]
+        run_id = trace["run_id"]
+        other = TestClient(create_app(self.settings))
+        path = self.settings.runs_dir / f"{run_id}.trace.json"
+        before = path.read_bytes()
+        update = {**trace["evaluation"], "reviewer": "second-worker", "reason": "independent review"}
+        url = f"/api/v1/runs/{run_id}/evaluation"
+        with RunTraceStore(self.settings.runs_dir).review_lock(run_id):
+            result = other.put(url, json=update)
+            self.assertEqual(result.status_code, 409, result.text)
+            self.assertEqual(result.json(), {"detail": {"code": "CONCURRENT_WRITE"}})
+            self.assertEqual(other.get(f"/api/v1/runs/{run_id}").status_code, 200)
+        self.assertEqual(path.read_bytes(), before)
+        self.assertFalse((self.settings.runs_dir / f"{run_id}.evaluation.json").exists())
+        self.assertEqual(other.put(url, json=update).status_code, 200)
+        self.assertEqual(self.client.get(f"/api/v1/runs/{run_id}").json()["evaluation"]["reviewer"],
+                         "second-worker")
 
 
 if __name__ == "__main__":

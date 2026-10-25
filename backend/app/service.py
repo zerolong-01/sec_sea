@@ -73,7 +73,8 @@ class RunService:
         self._base_prompt_version = settings.system_prompt_version + (
             "+policy-sha256:" + hashlib.sha256(self._common_policy.encode()).hexdigest()
             if self._common_policy else "")
-        # The local single-worker API may receive concurrent review updates.
+        # Serialize threads in this service; the store lock also coordinates
+        # other services/processes using the same run directory.
         self._review_lock = threading.RLock()
 
     @contextmanager
@@ -402,7 +403,7 @@ class RunService:
         return self._public_trace(trace, rules=self._rules_for_trace(trace))
 
     def update_evaluation(self, run_id: str, update: EvaluationUpdate) -> RunTrace:
-        with self._review_lock:
+        with self._review_lock, self._trace_store.review_lock(run_id):
             return self._update_evaluation(run_id, update)
 
     def _update_evaluation(self, run_id: str, update: EvaluationUpdate) -> RunTrace:
@@ -419,7 +420,7 @@ class RunService:
         return trace
 
     def update_detector_gold(self, run_id: str, update: DetectorGoldUpdate) -> RunTrace:
-        with self._review_lock:
+        with self._review_lock, self._trace_store.review_lock(run_id):
             return self._update_detector_gold(run_id, update)
 
     def _update_detector_gold(self, run_id: str, update: DetectorGoldUpdate) -> RunTrace:

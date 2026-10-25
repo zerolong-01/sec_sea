@@ -12,6 +12,7 @@ from .research_models import ResearchFilters, ResearchReport
 from .research_reports import available_sources, research_report, research_csv
 
 from .config import Settings
+from .storage import ConcurrentWriterError
 from .models import (RUN_ID_PATTERN, DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
                      EvaluationUpdate, RunRequest, RunResponse, RunTrace)
 from .repository import (
@@ -47,6 +48,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Batch execution stays in the local CLI. These read/review endpoints never
     # cause a paid model invocation, including report/export refreshes.
     batch_runner = BatchRunner(settings)
+
+    @app.exception_handler(ConcurrentWriterError)
+    async def concurrent_writer(_request, _exc):
+        return JSONResponse(status_code=409, content={"detail": {"code": "CONCURRENT_WRITE"}})
 
     @app.exception_handler(ArtifactValidationError)
     async def invalid_trace(_request, _exc):
@@ -124,6 +129,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return batch_runner.review(batch_id, run_id, review)
         except ArtifactNotFound as exc:
             raise HTTPException(404, detail={"code": "BATCH_OR_RUN_NOT_FOUND"}) from exc
+        except ConcurrentWriterError:
+            raise
         except ValueError as exc:
             raise HTTPException(422, detail={"code": "INVALID_BATCH_REVIEW"}) from exc
 
@@ -141,6 +148,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return service.update_detector_gold(run_id, update)
         except ArtifactNotFound as exc:
             raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
+        except ConcurrentWriterError:
+            raise
         except ValueError as exc:
             raise HTTPException(status_code=422, detail={"code": "INVALID_DETECTOR_GOLD", "message": str(exc)}) from exc
 
@@ -157,6 +166,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return service.update_evaluation(run_id, update)
         except ArtifactNotFound as exc:
             raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
+        except ConcurrentWriterError:
+            raise
         except ValueError as exc:
             raise HTTPException(status_code=422, detail={"code": "INVALID_EVALUATION", "message": str(exc)}) from exc
 

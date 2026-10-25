@@ -8,6 +8,8 @@
 저장 파일의 ID 불일치·손상과 끊긴 모델 응답 처리도 [4주차 가이드](../docs/week4-backend.md)에 정리했다.
 마스킹 패턴 재사용·바이트 기준 데이터 인덱스·배치 실행 세션과 파이프라인 출력 잠금은
 [통합 파이프라인 가이드](../docs/week3-live-pipeline.md#실행-세션저장-조회동시-실행)를 따른다.
+평가 동시 갱신, 모델 HTTP 통신 제한, 대용량 해시 계산의 추가 개선은
+[백엔드 업그레이드 기록](../docs/backend-upgrades-2026-10-25.md)에 정리했다.
 
 고정 코퍼스 RAG와 합성 이메일을 공통 실행 엔진으로 실행한다. 2주차 #22의 D1/D2, 적용 위치, 평가 저장, 계측을 지원한다. 실제 모델 설정은 로컬 `.env`/환경 변수에서 읽으며 HTTP fixture 검증과 실제 모델 성능 검증을 구분한다.
 
@@ -53,6 +55,14 @@ python -m uvicorn app.main:app --reload
 | POST | /api/v1/detector-report | 조건별 대상 FNR/FPR·분모·오류/검토/미등록 수량 |
 
 `runs/{run_id}.trace.json`은 API/UI와 동일한 표시용 결과다. `.raw.json`, `.evaluation.json`, `.detector-gold.json`은 로컬 원시 근거·판정 이력이며 API로 제공하지 않는다. `runs/`는 Git에서 제외한다.
+
+평가와 detector gold 갱신은 실행 ID별 OS 파일 잠금으로 보호한다. 다른 서비스/프로세스가
+같은 실행을 갱신 중이면 `409`와 `detail.code=CONCURRENT_WRITE`를 반환한다. 갱신이 끝난 뒤
+요청을 다시 보낼 수 있다. 잠금 파일은 남아 있어도 프로세스 종료 시 OS 잠금이 해제된다.
+
+모델 생성·탐지 HTTP 요청은 리다이렉트를 따르지 않으며 `MODEL_REDIRECT_BLOCKED`로 기록한다.
+응답 본문은 최대 4 MiB이고 초과 시 `MODEL_RESPONSE_TOO_LARGE`로 기록한다. 두 오류 모두
+추가 모델 호출 없이 실패한 호출을 보존하며 사용량을 모르면 비용은 미확인 상태를 유지한다.
 
 #26 보완으로 score/reason 모순 검토·차단/격리 정책, 선택적인 제공자 JSON schema 형식, 생성 없이 검사하는 detector_only 실행을 지원한다. gold는 실행 후 등록하며 D2에 전달하지 않는다. 일관된 의미적 오판은 남는 위험이며 실제 모델 성능은 별도 검증이 필요하다. API 본문·산식과 인계는 [2주차 문서](../docs/week2-backend.md#26-탐지기-자체의-판정-우회-보완), [마스킹 샘플](../docs/examples/d2-security/README.md)을 참고한다.
 

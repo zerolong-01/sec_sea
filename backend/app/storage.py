@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import time
 import uuid
@@ -16,6 +17,8 @@ class ConcurrentWriterError(ValueError):
 @contextmanager
 def exclusive_file_lock(path: Path):
     """Nonblocking OS lock, released on crash; the file is never a PID lease."""
+    if path.is_symlink():
+        raise ValueError("Writer lock must not be a symlink")
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a+b") as handle:
         handle.seek(0, os.SEEK_END)
@@ -40,6 +43,17 @@ def exclusive_file_lock(path: Path):
                 msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
             else:
                 fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def file_sha256(path: Path) -> str:
+    """Hash artifacts using a fixed one MiB input buffer."""
+    checksum = hashlib.sha256()
+    buffer = bytearray(1024 * 1024)
+    view = memoryview(buffer)
+    with path.open("rb") as handle:
+        while size := handle.readinto(buffer):
+            checksum.update(view[:size])
+    return checksum.hexdigest()
 
 
 def atomic_json(path: Path, value):

@@ -10,7 +10,7 @@ from pydantic import BaseModel, ValidationError
 
 from .models import RUN_ID_PATTERN, CaseRecord, RunTrace, SourceDocument
 from .shared_variables import CANONICAL_PATHS, KEYS
-from .storage import atomic_json
+from .storage import atomic_json, exclusive_file_lock
 
 ModelType = TypeVar("ModelType", bound=BaseModel)
 
@@ -164,16 +164,21 @@ class RunTraceStore:
         return self._save_json(target, raw_log)
 
     def save_evaluation(self, run_id: str, evaluation: dict) -> Path:
-        target = self._path(run_id, "evaluation")
-        history = self._read_json(target, list, [])
-        history.append(evaluation)
-        return self._save_json(target, history)
+        return self._append_history(run_id, "evaluation", evaluation)
 
     def save_detector_gold(self, run_id: str, evaluation: dict) -> Path:
-        target = self._path(run_id, "detector-gold")
-        history = self._read_json(target, list, [])
-        history.append(evaluation)
-        return self._save_json(target, history)
+        return self._append_history(run_id, "detector-gold", evaluation)
+
+    def review_lock(self, run_id: str):
+        """Own the entire read/update/save across independent API workers."""
+        return exclusive_file_lock(self._path(run_id, "review").with_suffix(".lock"))
+
+    def _append_history(self, run_id: str, kind: str, evaluation: dict) -> Path:
+        target = self._path(run_id, kind)
+        with exclusive_file_lock(target.with_suffix(".lock")):
+            history = self._read_json(target, list, [])
+            history.append(evaluation)
+            return self._save_json(target, history)
 
     def get_raw(self, run_id: str) -> dict:
         payload = self._read_json(self._path(run_id, "raw"), dict, {})

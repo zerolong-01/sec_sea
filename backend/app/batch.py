@@ -23,7 +23,7 @@ from .models import RunRequest
 from .repository import ArtifactNotFound, ExperimentRepository, RunTraceStore
 from .service import RunService, TraceableRunError, build_provider
 from .shared_variables import BATCH_VERSION
-from .storage import atomic_json, exclusive_file_lock
+from .storage import atomic_json, exclusive_file_lock, file_sha256
 
 
 def digest(value) -> str:
@@ -32,7 +32,7 @@ def digest(value) -> str:
 
 
 def file_hash(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return file_sha256(path)
 
 
 def implementation_hash(root):
