@@ -168,6 +168,17 @@ class ApiTests(unittest.TestCase):
                 response = self.client.get("/api/v1/runs/" + run_id)
                 self.assertEqual(response.status_code, 422)
 
+    def test_private_raw_filename_is_rejected_before_reading_trace_or_private_file(self):
+        trace = self.client.post("/api/v1/runs", json=self.request_body()).json()["trace"]
+        path = self.settings.runs_dir / f"{trace['run_id']}.raw.json"
+        original = path.read_bytes()
+        with patch("app.service.RunService.get_trace", side_effect=AssertionError("Invalid ID reached storage")):
+            response = self.client.get(f"/api/v1/runs/{trace['run_id']}.raw.json")
+        self.assertEqual(response.status_code, 422)
+        self.assertNotIn("provider_output", response.text)
+        self.assertNotIn("user_input", response.text)
+        self.assertEqual(path.read_bytes(), original)
+
     def test_corrupt_trace_returns_controlled_errors_on_reads_and_reviews(self):
         result = self.client.post("/api/v1/runs", json=self.request_body()).json()
         run_id = result["run_id"]

@@ -289,7 +289,8 @@ class BatchRunner:
             state = self.store.get(batch_id)
             # A pilot resumes only after the operator resolves earlier failures.
             # Returning untouched also preserves the original interruption reason.
-            if stop_on_error and any(e["status"] in ("failed", "uncertain") for e in state.plan):
+            if stop_on_error and any(e["status"] == "failed" and not retry_failed or
+                                     e["status"] == "uncertain" and not retry_uncertain for e in state.plan):
                 return state
             if public_settings(self.settings) != state.execution_settings:
                 raise ValueError("Execution settings changed; create a new batch")

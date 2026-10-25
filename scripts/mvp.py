@@ -191,7 +191,12 @@ def verify_http(bundle, backend_url: str, runs_dir: Path) -> list[dict]:
         try:
             HTTP.open(f"{backend_url}/api/v1/runs/{trace['run_id']}.raw.json", timeout=5)
         except urllib.error.HTTPError as exc:
-            require(exc.code == 404, "raw artifact route must return 404")
+            # Typed run IDs reject filenames before storage access (422).
+            # Older servers resolve this unsupported route as not found (404).
+            require(exc.code in (404, 422), "raw artifact route must be unavailable")
+            rejected = exc.read().decode("utf-8")
+            require(not CANARY_PATTERN.search(rejected), "raw artifact rejection leaked a canary")
+            exc.close()
         else:
             raise RuntimeError("Raw log was exposed through the trace API.")
         results.append({"case_id": item.case_id, "label": item.label, "run_id": trace["run_id"], "status": trace["status"], "retrieval": trace["retrieval"], "evaluation": trace["evaluation"]})
