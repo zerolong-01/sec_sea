@@ -85,6 +85,20 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(again.model_dump(mode="json"), saved)
         self.assertEqual(len(self.fixture.requests), 1)
 
+    def test_explicit_failed_retry_with_stop_on_error_resumes_and_keeps_prior_cost(self):
+        self.fixture.fail_detection = "http_error"
+        state = self.runner.execute(self.runner.create(self.one("D2")).batch_id, stop_on_error=True)
+        self.assertEqual(state.status, "partial")
+        self.assertEqual(len(self.fixture.requests), 1)
+        self.fixture.fail_detection = None
+        resumed = self.runner.execute(state.batch_id, retry_failed=True, stop_on_error=True)
+        self.assertEqual(resumed.status, "completed")
+        self.assertEqual(len(resumed.plan[0]["attempts"]), 2)
+        self.assertGreater(len(self.fixture.requests), 1)
+        self.assertEqual(resumed.calls[0]["error_code"], "MODEL_PROVIDER_ERROR")
+        self.assertIsNone(resumed.calls[0]["known_cost_usd"])
+        self.assertIsNotNone(resumed.calls[0]["reserved_tokens"])
+
     def test_repository_is_reused_and_mid_execution_frozen_data_change_stops_transport(self):
         state = self.runner.create(self.one(repeats=3))
         path = self.runner.store.folder(state.batch_id) / "inputs/rag/cases.v0.1.jsonl"

@@ -13,6 +13,9 @@ from .research_reports import available_sources, research_report, research_csv
 
 from .config import Settings
 from .storage import ConcurrentWriterError
+from .experiment_models import EXPERIMENT_ID_PATTERN, ExperimentReport, ExperimentSummary
+from .experiment_reports import experiment_csv, experiment_report
+from .experiments import ExperimentRunner
 from .models import (RUN_ID_PATTERN, DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
                      EvaluationUpdate, RunRequest, RunResponse, RunTrace)
 from .repository import (
@@ -31,6 +34,7 @@ from .service import (
 from .shared_variables import BATCH_API_PATHS, RESEARCH_API_PATHS, KEYS, SchemaVersion
 
 RunId = Annotated[str, Path(pattern=RUN_ID_PATTERN)]
+ExperimentId = Annotated[str, Path(pattern=EXPERIMENT_ID_PATTERN)]
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -48,6 +52,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Batch execution stays in the local CLI. These read/review endpoints never
     # cause a paid model invocation, including report/export refreshes.
     batch_runner = BatchRunner(settings)
+    experiment_runner = ExperimentRunner(settings.project_root, settings.runs_dir)
 
     @app.exception_handler(ConcurrentWriterError)
     async def concurrent_writer(_request, _exc):
@@ -58,6 +63,34 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Never include raw validation input, private evidence or file contents
         # in an error response. The same rule applies to review/report routes.
         return JSONResponse(status_code=500, content={"detail": {"code": "INVALID_TRACE"}})
+
+    def read_experiment(action):
+        try:
+            return action()
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "MODEL_EXPERIMENT_NOT_FOUND"}) from exc
+        except (RepositoryError, ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_MODEL_EXPERIMENT"}) from exc
+
+    @app.get("/api/v1/model-experiments", response_model=list[ExperimentSummary])
+    def list_model_experiments():
+        return read_experiment(experiment_runner.list)
+
+    @app.get("/api/v1/model-experiments/{experiment_id}", response_model=ExperimentSummary)
+    def get_model_experiment(experiment_id: ExperimentId):
+        return read_experiment(lambda: experiment_runner.summary(experiment_id))
+
+    @app.post("/api/v1/model-experiments/{experiment_id}/report", response_model=ExperimentReport)
+    def get_model_experiment_report(experiment_id: ExperimentId, filters: BatchFilters):
+        return read_experiment(lambda: experiment_report(settings.project_root, settings.runs_dir,
+                                                        experiment_id, filters))
+
+    @app.post("/api/v1/model-experiments/{experiment_id}/export.csv")
+    def get_model_experiment_csv(experiment_id: ExperimentId, filters: BatchFilters):
+        report = get_model_experiment_report(experiment_id, filters)
+        return Response(experiment_csv(report), media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="model-comparison.csv"',
+                     "X-Report-SHA256": report.report_sha256, "X-Report-Version": report.report_version})
 
     @app.get(RESEARCH_API_PATHS["SOURCES"])
     def evaluation_sources(batch_id: str):

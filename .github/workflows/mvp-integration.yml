@@ -54,3 +54,5 @@ jobs:
         run: python -m scripts.verify_week3 --output runs/week3-batch-ci
       - name: Week-four immutable replay and evaluation-source contract
         run: python -m scripts.verify_week4 --fixture-output runs/week3-batch-ci --output runs/week4-package-ci
+      - name: Multi-model CLI, shared detector and comparison exports
+        run: python -m scripts.verify_model_experiment --output runs/model-experiment-ci

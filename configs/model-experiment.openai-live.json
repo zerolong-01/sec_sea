@@ -1,0 +1,218 @@
+{
+  "schema_version": "0.1",
+  "artifact_type": "model_experiment_spec",
+  "models": [
+    {
+      "model_key": "mini",
+      "provider": "openai_compatible",
+      "model_id": "gpt-4.1-mini-2025-04-14",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env": "MODEL_API_KEY"
+    },
+    {
+      "model_key": "full",
+      "provider": "openai_compatible",
+      "model_id": "gpt-4.1-2025-04-14",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env": "MODEL_API_KEY"
+    }
+  ],
+  "detector": {
+    "model_key": "shared-mini",
+    "provider": "openai_compatible",
+    "model_id": "gpt-4.1-mini-2025-04-14",
+    "base_url": "https://api.openai.com/v1",
+    "api_key_env": "D2_API_KEY"
+  },
+  "batch": {
+    "schema_version": "0.1",
+    "artifact_type": "batch_spec",
+    "sources": [
+      {
+        "source_id": "rag",
+        "data_dir": "data/week2",
+        "split": "dev",
+        "case_ids": [
+          "a006",
+          "b006",
+          "h007"
+        ],
+        "languages": [],
+        "metadata": {
+          "a006": {
+            "family_id": "education",
+            "comparison_pair_id": null,
+            "parent_case_id": null,
+            "ablation_variant": "original",
+            "removed_components": [],
+            "information_available": null,
+            "goal_kind": "secret_leak",
+            "severity": "high"
+          },
+          "b006": {
+            "family_id": "education",
+            "comparison_pair_id": null,
+            "parent_case_id": null,
+            "ablation_variant": "original",
+            "removed_components": [],
+            "information_available": null,
+            "goal_kind": "normal",
+            "severity": "low"
+          },
+          "h007": {
+            "family_id": "security-quotation",
+            "comparison_pair_id": null,
+            "parent_case_id": null,
+            "ablation_variant": "original",
+            "removed_components": [],
+            "information_available": null,
+            "goal_kind": "normal",
+            "severity": "low"
+          }
+        }
+      },
+      {
+        "source_id": "email",
+        "data_dir": "runs/model-live-prepared/email",
+        "split": "dev",
+        "case_ids": [
+          "email-attack-001",
+          "email-benign-001",
+          "email-hard-negative-001"
+        ],
+        "languages": [],
+        "metadata": {
+          "email-attack-001": {
+            "family_id": "meeting",
+            "comparison_pair_id": null,
+            "parent_case_id": null,
+            "ablation_variant": "original",
+            "removed_components": [],
+            "information_available": null,
+            "goal_kind": "secret_leak",
+            "severity": "high"
+          },
+          "email-benign-001": {
+            "family_id": "meeting",
+            "comparison_pair_id": null,
+            "parent_case_id": null,
+            "ablation_variant": "original",
+            "removed_components": [],
+            "information_available": null,
+            "goal_kind": "normal",
+            "severity": "low"
+          },
+          "email-hard-negative-001": {
+            "family_id": "meeting-quotation",
+            "comparison_pair_id": null,
+            "parent_case_id": null,
+            "ablation_variant": "original",
+            "removed_components": [],
+            "information_available": null,
+            "goal_kind": "normal",
+            "severity": "low"
+          }
+        }
+      }
+    ],
+    "conditions": [
+      {
+        "condition_id": "none",
+        "defense_mode": "none",
+        "defense_position": "input_retrieval",
+        "execution_kind": "full_pipeline",
+        "d2_threshold": null,
+        "consistency_policy": null,
+        "comparisons": [
+          "technique"
+        ]
+      },
+      {
+        "condition_id": "D1",
+        "defense_mode": "D1",
+        "defense_position": "input_retrieval",
+        "execution_kind": "full_pipeline",
+        "d2_threshold": null,
+        "consistency_policy": null,
+        "comparisons": [
+          "technique"
+        ]
+      },
+      {
+        "condition_id": "D2-both",
+        "defense_mode": "D2",
+        "defense_position": "input_retrieval",
+        "execution_kind": "full_pipeline",
+        "d2_threshold": null,
+        "consistency_policy": null,
+        "comparisons": [
+          "technique",
+          "position"
+        ]
+      },
+      {
+        "condition_id": "D1-D2",
+        "defense_mode": "D1+D2",
+        "defense_position": "input_retrieval",
+        "execution_kind": "full_pipeline",
+        "d2_threshold": null,
+        "consistency_policy": null,
+        "comparisons": [
+          "technique"
+        ]
+      },
+      {
+        "condition_id": "D2-input",
+        "defense_mode": "D2",
+        "defense_position": "input",
+        "execution_kind": "full_pipeline",
+        "d2_threshold": null,
+        "consistency_policy": null,
+        "comparisons": [
+          "position"
+        ]
+      },
+      {
+        "condition_id": "D2-retrieval",
+        "defense_mode": "D2",
+        "defense_position": "retrieval",
+        "execution_kind": "full_pipeline",
+        "d2_threshold": null,
+        "consistency_policy": null,
+        "comparisons": [
+          "position"
+        ]
+      }
+    ],
+    "repeats": 3,
+    "random_seed": 2026,
+    "budget": {
+      "max_calls": 240,
+      "max_reserved_tokens": 2500000,
+      "max_seconds": 1800.0,
+      "max_usd": 0.48,
+      "unknown_price_policy": "stop",
+      "per_call_input_token_ceiling": 8192
+    },
+    "statistics": {
+      "version": "cluster-bootstrap-v0.1-draft",
+      "status": "draft",
+      "reviewed_by": [],
+      "bootstrap_samples": 1000,
+      "seed": 2026,
+      "minimum_families": 2,
+      "minimum_evaluated_runs": 3
+    },
+    "evaluation_policy_file": "configs/week3-evaluation-policy.json",
+    "common_policy_file": "configs/week3-common-policy.txt",
+    "freeze_hashes": {},
+    "holdout_reviewers": [],
+    "warmup": "none",
+    "cache": "disabled_by_runner_provider_cache_unknown",
+    "concurrency": 1,
+    "seed_support": "order_only_provider_seed_not_requested",
+    "min_call_interval_seconds": 0.1
+  },
+  "pricing_file": "configs/pricing-openai-2026-10-25.json",
+  "evaluation_rules_file": "configs/evaluation-week2.json"
+}
