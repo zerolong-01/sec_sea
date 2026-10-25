@@ -381,5 +381,16 @@
       "value": "detection",
       "label_ko": "인젝션 탐지"
     }
+  },
+  "research_export": {
+    "report_version": "week4-public-overlay-v0.2",
+    "schema_file": "contracts/research-overlay-v0.2.schema.json",
+    "csv_row_kinds": ["report_metadata", "final_output_metric", "target_gold_count"],
+    "csv_fields": ["batch_id", "report_version", "report_sha256", "evaluation_source", "evaluation_version", "evaluation_snapshot_sha256", "filters", "source_files", "research_policy_versions", "human_review", "decision_status", "row_kind", "counts", "capabilities", "group_id", "cohort", "run_ids", "metric", "metric_source", "value", "numerator", "denominator", "selected_count", "excluded", "unique_case_count", "recorded_family_count", "ci95", "coverage_status", "inference_status", "gold_label", "gold_count", "target_observations"]
+  },
+  "research_api_paths": {
+    "SOURCES": "/api/v1/batches/{batch_id}/evaluation-sources",
+    "REPORT": "/api/v1/batches/{batch_id}/research/report",
+    "CSV": "/api/v1/batches/{batch_id}/research/export.csv"
   }
 }

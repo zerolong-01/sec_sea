@@ -2,6 +2,15 @@
 
 > 프롬프트 인젝션 방어의 효과와 부작용을 한 화면에서 비교하는 LLM 보안 백테스팅 플랫폼
 
+4주차 백엔드: [고정 의존성 설치·재현 패키지·평가 버전별 API](docs/week4-backend.md) ·
+[검증/남은 인계](docs/week4-backend-acceptance.md).
+연구 CSV v0.2는 출력 지표·target gold·빈 결과 식별 정보를 보존하며, 전달 패키지는
+`python -m scripts.week4_package verify PATH`로 키 없이 검사할 수 있습니다.
+
+[여러 모델 일괄 실험](docs/multi-model-experiments.md)은 같은 데이터·방어 조건을 여러 모델에 실행하고
+보안성·정상 기능·비용을 비교합니다. `python -m scripts.verify_model_experiment --output runs/model-comparison-demo`로
+실제 API 키 없이 전체 흐름을 검증할 수 있습니다.
+
 2026년도 2학기 캡스톤디자인(산학형) 프로젝트입니다.
 
 ## MVP 바로 실행하기

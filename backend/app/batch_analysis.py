@@ -21,7 +21,7 @@ from .detector_evaluation import report as detector_report
 from .prompts import D1_VERSION
 from .repository import ArtifactNotFound, RunTraceStore
 
-REPORT_VERSION = "batch-cluster-summary-v0.4"
+REPORT_VERSION = "batch-cluster-summary-v0.6"
 VERSION_FILTERS = {"model_id", "evaluator_version", "evaluation_policy_version", "pricing_version"}
 
 
@@ -786,28 +786,38 @@ def aggregate(runs_dir, batch_id, filters=None):
         for record in report.decisions["records"]:
             record["status"] = "deferred"
             record["reasons"] = sorted(set(record["reasons"] + deferrals))
+    report.provenance["evaluation_source"] = "original_saved_evaluation"
+    report.provenance["report_sha256"] = digest(report.model_dump(mode="json"))
     return report
 
 
 def report_csv(report):
     stream = io.StringIO(newline="")
-    writer = csv.DictWriter(stream, fieldnames=["batch_id", "report_version", "evaluation_snapshot_sha256", "filters", "code_commit",
+    writer = csv.DictWriter(stream, fieldnames=["batch_id", "report_version", "report_sha256", "evaluation_source", "evaluation_snapshot_sha256", "filters", "code_commit",
         "execution_scope", "configuration_sha256", "calculation_implementation_sha256", "group_id", "source_id", "dataset_version", "corpus_version",
         "evaluator_version", "evaluation_policy_version", "pricing_version", "condition_id", "condition", "run_ids", "scenario",
         "language", "split", "ablation_variant", "goal_kind", "model_id", "metric", "value", "numerator", "denominator", "family_count", "unique_case_count", "repeat_count", "evaluated_count", "excluded_count", "ci95_low", "ci95_high", "excluded"])
     writer.writeheader()
+    common = {"batch_id": report.batch_id, "report_version": report.report_version,
+              "report_sha256": report.provenance.get("report_sha256"),
+              "evaluation_source": report.provenance.get("evaluation_source", "original_saved_evaluation"),
+              "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
+              "filters": json.dumps(report.filters.model_dump(exclude_none=True), sort_keys=True),
+              "code_commit": report.provenance["code_commit"],
+              "configuration_sha256": digest(report.provenance["configuration_hashes"]),
+              "execution_scope": report.provenance["execution_settings"]["execution_scope"],
+              "calculation_implementation_sha256": report.provenance["calculation_implementation_sha256"]}
+    if not report.groups and report.report_version == REPORT_VERSION:
+        # Preserve the identity of an empty selection without inventing a
+        # zero-valued metric. Archived v0.5 exports remain byte-compatible.
+        writer.writerow({**common, "metric": "report_metadata"})
     for group in report.groups:
         for name, metric in group["metrics"].items():
-            writer.writerow({"batch_id": report.batch_id, "report_version": report.report_version,
-                "filters": json.dumps(report.filters.model_dump(exclude_none=True), sort_keys=True),
-                "code_commit": report.provenance["code_commit"], "configuration_sha256": digest(report.provenance["configuration_hashes"]),
-                "execution_scope": report.provenance["execution_settings"]["execution_scope"],
-                "calculation_implementation_sha256": report.provenance["calculation_implementation_sha256"],
+            writer.writerow({**common,
                 "source_id": group["source_id"], "dataset_version": group["source_snapshot"]["dataset_version"],
                 "corpus_version": group["source_snapshot"]["corpus_version"], "evaluator_version": group["evaluator_version"],
                 "evaluation_policy_version": group["evaluation_policy_version"], "pricing_version": group["pricing_version"],
                 "condition": json.dumps(group["condition"], sort_keys=True), "run_ids": json.dumps(group["run_ids"]),
-                "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
                 **{k: group[k] for k in ("group_id", "condition_id", "scenario", "language", "split", "ablation_variant", "goal_kind", "model_id")}, "metric": name,
                 **{k: metric[k] for k in ("value", "numerator", "denominator", "family_count")},
                 **{k: metric.get(k) for k in ("unique_case_count", "repeat_count", "evaluated_count", "excluded_count")},
@@ -816,10 +826,30 @@ def report_csv(report):
     return stream.getvalue()
 
 
+def batch_decision_record(report):
+    return {"batch_id": report.batch_id,
+                "report_version": report.report_version, "report_sha256": report.provenance.get("report_sha256"),
+                "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
+                "provenance": report.provenance, "filters": report.filters.model_dump(mode="json"), **report.decisions}
+
+
+def validate_report_export(report, output):
+    """An existing export must still match its report before it can be reused."""
+    expected_json = {"report.json": report.model_dump(mode="json"),
+                     "decision-record.json": batch_decision_record(report)}
+    paths = list(output.iterdir())
+    if ({p.name for p in paths} != set(expected_json) | {"metrics.csv"} or
+            any(p.is_symlink() or not p.is_file() for p in paths)):
+        raise ValueError("Invalid report export files")
+    for name, expected in expected_json.items():
+        if json.loads((output / name).read_text(encoding="utf-8-sig")) != expected:
+            raise ValueError("Export JSON differs from its report")
+    if (output / "metrics.csv").read_text(encoding="utf-8-sig") != report_csv(report).replace("\r\n", "\n"):
+        raise ValueError("Export CSV differs from its report")
+
+
 def export_report(report, output):
     output.mkdir(parents=True, exist_ok=False)
     atomic_json(output / "report.json", report.model_dump(mode="json"))
     (output / "metrics.csv").write_text(report_csv(report), encoding="utf-8-sig", newline="")
-    atomic_json(output / "decision-record.json", {"batch_id": report.batch_id,
-                "evaluation_snapshot_sha256": report.evaluation_snapshot_sha256,
-                "provenance": report.provenance, "filters": report.filters.model_dump(mode="json"), **report.decisions})
+    atomic_json(output / "decision-record.json", batch_decision_record(report))

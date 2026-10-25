@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import json
 import hashlib
 import re
@@ -21,6 +20,7 @@ from .models import (CaseRecord, DefenseEvent, DetectorEvaluation, DetectorGoldU
                      EvaluationUpdate, Manifest, ModelCall,
                      OutputRecord, PromptComponent, RunRequest, RunTrace, StageMetric)
 from .prompts import D1_VERSION, prepare_prompt
+from .privacy import CANARY_PATTERN, DisplayRedactor, mask_display_text, mask_value
 from .providers import DemoRagProvider, OpenAICompatibleProvider, ProviderError
 from .repository import ArtifactNotFound, ArtifactValidationError, ExperimentRepository, RunTraceStore
 from .retrieval import lexical_retrieve
@@ -28,16 +28,8 @@ from .shared_variables import (DefenseDecision, DefenseMode, DefensePosition, De
                                DetectorErrorPolicy, EvaluationStatus, ExecutionKind, ExecutionScope,
                                KEYS, OutputOutcome, RunStatus, Scenario, SchemaVersion, TraceStage)
 
-CANARY_PATTERN = re.compile(r"CANARY_[A-Z0-9_]+")
-
-
 class UnsupportedDefenseMode(Exception):
     """Reserved for a future defense mode outside the shared contract."""
-
-
-def mask_display_text(text: str) -> tuple[str, bool]:
-    masked = CANARY_PATTERN.sub("[MASKED_CANARY]", text)
-    return masked, masked != text
 
 
 class TraceableRunError(Exception):
@@ -81,7 +73,8 @@ class RunService:
         self._base_prompt_version = settings.system_prompt_version + (
             "+policy-sha256:" + hashlib.sha256(self._common_policy.encode()).hexdigest()
             if self._common_policy else "")
-        # The local single-worker API may receive concurrent review updates.
+        # Serialize threads in this service; the store lock also coordinates
+        # other services/processes using the same run directory.
         self._review_lock = threading.RLock()
 
     @contextmanager
@@ -249,54 +242,12 @@ class RunService:
         rule = next((item for item in rules.rules if item.case_id == case_id), None) if rules else None
         return (set(rule.protected_values) | ({rule.canary} if rule.canary else set())) if rule else set()
 
-    @staticmethod
-    def _mask_value(text: str, value: str, replacement: str) -> str:
-        # A URL can encode only some characters. Match the UTF-8 percent bytes
-        # per character, so mixed encodings also work for non-ASCII targets.
-        def token(character):
-            encoded = "".join(f"%{byte:02x}" for byte in character.encode("utf-8"))
-            return f"(?:{re.escape(character)}|(?i:{encoded}))"
-
-        # Encoding a whole sentence changes the target's Base64 alignment.
-        # Inspect complete contiguous containers too, including URL-safe and
-        # unpadded forms; redact the container rather than exposing its payload.
-        target_pattern = re.compile(r"\s*".join(token(character) for character in value))
-
-        def mask_container(match):
-            candidate = match.group(0)
-            try:
-                decoded = base64.b64decode(candidate + "=" * (-len(candidate) % 4),
-                                           altchars=b"-_", validate=True).decode("utf-8")
-            except (ValueError, UnicodeDecodeError):
-                return candidate
-            return replacement if target_pattern.search(decoded) else candidate
-
-        text = re.sub(r"(?<![A-Za-z0-9+/_=-])[A-Za-z0-9+/_-]{8,}={0,2}(?![A-Za-z0-9+/_=-])",
-                      mask_container, text)
-        encoded = base64.b64encode(value.encode()).decode()
-        urlsafe = base64.urlsafe_b64encode(value.encode()).decode()
-        for variant in sorted({value, encoded, urlsafe, encoded.rstrip("="), urlsafe.rstrip("=")},
-                              key=len, reverse=True):
-            text = re.sub(r"\s*".join(token(character) for character in variant), replacement, text)
-        return text
+    # Keep the review scripts' historical scalar entry point available.
+    _mask_value = staticmethod(mask_value)
 
     def _safe(self, value, canaries=(), protected_values=()):
-        if isinstance(value, str):
-            masked = value
-            for target in sorted(set(canaries) | set(protected_values), key=len, reverse=True):
-                masked = self._mask_value(masked, target,
-                    "[MASKED_CANARY]" if CANARY_PATTERN.fullmatch(target) else "[MASKED_PROTECTED]")
-            masked = mask_display_text(masked)[0]
-            for secret in (self._settings.model_api_key, self._settings.d2_api_key):
-                if secret:
-                    masked = masked.replace(secret, "[MASKED_CREDENTIAL]")
-            return masked
-        if isinstance(value, dict):
-            return {self._safe(key, canaries, protected_values): self._safe(item, canaries, protected_values)
-                    for key, item in value.items()}
-        if isinstance(value, list):
-            return [self._safe(item, canaries, protected_values) for item in value]
-        return value
+        return DisplayRedactor(canaries=canaries, protected_values=protected_values,
+            credentials=(self._settings.model_api_key, self._settings.d2_api_key))(value)
 
     def _rules_for_trace(self, trace: RunTrace) -> RuleSet | None:
         # Batch execution and API readers can use different current settings.
@@ -452,7 +403,7 @@ class RunService:
         return self._public_trace(trace, rules=self._rules_for_trace(trace))
 
     def update_evaluation(self, run_id: str, update: EvaluationUpdate) -> RunTrace:
-        with self._review_lock:
+        with self._review_lock, self._trace_store.review_lock(run_id):
             return self._update_evaluation(run_id, update)
 
     def _update_evaluation(self, run_id: str, update: EvaluationUpdate) -> RunTrace:
@@ -469,7 +420,7 @@ class RunService:
         return trace
 
     def update_detector_gold(self, run_id: str, update: DetectorGoldUpdate) -> RunTrace:
-        with self._review_lock:
+        with self._review_lock, self._trace_store.review_lock(run_id):
             return self._update_detector_gold(run_id, update)
 
     def _update_detector_gold(self, run_id: str, update: DetectorGoldUpdate) -> RunTrace:

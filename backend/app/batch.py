@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import random
 import platform
 import importlib.metadata
@@ -24,7 +23,7 @@ from .models import RunRequest
 from .repository import ArtifactNotFound, ExperimentRepository, RunTraceStore
 from .service import RunService, TraceableRunError, build_provider
 from .shared_variables import BATCH_VERSION
-from .storage import atomic_json
+from .storage import atomic_json, exclusive_file_lock, file_sha256
 
 
 def digest(value) -> str:
@@ -33,7 +32,7 @@ def digest(value) -> str:
 
 
 def file_hash(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return file_sha256(path)
 
 
 def implementation_hash(root):
@@ -86,31 +85,8 @@ def verify_frozen_artifacts(store, state):
 
 @contextmanager
 def batch_lock(folder: Path):
-    """OS lock is released on crash; no stale PID file authorizes a replay."""
-    folder.mkdir(parents=True, exist_ok=True)
-    with (folder / "writer.lock").open("a+b") as handle:
-        handle.seek(0, os.SEEK_END)
-        if handle.tell() == 0:
-            handle.write(b"0")
-            handle.flush()
-        handle.seek(0)
-        try:
-            if os.name == "nt":
-                import msvcrt
-                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
-            else:
-                import fcntl
-                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as exc:
-            raise ValueError("Batch already has an active writer") from exc
-        try:
-            yield
-        finally:
-            handle.seek(0)
-            if os.name == "nt":
-                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
-            else:
-                fcntl.flock(handle, fcntl.LOCK_UN)
+    with exclusive_file_lock(folder / "writer.lock"):
+        yield
 
 
 class BatchStore:
@@ -126,7 +102,10 @@ class BatchStore:
         path = self.folder(batch_id) / "manifest.json"
         if not path.exists():
             raise ArtifactNotFound("Batch not found")
-        return BatchArtifact.model_validate_json(path.read_text(encoding="utf-8"))
+        state = BatchArtifact.model_validate_json(path.read_text(encoding="utf-8"))
+        if state.batch_id != batch_id:
+            raise ValueError("Batch ID does not match its directory")
+        return state
 
     def save(self, state):
         atomic_json(self.folder(state.batch_id) / "manifest.json", state.model_dump(mode="json"))
@@ -302,14 +281,26 @@ class BatchRunner:
             raise ValueError("Batch implementation changed; create a new batch")
         verify_frozen_artifacts(self.store, state)
 
-    def execute(self, batch_id, *, max_items=None, retry_failed=False, retry_uncertain=False):
+    def execute(self, batch_id, *, max_items=None, retry_failed=False, retry_uncertain=False, stop_on_error=False):
+        if max_items is not None and (type(max_items) is not int or max_items < 1):
+            raise ValueError("max_items must be a positive integer")
         folder = self.store.folder(batch_id)
         with batch_lock(folder):
             state = self.store.get(batch_id)
+            # A pilot resumes only after the operator resolves earlier failures.
+            # Returning untouched also preserves the original interruption reason.
+            if stop_on_error and any(e["status"] == "failed" and not retry_failed or
+                                     e["status"] == "uncertain" and not retry_uncertain for e in state.plan):
+                return state
             if public_settings(self.settings) != state.execution_settings:
                 raise ValueError("Execution settings changed; create a new batch")
             self._verify_inputs(state)
             condition_by_id = {c.condition_id: c for c in state.spec.conditions}
+            source_by_id = {s["source_id"]: s for s in state.source_snapshots}
+            repositories = {source_id: ExperimentRepository(folder / "inputs" / source_id,
+                expected_hashes={"cases.v0.1.jsonl": source["cases_sha256"],
+                                 "corpus.v0.1.jsonl": source["corpus_sha256"]})
+                for source_id, source in source_by_id.items()}
             state.status, state.reason = "running", None
             started, elapsed_before = time.monotonic(), state.elapsed_seconds
             self.store.save(state)
@@ -343,15 +334,21 @@ class BatchRunner:
                     entry["status"] = "running"
                     self.store.save(state)
                     condition = condition_by_id[entry["condition_id"]]
-                    source = next(s for s in state.source_snapshots if s["source_id"] == entry["source_id"])
+                    source = source_by_id[entry["source_id"]]
                     def snapshot_path(name):
-                        return folder / (name + ".snapshot") if state.configuration_hashes[name] != "not_configured" else None
+                        expected = state.configuration_hashes[name]
+                        if expected == "not_configured":
+                            return None
+                        path = folder / (name + ".snapshot")
+                        if file_hash(path) != expected:
+                            raise ValueError("Frozen configuration hash mismatch")
+                        return path
                     settings = replace(self.settings, data_dir=folder / "inputs" / entry["source_id"],
                                        common_policy_path=snapshot_path("common_policy"),
                                        pricing_path=snapshot_path("pricing"), evaluation_rules_path=snapshot_path("evaluation_rules"),
                                        d2_consistency_policy=condition.consistency_policy or self.settings.d2_consistency_policy)
                     provider = build_provider(settings)
-                    service = RunService(settings, ExperimentRepository(settings.data_dir), self.traces, provider)
+                    service = RunService(settings, repositories[entry["source_id"]], self.traces, provider)
                     guard = BatchCallBudget(state, self.store.save, Accounting(settings.pricing_path), attempt_id)
                     provider.observer = guard
                     if service._classifier is not None:
@@ -373,6 +370,8 @@ class BatchRunner:
                     processed += 1
                     if trace.error and trace.error.code.startswith("BATCH_"):
                         state.reason = trace.error.code
+                        break
+                    if stop_on_error and trace.status == "failed":
                         break
             except KeyboardInterrupt:
                 state.reason = "operator_interrupt"

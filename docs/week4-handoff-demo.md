@@ -1,9 +1,10 @@
 # 4주차 인계·저장 결과 시연 안내
 
-2026-10-20 기준이다. PR [#39](https://github.com/zerolong-01/sec_sea/pull/39)의 작업 브랜치를 사용한다.
-작성 시 PR은 **draft·base dev이며 아직 dev에 병합되지 않았다**. dev에 이미 같은 코드가 있다고 가정하지 않는다.
-`63ef871`의 [Ubuntu·Windows CI](https://github.com/zerolong-01/sec_sea/actions/runs/39428651601)는 통과했다.
-이후 commit의 결과는 해당 PR Checks에서 별도로 확인한다.
+2026-10-22 기준으로 갱신했다. PR [#39](https://github.com/zerolong-01/sec_sea/pull/39)는 dev에 병합됐고,
+PR [#44](https://github.com/zerolong-01/sec_sea/pull/44)로 main `77afde7`에도 반영됐다.
+4주차 작업은 최신 dev `0e2f35d`에서 출발한다.
+`63ef871`의 [Ubuntu·Windows CI](https://github.com/zerolong-01/sec_sea/actions/runs/39428651601)는 과거 증거다.
+이번 후보 commit의 Checks는 별도로 확인한다. 설치·재현·평가 버전 API는 [4주차 백엔드 가이드](week4-backend.md)를 따른다.
 
 [공개 실행 요약](examples/week3-completion/README.md), [수치·해시 JSON](examples/week3-completion/summary.v0.4.json),
 [대표 사례 catalog](examples/week3-completion/case-handoff.v0.4.json), [전체 요구사항 대조표](week3-completion-status.md)를 함께 인계한다.
@@ -26,6 +27,20 @@
 명령은 `.venv`, `scripts`, `backend`, `frontend`가 있는 저장소 루트에서 실행한다.
 무시되는 로컬 `runs/`가 있어야 실제 배치를 열 수 있다. Git checkout만으로 원시 실행 자료가 생기지는 않는다.
 `.env`·키·원시 출력 파일을 화면에 출력할 필요가 없다.
+
+사용자는 과거648의 원시 자료가 현재 환경에 없다고 확인했다. 아래 과거 cohort 명령은 자료를 전달받은 후 사용한다.
+현재 로컬에서는 새 대표108개 `batch-08426b109dc1`을 조회할 수 있다. 응답90·방어차단18이며
+과거648과 합산하지 않는다. API·대시보드·CSV의 저장 재생 대조는 [완료 요약](examples/week4/real-reproduction.v0.3.json)을 따른다.
+macOS/Linux의 조회 예시는 다음과 같다. Windows에서는 Python·환경 변수 표기를 아래 해당 OS 형식으로 바꾼다.
+
+```bash
+export MVP_LOAD_DOTENV=0 MODEL_PROVIDER=demo MODEL_ID=demo-rag-v0.1
+export MODEL_BASE_URL="" D2_BASE_URL=""
+python -m scripts.mvp serve --data-dir runs/week4-real/runs/batches/batch-08426b109dc1/inputs/rag --runs-dir runs/week4-real/runs --service-logs-dir runs/week4-real-view-logs --api-port 8007 --ui-port 8508
+```
+
+가상환경 Python을 사용하고 UI의 배치 대시보드에서 위 ID를 선택한다. 배치에는 RAG·이메일 두 source가 모두 있다.
+로그는 원본 store 외부에 기록한다. 조회에는 키가 필요하지 않다.
 
 기존 8000/8501 프로세스는 그대로 둔다. 아래 명령은 **새 터미널**에서 별도 포트로 실행한다.
 포트가 사용 중이면 다른 `--api-port`·`--ui-port`를 선택한다. 실행기는 충돌 시 오류를 내며 기존 서비스를 종료하지 않는다.
@@ -145,6 +160,8 @@ quotation은 `http://127.0.0.1:8502`, D2는 `http://127.0.0.1:8504`, legacy는 `
 
 대시보드는 원래 저장 평가·명시적 후속 annotation을 소비한다.
 새 AI 정상 작업 검토와 posthoc paired exact overlay는 **원래 evaluation에 자동 적용하지 않았다**.
+4주차의 `/research/report`·`/research/export.csv`는 `week3-two-ai-review-v0.1`을 명시적으로 조회하는
+별도 공개 API다. 기존 대시보드 KPI를 교체하지 않으며 정상 benchmark/paired/자원·D2율의 미지원 범위는 null과 사유로 반환한다.
 현재 quotation/D2 common report의 task_success 분모는 0이고 target_exposure_rate는 null이다.
 따라서 아래 AI 수치를 대시보드가 이미 모두 보여 준다고 설명하지 않는다.
 

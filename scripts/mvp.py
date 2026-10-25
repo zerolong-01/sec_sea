@@ -24,9 +24,11 @@ HTTP = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 def setup() -> int:
+    if sys.version_info < (3, 11):
+        raise RuntimeError("Python 3.11 or newer is required. Use Python 3.11 for the locked release environment.")
     if not VENV_PYTHON.exists():
         venv.EnvBuilder(with_pip=True).create(ROOT / ".venv")
-    subprocess.run([str(VENV_PYTHON), "-m", "pip", "install", "--disable-pip-version-check", "--no-input", "-r", str(ROOT / "requirements.txt")], cwd=ROOT, check=True)
+    subprocess.run([str(VENV_PYTHON), "-m", "pip", "install", "--disable-pip-version-check", "--no-input", "--require-hashes", "-r", str(ROOT / "requirements.lock")], cwd=ROOT, check=True)
     print("Environment ready. Run: python -m scripts.mvp serve")
     return 0
 
@@ -102,13 +104,13 @@ class ManagedProcess:
 
 
 @contextmanager
-def services(bundle, runs_dir: Path, api_port: int, ui_port: int, demo: bool, *, environment_overrides=None):
+def services(bundle, runs_dir: Path, api_port: int, ui_port: int, demo: bool, *, environment_overrides=None, service_logs_dir=None):
     api_port, ui_port = available_port(api_port), available_port(ui_port)
     if api_port == ui_port:
         raise RuntimeError("API and UI ports must be different.")
     runs_dir.mkdir(parents=True, exist_ok=True)
-    log_dir = runs_dir / f"services-{uuid.uuid4().hex[:8]}"
-    log_dir.mkdir()
+    log_dir = (service_logs_dir or runs_dir) / f"services-{uuid.uuid4().hex[:8]}"
+    log_dir.mkdir(parents=True)
     backend_url = f"http://127.0.0.1:{api_port}"
     frontend_url = f"http://127.0.0.1:{ui_port}"
     env = dict(os.environ, DATA_DIR=str(bundle.data_dir), MVP_MANIFEST=str(bundle.manifest_path), RUNS_DIR=str(runs_dir), BACKEND_URL=backend_url, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8")
@@ -189,7 +191,12 @@ def verify_http(bundle, backend_url: str, runs_dir: Path) -> list[dict]:
         try:
             HTTP.open(f"{backend_url}/api/v1/runs/{trace['run_id']}.raw.json", timeout=5)
         except urllib.error.HTTPError as exc:
-            require(exc.code == 404, "raw artifact route must return 404")
+            # Typed run IDs reject filenames before storage access (422).
+            # Older servers resolve this unsupported route as not found (404).
+            require(exc.code in (404, 422), "raw artifact route must be unavailable")
+            rejected = exc.read().decode("utf-8")
+            require(not CANARY_PATTERN.search(rejected), "raw artifact rejection leaked a canary")
+            exc.close()
         else:
             raise RuntimeError("Raw log was exposed through the trace API.")
         results.append({"case_id": item.case_id, "label": item.label, "run_id": trace["run_id"], "status": trace["status"], "retrieval": trace["retrieval"], "evaluation": trace["evaluation"]})
@@ -263,6 +270,7 @@ def parse_args(argv: list[str] | None = None):
         if name == "serve":
             command.add_argument("--fixture-model", action="store_true", help="Local HTTP fixtures for all four defense modes; no actual LLM.")
             command.add_argument("--pipeline-output", type=Path, help="Open an existing week3 pipeline's data, runs and frozen rules/pricing/policy.")
+            command.add_argument("--service-logs-dir", type=Path, help="Write startup logs outside the saved evidence store.")
     return parser.parse_args(argv)
 
 
@@ -307,7 +315,8 @@ def main(argv: list[str] | None = None) -> int:
         fixture_context = (fixture_environment(bundle.data_dir)
                            if args.command == "verify-week2" or getattr(args, "fixture_model", False) else nullcontext(None))
         with fixture_context as fixture:
-            with services(bundle, runs_dir, args.api_port, args.ui_port, demo=args.command == "verify", environment_overrides=profile) as (backend_url, frontend_url, env, children):
+            log_options = {"service_logs_dir": args.service_logs_dir.resolve()} if getattr(args, "service_logs_dir", None) else {}
+            with services(bundle, runs_dir, args.api_port, args.ui_port, demo=args.command == "verify", environment_overrides=profile, **log_options) as (backend_url, frontend_url, env, children):
                 if args.command == "verify":
                     results = verify_http(bundle, backend_url, runs_dir)
                     verify_ui(bundle, env)

@@ -185,8 +185,11 @@ def preflight(runs_dir: Path, batch_id: str, gold_path: Path):
                     "target_sha256": row.target_sha256, "body": body,
                     "action": "already_applied" if already else "apply"})
     require(bool(updates), "batch has no actually inspected D2 targets")
+    # Applying a review also creates persistent OS-lock coordination files.
+    # Permit only the named targets' locks; raw evidence, other locks and all
+    # unrelated files must still retain their exact preflight fingerprints.
     allowed = {runs_dir / (update["run_id"] + suffix) for update in updates
-               for suffix in (".trace.json", ".detector-gold.json")}
+               for suffix in (".trace.json", ".detector-gold.json", ".review.lock", ".detector-gold.lock")}
     plan = {"plan_version": VERSION, "batch_id": batch_id, "gold_sha256": gold_hash,
         "reviewer": REVIEWER, "review_method": "source_ai_gold_and_literal_hash_integrity",
         "human_independent_review": "pending", "source_authentication": "not_verified",

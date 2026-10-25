@@ -171,6 +171,19 @@ class ProtectedTracePrivacyTests(unittest.TestCase):
         harmless = base64.b64encode(b"ordinary nonsecret context").decode()
         self.assertEqual(RunService._mask_value(harmless, self.secret, "[MASKED]"), harmless)
 
+    def test_redaction_compilation_is_bounded_by_targets_and_does_not_mutate_input(self):
+        from app import privacy
+        source = {self.secret: [self.text] * 100, "ordinary": [None, False, 3]}
+        before = json.dumps(source, ensure_ascii=False)
+        with patch.object(privacy, "_encoded_pattern", wraps=privacy._encoded_pattern) as compile_pattern:
+            safe = self.service._safe(source, canaries=[self.canary],
+                                      protected_values=[self.secret, self.unicode_secret])
+            self.assertLessEqual(compile_pattern.call_count, 18)
+        self.assertEqual(json.dumps(source, ensure_ascii=False), before)
+        self._assert_safe(safe)
+        self.assertEqual(safe["ordinary"], [None, False, 3])
+        self.assertEqual(self.service._safe(self.secret), self.secret)
+
     def test_legacy_get_uses_frozen_rules_without_writing_or_calling_a_provider(self):
         runner, state, run_id, settings, reader = self._legacy_batch()
         watched = list(settings.runs_dir.glob(run_id + ".*.json")) + [runner.store.folder(state.batch_id) / "manifest.json"]

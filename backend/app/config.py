@@ -46,16 +46,24 @@ class Settings:
     common_policy_path: Path | None = None
 
     def __post_init__(self):
-        if not math.isfinite(self.temperature) or not 0 <= self.temperature <= 2:
+        def finite_number(value):
+            return type(value) in (int, float) and math.isfinite(value)
+
+        if self.model_provider not in ("demo", "openai_compatible", "fixture_http"):
+            raise ValueError("MODEL_PROVIDER must be demo, openai_compatible or fixture_http")
+        if not finite_number(self.temperature) or not 0 <= self.temperature <= 2:
             raise ValueError("MODEL_TEMPERATURE must be between 0 and 2")
-        if not math.isfinite(self.d2_threshold) or not 0 <= self.d2_threshold <= 1:
+        if not finite_number(self.d2_threshold) or not 0 <= self.d2_threshold <= 1:
             raise ValueError("D2_THRESHOLD must be between 0 and 1")
-        if self.max_tokens < 1 or self.max_model_calls < 1 or not math.isfinite(self.model_timeout_seconds) or self.model_timeout_seconds <= 0:
+        if (type(self.max_tokens) is not int or self.max_tokens < 1 or
+                type(self.max_model_calls) is not int or self.max_model_calls < 1 or
+                not finite_number(self.model_timeout_seconds) or self.model_timeout_seconds <= 0):
             raise ValueError("Token/call limits and timeout must be positive")
         if self.d2_document_action not in (DefenseDecision.QUARANTINE, DefenseDecision.BLOCK):
             raise ValueError("D2_DOCUMENT_ACTION must be quarantine or block")
         DetectorConsistencyPolicy(self.d2_consistency_policy)
         DetectorResponseFormat(self.d2_response_format)
+        DetectorErrorPolicy(self.d2_error_policy)
 
     @classmethod
     def from_environment(cls, project_root: Path | None = None) -> "Settings":
