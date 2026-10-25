@@ -30,7 +30,7 @@ from app.storage import exclusive_file_lock
 from backend.testing.fixture_model import FixtureModelServer
 
 
-class ExperimentPlanningTests(unittest.TestCase):
+class ExperimentTestCase(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
@@ -52,6 +52,8 @@ class ExperimentPlanningTests(unittest.TestCase):
         payload.update(updates)
         return ExperimentSpec.model_validate(payload)
 
+
+class ExperimentPlanningTests(ExperimentTestCase):
     def test_planning_freezes_equal_inputs_and_never_calls_models(self):
         with patch("app.providers.DemoRagProvider.generate_prepared", side_effect=AssertionError("No model calls")):
             state = self.runner.create(self.spec(), settings=self.settings)
@@ -97,7 +99,7 @@ class ExperimentPlanningTests(unittest.TestCase):
             self.runner.validate_members(state)
 
 
-class ExperimentExecutionTests(ExperimentPlanningTests):
+class ExperimentExecutionTests(ExperimentTestCase):
     def setUp(self):
         super().setUp()
         self.fixture = FixtureModelServer(ROOT / "data").__enter__()
@@ -184,6 +186,38 @@ class ExperimentExecutionTests(ExperimentPlanningTests):
         self.assertEqual(self.fixture.requests, [])
         self.assertEqual(self.runner.summary(state.experiment_id).attempt_count, 0)
 
+    def test_model_call_budgets_are_independent_and_total_is_bounded(self):
+        self.specification["batch"]["budget"]["max_calls"] = 1
+        state = self.create_experiment()
+        result = self.runner.execute(state.experiment_id)
+        self.assertEqual(len(self.fixture.requests), 2)
+        self.assertEqual(result.budget_limits["total_max_calls"], 2)
+        self.assertTrue(all(model["budget"]["admitted_calls"] == 1 for model in result.models))
+        self.runner.execute(state.experiment_id)
+        self.assertEqual(len(self.fixture.requests), 2)
+
+    def test_frozen_data_change_is_rejected_before_resuming_any_model(self):
+        state = self.create_experiment()
+        self.runner.execute(state.experiment_id, max_items=1)
+        before = len(self.fixture.requests)
+        path = self.runner.batches.folder(state.members[1].batch_id) / "inputs/rag/corpus.v0.1.jsonl"
+        path.write_bytes(path.read_bytes() + b"\n")
+        with self.assertRaises(ValueError):
+            self.runner.execute(state.experiment_id)
+        self.assertEqual(len(self.fixture.requests), before)
+
+    def test_resume_uses_frozen_runtime_settings_and_completed_models_need_no_keys(self):
+        state = self.create_experiment()
+        self.runner.execute(state.experiment_id, max_items=1)
+        with patch.dict(os.environ, {"MODEL_PROVIDER": "typo", "MODEL_TEMPERATURE": "not-a-number",
+                                     "D2_THRESHOLD": "invalid"}):
+            result = self.runner.execute(state.experiment_id)
+        self.assertEqual(result.status, "completed")
+        before = len(self.fixture.requests)
+        with patch.dict(os.environ, {"FIRST_KEY": "", "SECOND_KEY": "", "SHARED_DETECTOR_KEY": ""}):
+            self.assertEqual(self.runner.execute(state.experiment_id).status, "completed")
+        self.assertEqual(len(self.fixture.requests), before)
+
     def test_model_selection_and_writer_lock_do_not_create_extra_batches(self):
         state = self.create_experiment()
         with exclusive_file_lock(self.runner.store.folder(state.experiment_id) / "writer.lock"):
@@ -236,7 +270,7 @@ class ExperimentExecutionTests(ExperimentPlanningTests):
             self.assertEqual(response.text, experiment_csv(report))
             output = Path(self.temporary.name) / "export"
             export_experiment_report(report, output)
-            self.assertEqual(json.loads((output / "report.json").read_text()), report.model_dump(mode="json"))
+            self.assertEqual(json.loads((output / "report.json").read_text(encoding="utf-8")), report.model_dump(mode="json"))
             with self.assertRaises(ValueError):
                 export_experiment_report(report, output)
             empty = experiment_report(ROOT, self.runs, state.experiment_id, BatchFilters(condition_id=""))
@@ -245,3 +279,43 @@ class ExperimentExecutionTests(ExperimentPlanningTests):
             self.assertEqual(json.loads(rows[0]["filters"]), {"condition_id": ""})
             self.assertEqual(rows[0]["report_sha256"], empty.report_sha256)
         self.assertEqual(len(self.fixture.requests), before)
+
+    def test_read_api_rejects_missing_and_corrupt_manifests_without_echoing_private_text(self):
+        state = self.create_experiment()
+        client = TestClient(create_app(self.settings))
+        self.assertEqual(client.get("/api/v1/model-experiments/experiment-000000000000").status_code, 404)
+        self.assertEqual(client.get("/api/v1/model-experiments/invalid").status_code, 422)
+        path = self.runner.store.folder(state.experiment_id) / "manifest.json"
+        path.write_bytes(b'{"private":"private-first-key"')
+        response = client.post("/api/v1/model-experiments/" + state.experiment_id + "/report", json={})
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json(), {"detail": {"code": "INVALID_MODEL_EXPERIMENT"}})
+        self.assertNotIn("private-first-key", response.text)
+        self.assertFalse(self.fixture.requests)
+
+    def test_report_detects_evidence_changed_mid_read(self):
+        state = self.create_experiment()
+        self.runner.execute(state.experiment_id)
+        import app.experiment_reports as reports
+        original = reports.aggregate
+        child = self.runner.batches.get(state.members[0].batch_id)
+        path = self.runs / (child.plan[0]["attempts"][0]["run_id"] + ".trace.json")
+
+        def changed(*args, **kwargs):
+            result = original(*args, **kwargs)
+            path.write_bytes(path.read_bytes() + b"\n")
+            return result
+
+        with patch.object(reports, "aggregate", side_effect=changed):
+            with self.assertRaises(ArtifactValidationError):
+                experiment_report(ROOT, self.runs, state.experiment_id)
+
+    def test_report_rejects_path_traversal_in_dynamic_attempt_ids_before_hashing_files(self):
+        state = self.create_experiment()
+        child = self.runner.batches.get(state.members[0].batch_id)
+        child.plan[0]["attempts"] = [{"run_id": "../outside", "attempt_id": "tampered", "status": "completed"}]
+        self.runner.batches.save(child)
+        with patch("app.experiment_reports.file_hash", side_effect=AssertionError("Must validate IDs first")) as hashed:
+            with self.assertRaises(ArtifactValidationError):
+                experiment_report(ROOT, self.runs, state.experiment_id)
+        hashed.assert_not_called()

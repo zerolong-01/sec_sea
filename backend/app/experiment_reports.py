@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 import tempfile
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from .batch_analysis import aggregate
 from .batch_models import BatchFilters
 from .experiment_models import ExperimentReport
 from .experiments import ExperimentRunner
+from .models import RUN_ID_PATTERN
 from .repository import ArtifactValidationError
 from .storage import atomic_json
 
@@ -30,8 +32,12 @@ def source_inventory(runner, state):
         paths.update(folder / name for name in ("manifest.json", "reviews.json"))
         paths.update(folder.glob("*.snapshot"))
         paths.update((folder / "inputs").rglob("*"))
-        paths.update(runner.runs_dir / (a["run_id"] + ".trace.json")
-                     for entry in child.plan for a in entry["attempts"])
+        for entry in child.plan:
+            for attempt in entry["attempts"]:
+                run_id = attempt.get("run_id")
+                if not isinstance(run_id, str) or not re.fullmatch(RUN_ID_PATTERN, run_id):
+                    raise ArtifactValidationError("Invalid comparison run ID")
+                paths.add(runner.runs_dir / (run_id + ".trace.json"))
     if any(path.is_symlink() for path in paths):
         raise ArtifactValidationError("Comparison evidence must not be a symlink")
     return {path.relative_to(runner.runs_dir).as_posix(): file_hash(path)
