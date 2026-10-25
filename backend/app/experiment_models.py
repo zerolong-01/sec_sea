@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
-from .batch_models import BatchModel, BatchSpec
+from .batch_models import BatchFilters, BatchModel, BatchSpec
 from .providers import OpenAICompatibleProvider
 
 EXPERIMENT_VERSION = "0.1"
@@ -84,3 +84,32 @@ class ExperimentManifest(BatchModel):
                 len({m.batch_id for m in self.members}) != len(self.members)):
             raise ValueError("Experiment members must match the ordered unique model profiles")
         return self
+
+
+class ExperimentSummary(BatchModel):
+    schema_version: Literal[EXPERIMENT_VERSION] = EXPERIMENT_VERSION
+    artifact_type: Literal["model_experiment_summary"] = "model_experiment_summary"
+    experiment_id: str
+    created_at: str
+    code_commit: str
+    status: Literal["planned", "paused", "partial", "uncertain", "completed"]
+    common_sha256: str
+    planned_count: int
+    attempt_count: int
+    models: list[dict]
+    budget_limits: dict
+    budget_usage: dict
+    execution_order: Literal["sequential_profile_order"] = "sequential_profile_order"
+
+
+class ExperimentReport(BatchModel):
+    schema_version: Literal[EXPERIMENT_VERSION] = EXPERIMENT_VERSION
+    artifact_type: Literal["model_experiment_report"] = "model_experiment_report"
+    experiment_id: str
+    report_version: Literal["model-comparison-v0.1"] = "model-comparison-v0.1"
+    filters: BatchFilters
+    summary: ExperimentSummary
+    provenance: dict
+    rows: list[dict]
+    comparisons: list[dict]
+    report_sha256: str

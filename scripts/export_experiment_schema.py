@@ -5,11 +5,11 @@ from typing import Union
 
 from pydantic import TypeAdapter
 
-from backend.app.experiment_models import ExperimentManifest, ExperimentSpec
+from backend.app.experiment_models import ExperimentManifest, ExperimentReport, ExperimentSpec, ExperimentSummary
 
 
 def main():
-    schema = TypeAdapter(Union[ExperimentSpec, ExperimentManifest]).json_schema()
+    schema = TypeAdapter(Union[ExperimentSpec, ExperimentManifest, ExperimentSummary, ExperimentReport]).json_schema()
     schema.update({"$schema": "https://json-schema.org/draft/2020-12/schema",
         "$id": "https://github.com/zerolong-01/sec_sea/contracts/model-experiment-v0.1.schema.json",
         "title": "Multi-model experiment specification and frozen membership v0.1"})

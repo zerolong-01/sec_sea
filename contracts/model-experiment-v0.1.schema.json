@@ -127,6 +127,220 @@
       "title": "BatchCondition",
       "type": "object"
     },
+    "BatchFilters": {
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Id"
+        },
+        "scenario": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scenario"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "split": {
+          "anyOf": [
+            {
+              "enum": [
+                "dev",
+                "holdout"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Split"
+        },
+        "condition_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition Id"
+        },
+        "comparison": {
+          "anyOf": [
+            {
+              "enum": [
+                "technique",
+                "position",
+                "payload",
+                "detector"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comparison"
+        },
+        "family_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Family Id"
+        },
+        "attack_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attack Type"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "enum": [
+                "attack",
+                "benign",
+                "hard_negative"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "goal_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Goal Kind"
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Severity"
+        },
+        "execution_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Execution Kind"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "evaluator_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluator Version"
+        },
+        "evaluation_policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluation Policy Version"
+        },
+        "pricing_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pricing Version"
+        }
+      },
+      "title": "BatchFilters",
+      "type": "object"
+    },
     "BatchSource": {
       "additionalProperties": false,
       "properties": {
@@ -561,6 +775,75 @@
       "title": "ExperimentModel",
       "type": "object"
     },
+    "ExperimentReport": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "0.1",
+          "default": "0.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "model_experiment_report",
+          "default": "model_experiment_report",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "experiment_id": {
+          "title": "Experiment Id",
+          "type": "string"
+        },
+        "report_version": {
+          "const": "model-comparison-v0.1",
+          "default": "model-comparison-v0.1",
+          "title": "Report Version",
+          "type": "string"
+        },
+        "filters": {
+          "$ref": "#/$defs/BatchFilters"
+        },
+        "summary": {
+          "$ref": "#/$defs/ExperimentSummary"
+        },
+        "provenance": {
+          "additionalProperties": true,
+          "title": "Provenance",
+          "type": "object"
+        },
+        "rows": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Rows",
+          "type": "array"
+        },
+        "comparisons": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Comparisons",
+          "type": "array"
+        },
+        "report_sha256": {
+          "title": "Report Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "experiment_id",
+        "filters",
+        "summary",
+        "provenance",
+        "rows",
+        "comparisons",
+        "report_sha256"
+      ],
+      "title": "ExperimentReport",
+      "type": "object"
+    },
     "ExperimentSpec": {
       "additionalProperties": false,
       "properties": {
@@ -631,6 +914,96 @@
       "title": "ExperimentSpec",
       "type": "object"
     },
+    "ExperimentSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "0.1",
+          "default": "0.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "model_experiment_summary",
+          "default": "model_experiment_summary",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "experiment_id": {
+          "title": "Experiment Id",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "code_commit": {
+          "title": "Code Commit",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "planned",
+            "paused",
+            "partial",
+            "uncertain",
+            "completed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "common_sha256": {
+          "title": "Common Sha256",
+          "type": "string"
+        },
+        "planned_count": {
+          "title": "Planned Count",
+          "type": "integer"
+        },
+        "attempt_count": {
+          "title": "Attempt Count",
+          "type": "integer"
+        },
+        "models": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Models",
+          "type": "array"
+        },
+        "budget_limits": {
+          "additionalProperties": true,
+          "title": "Budget Limits",
+          "type": "object"
+        },
+        "budget_usage": {
+          "additionalProperties": true,
+          "title": "Budget Usage",
+          "type": "object"
+        },
+        "execution_order": {
+          "const": "sequential_profile_order",
+          "default": "sequential_profile_order",
+          "title": "Execution Order",
+          "type": "string"
+        }
+      },
+      "required": [
+        "experiment_id",
+        "created_at",
+        "code_commit",
+        "status",
+        "common_sha256",
+        "planned_count",
+        "attempt_count",
+        "models",
+        "budget_limits",
+        "budget_usage"
+      ],
+      "title": "ExperimentSummary",
+      "type": "object"
+    },
     "StatisticsPolicy": {
       "additionalProperties": false,
       "properties": {
@@ -690,6 +1063,12 @@
     },
     {
       "$ref": "#/$defs/ExperimentManifest"
+    },
+    {
+      "$ref": "#/$defs/ExperimentSummary"
+    },
+    {
+      "$ref": "#/$defs/ExperimentReport"
     }
   ],
   "$schema": "https://json-schema.org/draft/2020-12/schema",
