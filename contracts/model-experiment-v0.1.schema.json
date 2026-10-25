@@ -944,6 +944,7 @@
         "status": {
           "enum": [
             "planned",
+            "running",
             "paused",
             "partial",
             "uncertain",

@@ -54,6 +54,15 @@ class ExperimentTestCase(unittest.TestCase):
 
 
 class ExperimentPlanningTests(ExperimentTestCase):
+    def test_summary_reports_running_while_a_member_batch_is_executing(self):
+        state = self.runner.create(self.spec(), settings=self.settings)
+        child = self.runner.batches.get(state.members[0].batch_id)
+        child.status = "running"
+        self.runner.batches.save(child)
+        summary = self.runner.summary(state.experiment_id)
+        self.assertEqual(summary.models[0]["status"], "running")
+        self.assertEqual(summary.status, "running")
+
     def test_planning_freezes_equal_inputs_and_never_calls_models(self):
         with patch("app.providers.DemoRagProvider.generate_prepared", side_effect=AssertionError("No model calls")):
             state = self.runner.create(self.spec(), settings=self.settings)

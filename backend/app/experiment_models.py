@@ -92,7 +92,7 @@ class ExperimentSummary(BatchModel):
     experiment_id: str
     created_at: str
     code_commit: str
-    status: Literal["planned", "paused", "partial", "uncertain", "completed"]
+    status: Literal["planned", "running", "paused", "partial", "uncertain", "completed"]
     common_sha256: str
     planned_count: int
     attempt_count: int

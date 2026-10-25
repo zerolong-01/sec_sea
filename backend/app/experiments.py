@@ -119,7 +119,8 @@ class ExperimentRunner:
                 **{key: summary[key] for key in ("status", "reason", "planned_count", "attempt_count",
                                                 "status_counts", "budget", "execution_scope")}})
         statuses = {child.status for child in children}
-        status = ("uncertain" if "uncertain" in statuses else "completed" if statuses == {"completed"}
+        status = ("uncertain" if "uncertain" in statuses else "running" if "running" in statuses
+                  else "completed" if statuses == {"completed"}
                   else "planned" if statuses == {"planned"} else "paused"
                   if statuses & {"running", "paused", "planned"} else "partial")
         budgets = [budget_summary(child) for child in children]

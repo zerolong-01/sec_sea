@@ -73,6 +73,7 @@ python -m scripts.model_experiment list
 ```
 
 모델은 명세 순서대로 순차 실행한다. 각 모델 안의 케이스·조건 순서는 같은 seed로 섞는다.
+하위 모델이 실행 중이면 상태 API도 `running`을 반환하고, 실제로 중단한 경우에는 `paused`를 반환한다.
 `--max-items`는 선택한 모델 전체에서 새로 시도할 실행 수다. 완료된 실행은 재전송하지 않는다.
 키는 실행 직전 선택한 미완료 모델 전체에 대해 먼저 검사한다. 뒤 모델의 키가 없다고
 앞 모델부터 호출하는 일을 방지한다. 재개는 원래 데이터 경로나 현재 `.env`의 생성 설정이
@@ -93,6 +94,44 @@ python -m scripts.model_experiment run EXPERIMENT_ID --stop-on-error
 
 종료 코드는 성공/조회 `0`, 미완료 실행 `2`, 잘못된 입력·환경·근거 자료 `1`이다.
 실행 구현이 바뀌면 재개를 거부하므로 새 실험을 생성한다. 저장된 결과의 조회는 계속 가능하다.
+
+## 유료 API를 사용하는 검증
+
+[`model-experiment.openai-live.json`](../configs/model-experiment.openai-live.json)은 GPT-4.1 mini와
+GPT-4.1의 고정 버전, 공통 GPT-4.1 mini 탐지기, 합성 RAG·이메일을 사용한다.
+2개 모델 × 2개 앱 × 3개 케이스 × 6개 조건 × 3회 = 216회 실행이다.
+키는 기존 `.env`의 `MODEL_API_KEY`와 `D2_API_KEY`에서 읽고 명세에는 저장하지 않는다.
+단가는 [GPT-4.1 mini 공식 문서](https://developers.openai.com/api/docs/models/gpt-4.1-mini)와
+[GPT-4.1 공식 문서](https://developers.openai.com/api/docs/models/gpt-4.1)를 기준으로
+[`pricing-openai-2026-10-25.json`](../configs/pricing-openai-2026-10-25.json)에 고정했다.
+
+```text
+python -m scripts.week2_data prepare-email --output runs/model-live-prepared/email
+python -m scripts.verify_real_model_experiment --spec configs/model-experiment.openai-live.json --output runs/model-live-verification --max-total-usd 0.96
+```
+
+위 검증 도구는 기본적으로 계획과 저장 결과만 검사한다. 새 실험은 `incomplete`/종료 코드 2를
+반환하며 모델을 호출하지 않는다. `--execute`를 넣을 때만 유료 호출을 시작한다.
+모델 하나당 최대 0.48달러, 두 모델 합계 최대 0.96달러의 예약 한도를 적용한다.
+이 금액 제한은 해당 실험의 모든 재시도와 미확인 예약을 포함한다.
+
+```text
+python -m scripts.verify_real_model_experiment --spec configs/model-experiment.openai-live.json --output runs/model-live-verification --max-total-usd 0.96 --execute --max-items 4
+python -m scripts.verify_real_model_experiment --spec configs/model-experiment.openai-live.json --output runs/model-live-verification --max-total-usd 0.96 --execute
+python -m scripts.verify_real_model_experiment --spec configs/model-experiment.openai-live.json --output runs/model-live-verification --max-total-usd 0.96
+```
+
+같은 출력 폴더의 checkpoint를 사용하므로 마지막 명령은 새 호출 없이 재검증한다.
+실행 중 오류가 나면 멈추고 실패한 실행을 자동 재시도하지 않는다. 같은 명세·구현에서
+오류 원인을 해결한 뒤 `--execute --retry-failed`로 명시적으로 재시도할 수 있다.
+전송 결과가 불확실한 실행은 별도 `--retry-uncertain`이 필요하며 이전 예약을 보존한다.
+
+검증은 원시 응답·공개 trace·예약 ledger 사이의 모델/호출 수·실제 HTTP 상태·관측 토큰·
+추정 비용을 대조한다. 모델 간 실제 전송된 메시지와 파라미터도 공통 실행 단위별로 비교한다.
+탐지 결과로 한쪽만 생성하지 않은 실행은 별도로 집계한다. JSON/CSV·API 및 모든 실제 trace를
+재조회하는 동안 모델 전송 함수는 차단하므로 조회로 추가 요금이 발생하지 않는다.
+실험 생성 시점의 평가 규칙과 draft/수동 검토 상태를 유지하며 사람이 독립 검토하거나
+모델의 품질 우열을 확정한 결과로 해석하지 않는다.
 
 ## 예산과 비용
 
@@ -165,5 +204,43 @@ POST 본문에는 `{}` 또는 필터 객체를 보낸다. CSV의 `X-Report-SHA25
 | 잘못된 실제 모델 환경 설정을 주입한 fixture 검증 | 통과 |
 
 로컬 결과는 `runs/model-experiment-development/isolated-final/verification-report.json`에 있다.
-실제 유료 모델은 호출하지 않았다. Ubuntu/Windows CI에는 같은 fixture 검증 단계를 추가했으며,
-이 개발 환경에서 두 운영체제의 원격 실행 결과를 확인한 것은 아니다.
+위 fixture 검증은 유료 모델을 호출하지 않는다. 후속 실제 API 검증과 수정 기록은 아래와 같다.
+
+## 실제 API 검증 결과와 보완
+
+2026-10-25 실제 OpenAI API에서 216회 본 실험을 완료했다.
+[공개 검증 기록](examples/model-experiment-live/verification-report.json)은 입력·원시 응답·키를
+포함하지 않고 실행 수, 관측 토큰, 추정 비용, HTTP 상태와 근거 해시를 제공한다.
+원시 자료와 마스킹된 전체 보고서는 Git 제외 `runs/real-model-experiment-20261025/`에 보관한다.
+
+| 대상 모델 | 실제 API 호출 | 관측 입력/출력 토큰 | 본 실험 추정 비용 |
+| --- | ---: | ---: | ---: |
+| GPT-4.1 mini | 198 | 50,739 / 13,277 | $0.0415388 |
+| GPT-4.1 | 198 | 50,739 / 13,542 | $0.1483852 |
+
+각 행의 토큰·비용은 해당 대상 모델 배치의 생성 호출과 공통 D2 탐지기 호출을 모두 포함한다.
+공개 검증 JSON에는 실제 호출 모델·용도별 사용량과 비용도 분리해 기록했다.
+
+본 실험 396개 호출은 모두 HTTP 200이며, 미확인 호출·API 오류·중복 실행은 0개다.
+실제 전송 메시지·파라미터 198쌍이 모델 간 일치한다. 4개 실행에서 중단한 뒤 같은
+checkpoint로 재개했고, 완료 후 실행 명령을 다시 호출해도 추가 모델 호출이 없음을 확인했다.
+API·JSON·CSV·공개 trace 재조회도 원본 자료 변경과 추가 호출 없이 일치한다.
+
+예비 인증/호환성 2회와 상태 수정 후 확인 2회를 합하면 실제 호출은 총 400회다.
+전체 사용량 기준 추정 비용은 $0.1918584로 설정한 $1 상한 이내다.
+이 값은 동결된 표준 비캐시 단가에 따른 추정치이며 계정 청구서를 조회한 값은 아니다.
+정상 작업의 의미 평가·독립 사람 검토 대기 상태는 기존 정책대로 유지했다.
+이 소형 dev 검증으로 모델 품질 순위나 holdout 결론을 확정하지 않는다.
+
+실검증 중 발견하고 수정한 항목은 다음과 같다.
+
+- 비공개 raw 파일명 요청은 엄격한 ID 검증으로 422를 반환하지만 기존 CI는 404만 기대했다.
+  원시 파일 접근을 계속 금지하면서 두 거부 응답을 검증하고 응답의 canary 노출도 검사한다.
+- `--retry-failed --stop-on-error`가 실패 항목을 재시도하지 않고 즉시 반환하던 문제를 수정했다.
+  이전 실패·비용 예약은 보존하며 명시적으로 허용한 재시도만 수행한다.
+- 실행 중인 하위 배치를 실험 요약이 `paused`로 표시하던 문제를 수정했다.
+  두 실제 모델의 HTTP 응답을 받는 시점에 요약과 상태 API가 모두 `running`을 반환함을 확인했다.
+
+최종 로컬 회귀는 백엔드 163개와 프로젝트 243개, 합계 406개가 통과했다.
+기존 CI 계약 수정 커밋 `ce170f8`의 [Ubuntu/Windows 실행](https://github.com/zerolong-01/sec_sea/actions/runs/40168211827)은
+두 운영체제에서 모두 통과했다. 최신 커밋의 원격 검증 상태는 PR #53에서 확인한다.
