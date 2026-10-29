@@ -1,0 +1,100 @@
+{
+  "additionalProperties": false,
+  "description": "Fixed final-report selection, separate from the archived overlay formats.",
+  "properties": {
+    "schema_version": {
+      "const": "0.1",
+      "default": "0.1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "artifact_type": {
+      "const": "research_comparison_report",
+      "default": "research_comparison_report",
+      "title": "Artifact Type",
+      "type": "string"
+    },
+    "report_version": {
+      "const": "week4-original-attack-comparison-v0.1",
+      "default": "week4-original-attack-comparison-v0.1",
+      "title": "Report Version",
+      "type": "string"
+    },
+    "batch_id": {
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "evaluation_version": {
+      "const": "week3-two-ai-review-v0.1",
+      "default": "week3-two-ai-review-v0.1",
+      "title": "Evaluation Version",
+      "type": "string"
+    },
+    "evaluation_source": {
+      "const": "ai_research_overlay",
+      "default": "ai_research_overlay",
+      "title": "Evaluation Source",
+      "type": "string"
+    },
+    "report_sha256": {
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "evaluation_snapshot_sha256": {
+      "title": "Evaluation Snapshot Sha256",
+      "type": "string"
+    },
+    "selection": {
+      "additionalProperties": true,
+      "title": "Selection",
+      "type": "object"
+    },
+    "rows": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rows",
+      "type": "array"
+    },
+    "members": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Members",
+      "type": "array"
+    },
+    "provenance": {
+      "additionalProperties": true,
+      "title": "Provenance",
+      "type": "object"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "decisions": {
+      "additionalProperties": true,
+      "title": "Decisions",
+      "type": "object"
+    }
+  },
+  "required": [
+    "batch_id",
+    "report_sha256",
+    "evaluation_snapshot_sha256",
+    "selection",
+    "rows",
+    "members",
+    "provenance",
+    "limitations",
+    "decisions"
+  ],
+  "title": "Week-four original-attack comparison v0.1",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
