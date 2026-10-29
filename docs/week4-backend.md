@@ -175,6 +175,45 @@ C 화면 연결과 A의 최종 보고판 선택은 각 담당자에게 인계할
 행 누락/중복을 검사한다. 기존 `csv_report_error`와 KPI 경로는 유지한다.
 [v0.2 sample](examples/week4/v0.2/README.md)은 출력 지표와 target gold가 함께 있는 D2-input 선택이다.
 
+## 최종 보고서의 원본 공격 비교표 재현
+
+`data/week4/final-report.md` 4.2절과 `data/week4/defense-comparison.md` 2.2절은
+`week3`의 원본 3개 case와 `w3pv_a11`을 합친 비교다. 기본 `/report`는 저장된 원평가를
+사용하므로 이 표의 AI 판정과 출처가 다르다. 공개 cohort 조회의 단일 variant 필터만으로도
+`original`과 `A11`을 함께 선택할 수 없다. 다음 고정 선택 API에서 같은 표를 재현한다.
+
+| API | 결과 |
+| --- | --- |
+| `GET /api/v1/research/week4-original-attacks` | 6조건의 AI 공격 목표 달성·공격 업무 수행, 목표별 내역, 72개 run/task/unit·원증거 해시 |
+| `GET /api/v1/research/week4-original-attacks/export.csv` | 같은 report hash의 합산 기술통계와 목표별 지표 36행 |
+
+계약은 [비교 보고서 v0.1 schema](../contracts/week4-original-attack-comparison-v0.1.schema.json)다.
+보고 형식은 `week4-original-attack-comparison-v0.1`, 판정 버전은 `week3-two-ai-review-v0.1`,
+평가 출처는 `ai_research_overlay`다. `selection`에 case 4개·조건 6개·repeat 0/1/2를 명시한다.
+추가 query 필터는 422로 거부하므로 고정된 분모를 부분 선택 결과로 오인하지 않는다.
+원평가·기존 overlay v0.1/v0.2 API와 보존된 export는 각 형식으로 조회한다.
+
+`rows[].metrics.fresh_ai_attack_task_utility`는 공격 상황의 업무 수행이며 정상 요청의 성공률이 아니다.
+합산 행은 목표가 다른 공격의 기술통계이고 최종 추천의 단일 ASR로 소비하지 않는다.
+JSON `goal_groups`와 CSV `goal_kind`에서 표식/보호값 목표별 결과를 구분한다.
+`combined_descriptive`는 CSV의 합산 행이다. `D1-D2` 원본 ID와 `D1+D2` 표시명을 함께 제공한다.
+CI는 `null`, 사람 검토는 `not_performed`, 추천은 `deferred`, holdout 권한은 false다.
+
+각 표는 공개 멤버 판정과 저장된 집계의 분자·분모·제외 수·case/family 수를 교차 검산한다.
+누락·중복 실행이나 일부 cohort만 선택하는 상황은 오류로 처리한다. 미확정은 제외 사유로
+남기고 분모 0의 값은 JSON `null`/CSV 빈 값으로 내보낸다. CSV 헤더의 `X-Report-SHA256`,
+`X-Report-Version`, `X-Evaluation-Source`를 JSON과 대조할 수 있다.
+
+키·private runs·추가 모델 호출 없이 문서를 검산하고 JSON/CSV를 생성한다:
+
+```bash
+python -m scripts.week4_report_comparison --check-docs --output runs/week4-original-attack-comparison
+```
+
+`--output`을 생략하면 파일 생성 없이 검산한다. 출력 폴더는 새 경로를 사용한다.
+두 문서의 표·case 범위·지표 제목이 백엔드 결과와 다르면 종료 코드 1을 반환하며,
+Ubuntu/Windows CI에서 같은 명령으로 문서와 백엔드 연결을 확인한다.
+
 ## 저장 결과를 새 패키지로 재생성
 
 공개 AI 자료는 키·네트워크·private runs 없이 재생성할 수 있다:

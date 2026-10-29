@@ -45,3 +45,22 @@ class ResearchReport(BatchModel):
     members: list[dict]
     capabilities: dict
     decisions: dict
+
+
+class ResearchComparisonReport(BatchModel):
+    """Fixed final-report selection, separate from the archived overlay formats."""
+
+    schema_version: Literal["0.1"] = "0.1"
+    artifact_type: Literal["research_comparison_report"] = "research_comparison_report"
+    report_version: Literal["week4-original-attack-comparison-v0.1"] = "week4-original-attack-comparison-v0.1"
+    batch_id: str
+    evaluation_version: Literal[RESEARCH_VERSION] = RESEARCH_VERSION
+    evaluation_source: Literal["ai_research_overlay"] = "ai_research_overlay"
+    report_sha256: str
+    evaluation_snapshot_sha256: str
+    selection: dict
+    rows: list[dict]
+    members: list[dict]
+    provenance: dict
+    limitations: list[str]
+    decisions: dict
