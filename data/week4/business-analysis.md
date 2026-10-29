@@ -62,7 +62,137 @@
 | API·JSON·CSV 및 사용량 검증 | PR #49 완료 기록 확인 |
 
 이 비용은 해당 실험의 관측 토큰과 적용 단가를 이용한 추정치다. 실제 기업 운영 비용이나 서비스 도입에 따른 비용 절감 효과를 의미하지 않는다.
+### 4.2 공식 기능·과금 근거 재확인
 
+- 공식 자료 확인일: **2026-10-29**
+- 확인 방식: 제공사의 공식 기술 문서·공식 저장소·가격 안내·제공 조건 문서 확인
+- 확인 범위: 공개 기능, 제공 방식, 무료·유료 조건 및 공개 과금 기준
+- 제외 범위: 비공개 계약 가격, 실제 고객 청구액, 경쟁 제품 직접 실행 및 동일 조건 성능 비교
+
+| 비교 대상 | 공식 기능 확인 | 공식 과금·제공 조건 확인 | 미확인 항목 | 공식 출처 |
+|---|---|---|---|---|
+| Promptfoo | LLM 평가, 레드팀, 취약점 검사, 결과 보고, CI/CD 연계 | Community 무료, 월 10,000회 레드팀 probe 제공. Enterprise·On-Premise는 맞춤 견적 | 기업별 계약 금액, 실제 운영 총비용 | [1]~[3] |
+| Microsoft Prompt Shields | 사용자 입력 공격과 외부 문서 공격 탐지 | Azure AI Content Safety는 모델·처리량에 따라 과금하며 텍스트 레코드 기반 요금 체계가 있음 | 적용 지역별 최종 단가, 실제 요청당 비용 | [4], [5] |
+| Microsoft Foundry AI Red Teaming Agent / PyRIT | 자동 공격 시험·평가·보고. PyRIT는 오픈소스 위험 식별 프레임워크 | PyRIT 프레임워크 자체는 오픈소스. Foundry 서비스 및 모델 호출 비용은 별도로 고려 | 실제 Foundry 실행 총비용, 조직별 적용 요금 | [6], [7] |
+| Check Point AI Guardrails / Lakera | 프롬프트 공격, 데이터 유출, 콘텐츠 위반, 악성 링크 탐지 및 정책 기반 대응 | Community는 월 10,000회 screening 요청 한도가 안내됨. Enterprise는 별도 영업 문의 | Enterprise 계약 단가, Self-hosted 총운영 비용 | [8], [12] |
+| Cisco AI Defense | AI 자산 가시성, 공급망 위험 검사, AI 모델·앱 검증, 실행 중 보호 | 공식 Offer Description에 AI Application 수량 기반 구독 방식이 명시됨 | 애플리케이션당 실제 계약 단가, 총도입 비용 | [9], [10] |
+| NVIDIA NeMo Guardrails | Input·Dialog·Retrieval·Execution·Output 단계의 프로그래밍 가능한 방어 | 오픈소스 라이브러리로 제공 | 연결 모델 호출비, 인프라 비용, 운영 인건비 | [11] |
+
+#### 확인된 사실과 미검증 사항 구분
+
+**공식 자료로 확인한 사항**
+
+1. Promptfoo는 무료 Community와 유료 Enterprise·On-Premise를 구분한다.
+2. Prompt Shields는 사용자 입력과 문서 공격을 탐지하며, Azure Content Safety의 사용량 기반 요금 체계와 연결된다.
+3. PyRIT는 Microsoft가 공개한 오픈소스 프레임워크이고, Foundry AI Red Teaming Agent와 구분된다.
+4. Check Point AI Guardrails는 무료 Community 이용 한도와 기업용 제공 방식을 안내한다.
+5. Cisco AI Defense는 구독 계약에서 AI Application 수량을 과금 기준으로 사용한다.
+6. NVIDIA NeMo Guardrails는 다섯 방어 단계를 지원하는 오픈소스 도구다.
+
+**아직 확인하지 못한 사항**
+
+- 각 기업의 실제 계약 금액과 할인 조건
+- 같은 실험 1회를 실행했을 때의 제품별 총비용
+- 본 프로젝트와 경쟁 제품의 동일 데이터·모델·조건 성능 차이
+- 국내 기업 고객의 구매 의향과 지불 의사
+- 도입 이후 관리 비용 및 실제 비용 절감 효과
+
+공식 기능이나 가격 정책이 확인됐다는 사실은 해당 제품의 실제 보안 성능, 총소유비용 또는 본 프로젝트 대비 우수성을 검증했다는 뜻이 아니다.
+
+특히 무료 플랜과 오픈소스는 모델 API·서버·운영 비용까지 모두 무료라는 의미가 아니다. 비공개 계약 가격은 임의로 추정하지 않는다.
+
+#### 과금 방식 비교 시 유의사항
+
+도구마다 과금 단위가 다르므로 단순 가격 순위를 작성하지 않는다.
+
+- Promptfoo: Red Teaming probe 수와 기업별 계약 조건
+- Azure AI Content Safety: 서비스별 텍스트 처리량과 적용 요금
+- PyRIT: 실행에 연결되는 모델·서비스·인프라 사용량
+- Check Point AI Guardrails: Screening 요청량과 기업 계약 조건
+- Cisco AI Defense: 구독 대상 AI Application 수량
+- NeMo Guardrails: 모델·인프라·운영 리소스
+
+향후 비용 비교를 수행하려면 동일한 공격·정상 데이터, 모델, 실행 횟수, 검사 위치와 비용 포함 범위를 고정해야 한다.
+
+이번 문서는 공개 기능·요금 구조 비교이며, 제품별 최저 가격 또는 총비용 우열 비교는 수행하지 않았다.
+
+#### 추가 공식 근거
+
+기존 참고자료 [1]~[11]을 유지하고 다음 자료를 추가한다.
+
+[12] Check Point AI Security, AI Guardrails Dashboard  
+https://docs.lakera.ai/docs/platform
+
+- 확인 위치: Community와 Enterprise 제공 조건, 월별 screening 요청 한도
+- 활용: Check Point 무료 이용 한도 및 기업용 제공 방식 확인
+- 확인일: 2026-10-29
+
+공식 자료는 향후 갱신될 수 있으므로, 사업화 또는 실제 도입 검토 시 적용 날짜와 계약 조건을 재확인해야 한다.
+### 4.2 공식 기능·과금 근거 재확인
+
+- 공식 자료 확인일: **2026-10-29**
+- 확인 방식: 제공사의 공식 기술 문서·공식 저장소·가격 안내·제공 조건 문서 확인
+- 확인 범위: 공개 기능, 제공 방식, 무료·유료 조건 및 공개 과금 기준
+- 제외 범위: 비공개 계약 가격, 실제 고객 청구액, 경쟁 제품 직접 실행 및 동일 조건 성능 비교
+
+| 비교 대상 | 공식 기능 확인 | 공식 과금·제공 조건 확인 | 미확인 항목 | 공식 출처 |
+|---|---|---|---|---|
+| Promptfoo | LLM 평가, 레드팀, 취약점 검사, 결과 보고, CI/CD 연계 | Community 무료, 월 10,000회 레드팀 probe 제공. Enterprise·On-Premise는 맞춤 견적 | 기업별 계약 금액, 실제 운영 총비용 | [1]~[3] |
+| Microsoft Prompt Shields | 사용자 입력 공격과 외부 문서 공격 탐지 | Azure AI Content Safety는 모델·처리량에 따라 과금하며 텍스트 레코드 기반 요금 체계가 있음 | 적용 지역별 최종 단가, 실제 요청당 비용 | [4], [5] |
+| Microsoft Foundry AI Red Teaming Agent / PyRIT | 자동 공격 시험·평가·보고. PyRIT는 오픈소스 위험 식별 프레임워크 | PyRIT 프레임워크 자체는 오픈소스. Foundry 서비스 및 모델 호출 비용은 별도로 고려 | 실제 Foundry 실행 총비용, 조직별 적용 요금 | [6], [7] |
+| Check Point AI Guardrails / Lakera | 프롬프트 공격, 데이터 유출, 콘텐츠 위반, 악성 링크 탐지 및 정책 기반 대응 | Community는 월 10,000회 screening 요청 한도가 안내됨. Enterprise는 별도 영업 문의 | Enterprise 계약 단가, Self-hosted 총운영 비용 | [8], [12] |
+| Cisco AI Defense | AI 자산 가시성, 공급망 위험 검사, AI 모델·앱 검증, 실행 중 보호 | 공식 Offer Description에 AI Application 수량 기반 구독 방식이 명시됨 | 애플리케이션당 실제 계약 단가, 총도입 비용 | [9], [10] |
+| NVIDIA NeMo Guardrails | Input·Dialog·Retrieval·Execution·Output 단계의 프로그래밍 가능한 방어 | 오픈소스 라이브러리로 제공 | 연결 모델 호출비, 인프라 비용, 운영 인건비 | [11] |
+
+#### 확인된 사실과 미검증 사항 구분
+
+**공식 자료로 확인한 사항**
+
+1. Promptfoo는 무료 Community와 유료 Enterprise·On-Premise를 구분한다.
+2. Prompt Shields는 사용자 입력과 문서 공격을 탐지하며, Azure Content Safety의 사용량 기반 요금 체계와 연결된다.
+3. PyRIT는 Microsoft가 공개한 오픈소스 프레임워크이고, Foundry AI Red Teaming Agent와 구분된다.
+4. Check Point AI Guardrails는 무료 Community 이용 한도와 기업용 제공 방식을 안내한다.
+5. Cisco AI Defense는 구독 계약에서 AI Application 수량을 과금 기준으로 사용한다.
+6. NVIDIA NeMo Guardrails는 다섯 방어 단계를 지원하는 오픈소스 도구다.
+
+**아직 확인하지 못한 사항**
+
+- 각 기업의 실제 계약 금액과 할인 조건
+- 같은 실험 1회를 실행했을 때의 제품별 총비용
+- 본 프로젝트와 경쟁 제품의 동일 데이터·모델·조건 성능 차이
+- 국내 기업 고객의 구매 의향과 지불 의사
+- 도입 이후 관리 비용 및 실제 비용 절감 효과
+
+공식 기능이나 가격 정책이 확인됐다는 사실은 해당 제품의 실제 보안 성능, 총소유비용 또는 본 프로젝트 대비 우수성을 검증했다는 뜻이 아니다.
+
+특히 무료 플랜과 오픈소스는 모델 API·서버·운영 비용까지 모두 무료라는 의미가 아니다. 비공개 계약 가격은 임의로 추정하지 않는다.
+
+#### 과금 방식 비교 시 유의사항
+
+도구마다 과금 단위가 다르므로 단순 가격 순위를 작성하지 않는다.
+
+- Promptfoo: Red Teaming probe 수와 기업별 계약 조건
+- Azure AI Content Safety: 서비스별 텍스트 처리량과 적용 요금
+- PyRIT: 실행에 연결되는 모델·서비스·인프라 사용량
+- Check Point AI Guardrails: Screening 요청량과 기업 계약 조건
+- Cisco AI Defense: 구독 대상 AI Application 수량
+- NeMo Guardrails: 모델·인프라·운영 리소스
+
+향후 비용 비교를 수행하려면 동일한 공격·정상 데이터, 모델, 실행 횟수, 검사 위치와 비용 포함 범위를 고정해야 한다.
+
+이번 문서는 공개 기능·요금 구조 비교이며, 제품별 최저 가격 또는 총비용 우열 비교는 수행하지 않았다.
+
+#### 추가 공식 근거
+
+기존 참고자료 [1]~[11]을 유지하고 다음 자료를 추가한다.
+
+[12] Check Point AI Security, AI Guardrails Dashboard  
+https://docs.lakera.ai/docs/platform
+
+- 확인 위치: Community와 Enterprise 제공 조건, 월별 screening 요청 한도
+- 활용: Check Point 무료 이용 한도 및 기업용 제공 방식 확인
+
+공식 자료는 향후 갱신될 수 있으므로, 사업화 또는 실제 도입 검토 시 적용 날짜와 계약 조건을 재확인해야 한다.
 ## 5. 활용 방안 및 수익 모델
 
 | 활용 분야 | 활용 방법 | 예상 수익 모델 |
