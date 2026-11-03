@@ -400,6 +400,15 @@ st.title("LLM Defense Trade-off Lab")
 st.write("방어 모드 실행 · trace 확인")
 
 cases = load_cases()
+case_redaction_error = False
+try:
+    case_redactor = cb.load_redactor(
+        DATA_DIR, cases, rules_path=os.environ.get("EVALUATION_RULES_FILE"),
+        credentials=[os.environ.get(key) for key in ("MODEL_API_KEY", "D2_API_KEY")],
+    ) if cases else None
+except (OSError, ValueError, KeyError, TypeError, AttributeError):
+    st.error("케이스 표시용 마스킹 자료를 읽을 수 없습니다. 데이터와 평가 규칙 설정을 확인하세요.")
+    cases, case_redactor, case_redaction_error = [], None, True
 case = None
 
 # '케이스 찾기' 탭에서 고른 케이스는 다음 실행 때 사이드바 선택으로 옮긴다
@@ -423,14 +432,17 @@ with st.sidebar:
         case = st.radio(
             "대표 케이스 바로 선택",
             cb.radio_options(representatives, current),
-            format_func=cb.case_text,
+            format_func=lambda c: cb.case_text(c, redactor=case_redactor),
             key="case_selector",
         )
         st.caption("다른 케이스는 오른쪽 **케이스 찾기** 탭에서 검색해 고르세요.")
         case_id = case["case_id"]
         scenario = case["scenario"]
         dataset_version = case["source_version"]
-        st.info(f"실행할 케이스: **{case_id}**  \n{cb.summary(case)}")
+        st.info(f"실행할 케이스: **{case_id}**  \n{cb.summary(case, redactor=case_redactor)}")
+    elif case_redaction_error:
+        st.caption("마스킹 자료를 복구하면 케이스를 고를 수 있습니다. 저장 결과 조회는 사용할 수 있습니다.")
+        case_id, scenario, dataset_version = "", "rag_chat", MANIFEST["dataset_version"]
     else:
         st.warning("케이스 파일(data/cases.v0.1.jsonl)이 아직 없습니다. 아래 값으로 테스트 요청만 보낼 수 있습니다.")
         case_id = st.text_input("테스트용 case_id", "test_case_001")
@@ -454,7 +466,7 @@ with st.sidebar:
                             format_func=lambda value: label_of("defense_positions", value),
                             disabled=mode not in D2_MODES, key="defense_position")
 
-    blocked = cb.run_block_reason(case)
+    blocked = "케이스 표시용 마스킹 자료를 먼저 확인하세요." if case_redaction_error else cb.run_block_reason(case)
     if blocked:
         st.warning(blocked)
     button_text = "재실행" if "result" in st.session_state else "실행"
@@ -477,7 +489,9 @@ def reset_case_filters():
 
 # 케이스 찾기: 검색·필터·정렬·페이지. 여기서는 모델을 부르지 않는다 (선택만 함)
 with tab_find:
-    if not cases:
+    if case_redaction_error:
+        st.info("마스킹 자료를 확인한 뒤 케이스를 탐색할 수 있습니다.")
+    elif not cases:
         st.info("케이스 파일이 없어 검색할 수 없습니다.")
     else:
         top = st.columns([3, 1])
@@ -496,7 +510,8 @@ with tab_find:
         include_holdout = cols[3].checkbox("최종 평가용(holdout) 포함", key="case_holdout", disabled=not has_holdout,
                                           help="보기만 할 수 있고 실행은 막혀 있습니다.")
 
-        found = cb.sort_cases(cb.filter_cases(cases, query, f_scenario, f_label, f_language, include_holdout), sort_key)
+        found = cb.sort_cases(cb.filter_cases(cases, query, f_scenario, f_label, f_language, include_holdout,
+                                             redactor=case_redactor), sort_key)
         signature = (query, f_scenario, f_label, f_language, include_holdout, sort_key)
         if st.session_state.get("case_signature") != signature:  # 조건이 바뀌면 1페이지로
             st.session_state["case_signature"] = signature
@@ -513,21 +528,21 @@ with tab_find:
             page = st.number_input("페이지", min_value=1, max_value=pages, step=1, key="case_page")
             shown, page, pages = cb.paginate(found, page)
             info[0].caption(f"전체 {len(cases)}건 중 {len(found)}건 · {page}/{pages} 페이지 · 한 페이지 {cb.PAGE_SIZE}건")
-            st.dataframe([cb.row(item, case_id) for item in shown], hide_index=True)
+            st.dataframe([cb.row(item, case_id, redactor=case_redactor) for item in shown], hide_index=True)
 
             ids = [item["case_id"] for item in found]
             pick = st.selectbox("선택할 케이스 (입력해서 찾을 수 있음)", ids, key="case_pick",
                                 index=ids.index(case_id) if case_id in ids else 0,
-                                format_func=lambda i: cb.case_text(case_by_id[i]))
+                                format_func=lambda i: cb.case_text(case_by_id[i], redactor=case_redactor))
             picked = case_by_id[pick]
             with st.container(border=True):
                 st.markdown(f"**미리보기 · {pick}**")
                 pv = st.columns(4)
-                for index, (name, value) in enumerate(cb.preview(picked)):
+                for index, (name, value) in enumerate(cb.preview(picked, redactor=case_redactor)):
                     pv[index % 4].caption(name)
                     pv[index % 4].write(value)
                 with st.expander("입력 전체 보기 (보호값은 가려짐)"):
-                    st.code(cb.mask(picked.get("user_input")), language=None, wrap_lines=True)
+                    st.code(cb.mask(picked.get("user_input"), redactor=case_redactor), language=None, wrap_lines=True)
                 if cb.run_block_reason(picked):  # holdout은 보기만. 선택 버튼을 주지 않는다
                     st.warning(cb.run_block_reason(picked) + " 미리보기만 할 수 있고 실행할 케이스로 고를 수 없습니다.")
                 elif pick == case_id:

@@ -38,15 +38,30 @@
 
 ## 3. trace를 화면에서 여는 방법
 
-원본 기록이 있는 PC(B 백엔드 담당)에서:
+원본 기록이 있는 PC에서, 해당 사례의 출처별 `runs` 디렉터리를 지정한다. 감사 최상위 폴더 자체는 실행 저장소가 아니다:
 
 ```powershell
-python -m scripts.mvp serve --fixture-model --runs-dir <감사 실행 기록 폴더>
+python -m scripts.mvp serve --fixture-model --runs-dir runs/attack-audit-2026-10-20/exploration/executions/week2/runs
 ```
 
 첫 페이지 → **한 번 실행** 탭 → **실행 번호로 저장 결과 조회**에 위 표의 실행 번호를 넣는다.
 화면은 ① 실행 조건·상태 → ② 출력과 평가 요약 → ③ 단계별 trace·판정 근거 순서로 보여 준다. 조회는 모델을 호출하지 않는다.
-감사 기록 폴더가 일반 실행 저장소와 같은 구조인지는 B 백엔드 담당 확인이 필요하다 (미확인).
+`ai` 사례는 위 경로의 `week2`를 `ai`로, `legacy` 사례는 `legacy`로 바꾼다.
+아래 자동 재생 검증에서 이 세 저장소의 실제 manifest·동결 평가 규칙을 사용해 표의 10개 실행을 모두 조회했다.
+
+### #56 후속 자동 재생 검증 (2026-11-03, Codex)
+
+```powershell
+python -m scripts.verify_week4_case_traces --audit-root runs/attack-audit-2026-10-20 --output runs/week4-selected-traces.json
+```
+
+위 명령은 API의 읽기 전용 GET과 Streamlit AppTest로 이 문서의 10개 사례를 조회한다.
+화면 출력·평가 사유·방어 판정/근거 코드가 현재 공개 API와 일치하고, 동결 규칙을 다시 적용해도 추가 마스킹할 값이 없는지 검사한다.
+실행 POST·네트워크 I/O·모델 제공자 호출은 차단한다. 각 원본 저장소의 전체 파일 SHA를 조회 전후 대조한다.
+
+10/10 통과, 모델 호출 0, 원본 불변. 공개 기록은 [frontend-selected-traces.v0.1.json](../../docs/examples/week4/frontend-selected-traces.v0.1.json)이다.
+출력 원문·private 경로·보호값 대응표를 기록에 넣지 않고 run ID·공개 trace hash·검증 결과만 남겼다.
+검증자는 Codex이며, 새 사람의 A/B/C 공동 인수를 수행한 것으로 표시하지 않는다.
 
 ## 4. 이 PC에서 직접 따라간 사례 (원래 자동 평가)
 
@@ -66,7 +81,7 @@ python -m scripts.mvp serve --fixture-model --runs-dir <감사 실행 기록 폴
 
 ## 5. 하지 않은 것
 
-- #41 감사 실행 10개 사례의 trace 화면 열람: 원본 기록이 B 백엔드 담당 PC에만 있어 미수행. 위 3절 방법으로 확인 요청 예정
+- #41 감사 실행 10개 사례의 사람에 의한 화면 인수: 미수행. 3절의 Codex AppTest·API 자동 재생 검증과 구분
 - 사람 검토(gold) 연결: #41·#43 결정에 따라 `pending`
 - 실제 발생하지 않은 오류를 위한 fixture 예시는 [week2 예시](../../docs/examples/week2/)의 `detector-failed`·`review-needed` 등으로, 기능 검증용이며 위 실제 사례와 섞지 않는다
 
