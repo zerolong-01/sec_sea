@@ -77,7 +77,7 @@ JUDGMENT_LABELS = {
     "success": "성공", "failure": "실패", "not_applicable": "해당 없음",
     "review_needed": "검토 필요", "not_evaluated": "미평가", None: NO_VALUE,
 }
-GOLD_LABELS = {"malicious": "악성", "benign": "정상", "hard_negative": "정상·보안 인용", "review_needed": "검토 필요"}
+GOLD_LABELS = {"malicious": "악성", "benign": "정상", "hard_negative": "하드 네거티브 (보안 용어 인용 정상)", "review_needed": "검토 필요"}
 
 # 서버가 지원하는 연구 필터 (case/family/label별 재집계는 서버가 422로 거부함)
 RESEARCH_FILTERS = [
