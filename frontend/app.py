@@ -6,10 +6,13 @@ from pathlib import Path
 import streamlit as st
 
 import case_browser as cb
+import status_style as ss
 from ui_core import (
     COMPARE_DIFFERENT, COMPARE_UNAVAILABLE, D2_MODES, NO_VALUE, ROOT, SHARED,
-    BOTH, compare_verdict, label_of, load_run, run_case, summary_row, text_or_missing,
+    BOTH, compare_verdict, count_decisions, label_of, load_run, run_case, summary_row, text_or_missing,
 )
+
+PREVIEW_LENGTH = 300  # 입력·출력이 이보다 길면 앞부분만 보이고 나머지는 펼쳐 본다
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT / "data")).resolve()
 CASES_PATH = DATA_DIR / "cases.v0.1.jsonl"
@@ -33,6 +36,21 @@ def show_text(text):
     st.code(text, language=None, wrap_lines=True)
 
 
+def show_long_text(text, title):
+    """긴 글은 앞부분만 보여 주고 전체는 펼쳐 보게 한다. 짧으면 그대로 보여 준다."""
+    if len(text) <= PREVIEW_LENGTH:
+        show_text(text)
+        return
+    show_text(text[:PREVIEW_LENGTH] + " …")
+    with st.expander(f"{title} 전체 보기 ({len(text)}자)"):
+        show_text(text)
+
+
+def box_title(text):
+    """테두리 상자 안의 제목. 큰 제목이 너무 많지 않게 굵은 글씨로 통일한다."""
+    st.markdown(f"**{ss.md_text(text)}**")
+
+
 def format_time(created_at):
     """세계 표준시로 온 실행 시각을 한국 시간으로 바꿔 보여 준다."""
     try:
@@ -53,30 +71,86 @@ def load_cases():
     return cases
 
 def render_header(trace):
-    """결과 맨 위: 상태, 실행 번호, 실행 시각, 방어 모드"""
+    """① 실행 조건·상태: 상태, 실행 번호, 실행 시각, 방어 모드와 케이스·범위"""
     request = trace.get("request") or {}
-    cols = st.columns(4)
-    cols[0].caption("상태")
-    cols[0].text(str(label_of("run_statuses", trace.get("status")) or NO_VALUE))
-    cols[1].caption("실행 번호")
-    cols[1].text(str(trace.get("run_id") or NO_VALUE))
-    cols[2].caption("실행 시각 (한국 시간)")
-    cols[2].text(format_time(trace.get("created_at")))
-    cols[3].caption("방어 모드")
-    cols[3].text(str(label_of("defense_modes", request.get("defense_mode")) or NO_VALUE))
-    scope = (trace.get("manifest") or {}).get("execution_scope")
-    st.caption(f"실행 범위: {label_of('execution_scopes', scope) or NO_VALUE}")
-    kind = (trace.get("manifest") or {}).get("execution_kind")
-    if kind is None and trace.get("schema_version") == "0.2":
-        kind = SHARED["execution_kinds"]["FULL_PIPELINE"]["value"]
-    st.caption(f"실행 종류: {label_of('execution_kinds', kind) or NO_VALUE}")
-    st.caption(f"케이스: {request.get('case_id') or NO_VALUE} · 앱: {label_of('scenarios', request.get('scenario')) or NO_VALUE}")
-    if request.get("defense_mode") in D2_MODES:
-        st.caption(f"요청한 D2 위치: {label_of('defense_positions', request.get('defense_position')) or NO_VALUE} · "
-                   f"저장된 D2 위치: {label_of('defense_positions', (trace.get('manifest') or {}).get('defense_position')) or NO_VALUE}")
-    error = trace.get("error")
-    if error:
-        st.error(f"{error.get('code') or '오류'}: {error.get('message') or ''}")
+    manifest = trace.get("manifest") or {}
+    with st.container(border=True):
+        cols = st.columns(4)
+        cols[0].caption("실행 상태")
+        cols[0].markdown(ss.badge(label_of("run_statuses", trace.get("status")) or NO_VALUE, ss.run_tone(trace.get("status"))))
+        cols[1].caption("실행 번호")
+        cols[1].text(str(trace.get("run_id") or NO_VALUE))
+        cols[2].caption("실행 시각 (한국 시간)")
+        cols[2].text(format_time(trace.get("created_at")))
+        cols[3].caption("방어 모드")
+        cols[3].text(str(label_of("defense_modes", request.get("defense_mode")) or NO_VALUE))
+        kind = manifest.get("execution_kind")
+        if kind is None and trace.get("schema_version") == "0.2":
+            kind = SHARED["execution_kinds"]["FULL_PIPELINE"]["value"]
+        st.caption(f"케이스: {request.get('case_id') or NO_VALUE} · 앱: {label_of('scenarios', request.get('scenario')) or NO_VALUE} · "
+                   f"실행 범위: {label_of('execution_scopes', manifest.get('execution_scope')) or NO_VALUE} · "
+                   f"실행 종류: {label_of('execution_kinds', kind) or NO_VALUE}")
+        if request.get("defense_mode") in D2_MODES:
+            st.caption(f"요청한 D2 위치: {label_of('defense_positions', request.get('defense_position')) or NO_VALUE} · "
+                       f"저장된 D2 위치: {label_of('defense_positions', manifest.get('defense_position')) or NO_VALUE}")
+        error = trace.get("error")
+        if error:
+            st.error(f"{error.get('code') or '오류'}: {error.get('message') or ''}")
+
+
+def render_summary(trace):
+    """② 출력과 평가 요약: 결과를 먼저 한눈에. 값은 trace 그대로 옮긴다 (새로 계산하지 않음)."""
+    output = trace.get("output") or {}
+    evaluation = trace.get("evaluation") or {}
+    metrics = trace.get("metrics") or {}
+    decisions = [event.get("decision") for event in trace.get("defense_events") or []]
+    with st.container(border=True):
+        cols = st.columns(4)
+        cards = [
+            ("출력 결과", label_of("output_outcomes", output.get("outcome")) or NO_VALUE,
+             ss.output_tone(output.get("outcome")), None),
+            ("방어 판정", count_decisions(trace), ss.decision_tone(decisions), None),
+        ]
+        for title, kind, key in (("공격 성공", "attack", "attack_success"),
+                                 ("정상 태스크 성공", "normal", "normal_task_success")):
+            value = evaluation.get(key)
+            cards.append((title, label_of("evaluation_statuses", value) or NO_VALUE,
+                          ss.evaluation_tone(kind, value), ss.evaluation_meaning(kind, value)))
+        for col, (title, text, tone, note) in zip(cols, cards):
+            col.caption(title)
+            col.markdown(ss.badge(text, tone))
+            if note:
+                col.caption(note)
+
+        cols = st.columns(4)
+        cost = metrics.get("estimated_cost_usd")
+        values = [
+            ("응답 지연 시간(ms)", text_or_missing(metrics.get("latency_ms"))),
+            ("입력 / 출력 토큰", f"{text_or_missing(metrics.get('input_tokens'))} / {text_or_missing(metrics.get('output_tokens'))}"),
+            ("추정 비용(USD)", "미확인" if cost is None else str(cost)),
+            ("사용량 출처", label_of("usage_sources", metrics.get("usage_source")) or NO_VALUE),
+        ]
+        for col, (title, value) in zip(cols, values):
+            col.caption(title)
+            col.markdown(f"**{ss.md_text(value)}**")
+
+        if output.get("display_text"):
+            st.caption("출력 미리보기 (전체는 아래 ③의 5. 출력)")
+            show_text(output["display_text"][:PREVIEW_LENGTH] + (" …" if len(output["display_text"]) > PREVIEW_LENGTH else ""))
+
+
+def render_result(trace):
+    """결과 읽는 순서: ① 실행 조건·상태 → ② 출력과 평가 요약 → ③ 단계별 trace·판정 근거"""
+    st.markdown("##### ① 실행 조건·상태")
+    render_header(trace)
+    st.markdown("##### ② 출력과 평가 요약")
+    render_summary(trace)
+    st.markdown("##### ③ 단계별 trace·판정 근거")
+    left, right = st.columns([2, 1])
+    with left:
+        render_timeline(trace)
+    with right:
+        render_meta(trace)
 
 
 def render_timeline(trace):
@@ -85,7 +159,7 @@ def render_timeline(trace):
 
     # 1. 입력
     with st.container(border=True):
-        st.subheader(stage_title("input"))
+        box_title(stage_title("input"))
         data = trace.get("input") or {}
         user_input = data.get("user_input")
         doc_ids = data.get("external_document_ids") or []
@@ -94,7 +168,7 @@ def render_timeline(trace):
         else:
             st.caption("사용자 입력")
             if user_input:
-                show_text(user_input)
+                show_long_text(user_input, "입력")
             else:
                 st.text("없음")
             st.caption("외부 문서 ID")
@@ -102,7 +176,7 @@ def render_timeline(trace):
 
     # 2. 검색·수집
     with st.container(border=True):
-        st.subheader(stage_title("retrieval"))
+        box_title(stage_title("retrieval"))
         docs = trace.get("retrieval") or []
         if not docs:
             st.caption("검색된 문서 없음")
@@ -120,27 +194,31 @@ def render_timeline(trace):
 
     # 3. 프롬프트 조립
     with st.container(border=True):
-        st.subheader(stage_title("prompt_assembly"))
+        box_title(stage_title("prompt_assembly"))
         components = sorted(
             trace.get("prompt_assembly") or [], key=lambda c: c.get("order") or 0
         )
         if not components:
             st.caption("프롬프트 구성 요소 없음")
-        for comp in components:
-            parts = [
-                str(comp.get("order")),
-                str(label_of("prompt_component_types", comp.get("component_type"))),
-            ]
-            if comp.get("source_ref"):
-                parts.append(f"출처 {comp['source_ref']}")
-            if comp.get("is_masked"):
-                parts.append("마스킹됨")
-            st.text(" · ".join(parts))
-            show_text(comp.get("display_text") or "")
+        else:
+            names = [str(label_of("prompt_component_types", c.get("component_type"))) for c in components]
+            st.caption(f"구성 요소 {len(components)}개: " + " → ".join(names))
+            with st.expander("조립된 프롬프트 펼쳐 보기"):
+                for comp in components:
+                    parts = [
+                        str(comp.get("order")),
+                        str(label_of("prompt_component_types", comp.get("component_type"))),
+                    ]
+                    if comp.get("source_ref"):
+                        parts.append(f"출처 {comp['source_ref']}")
+                    if comp.get("is_masked"):
+                        parts.append("마스킹됨")
+                    st.text(" · ".join(parts))
+                    show_text(comp.get("display_text") or "")
 
     # 4. 방어 판정
     with st.container(border=True):
-        st.subheader(stage_title("defense_events"))
+        box_title(stage_title("defense_events"))
         events = trace.get("defense_events") or []
         mode_label = label_of("defense_modes", request.get("defense_mode"))
         if not events:
@@ -170,24 +248,39 @@ def render_timeline(trace):
 
     # 5. 출력
     with st.container(border=True):
-        st.subheader(stage_title("output"))
+        box_title(stage_title("output"))
         output = trace.get("output") or {}
         parts = [str(label_of("output_outcomes", output.get("outcome")) or NO_VALUE)]
         if output.get("is_masked"):
             parts.append("마스킹됨")
         st.text(" · ".join(parts))
         if output.get("display_text"):
-            show_text(output["display_text"])
+            show_long_text(output["display_text"], "출력")
         else:
             st.caption("출력 없음")
 
 
 def render_meta(trace):
-    """오른쪽: 성능·비용, 실행 설정, 데이터 버전, 평가"""
+    """오른쪽: 평가 근거 → 성능·비용 → 탐지 대상별 평가 → (펼쳐 보기) 실행 설정·데이터 버전·모델 호출"""
     request = trace.get("request") or {}
 
     with st.container(border=True):
-        st.subheader(str(label_of("trace_stages", "metrics")))
+        box_title(label_of("trace_stages", "evaluation"))
+        evaluation = trace.get("evaluation") or {}
+        st.caption("공격 성공")
+        st.text(str(label_of("evaluation_statuses", evaluation.get("attack_success")) or NO_VALUE))
+        st.caption("정상 태스크 성공")
+        st.text(str(label_of("evaluation_statuses", evaluation.get("normal_task_success")) or NO_VALUE))
+        if evaluation.get("reason"):
+            st.caption("판정 근거")
+            st.text(str(evaluation["reason"]))
+        for key, title in (("evaluator_version", "evaluator_version"), ("policy_version", "평가 정책"),
+                           ("reviewer", "검토자"), ("evaluated_at", "평가 시각")):
+            st.caption(title)
+            st.text(text_or_missing(evaluation.get(key)))
+
+    with st.container(border=True):
+        box_title(label_of("trace_stages", "metrics"))
         metrics = trace.get("metrics") or {}
         for item in SHARED["metric_keys"].values():
             value = metrics.get(item["value"])
@@ -204,7 +297,22 @@ def render_meta(trace):
                           for item in metrics["stages"]], hide_index=True)
 
     with st.container(border=True):
-        st.subheader("실행 설정")
+        box_title("탐지 대상별 독립 평가")
+        rows = trace.get("detector_evaluation") or []
+        if not rows:
+            st.caption("탐지 대상별 평가 기록 없음")
+        else:
+            st.dataframe([{"단계": label_of("trace_stages", item.get("stage")),
+                           "대상": item.get("target_ref") or "사용자 입력",
+                           "정답": label_of("detector_gold_labels", item.get("gold_label")) or NO_VALUE,
+                           "분석": label_of("detector_analysis_statuses", item.get("analysis_status")) or NO_VALUE,
+                           "정답 버전": item.get("gold_version") or NO_VALUE,
+                           "검토자": item.get("reviewer") or NO_VALUE,
+                           "근거": item.get("reason") or NO_VALUE} for item in rows], hide_index=True)
+
+    with st.expander("실행 설정·데이터 버전"):
+        st.caption("dataset_version · corpus_version")
+        st.text(f"{request.get('dataset_version') or NO_VALUE} · {request.get('corpus_version') or NO_VALUE}")
         manifest = trace.get("manifest") or {}
         if not manifest:
             st.caption(NO_VALUE)
@@ -216,28 +324,6 @@ def render_meta(trace):
                 st.text(json.dumps(value, ensure_ascii=False))
             else:
                 st.text(str(value))
-
-    with st.container(border=True):
-        st.subheader("데이터 버전")
-        for key in ("dataset_version", "corpus_version"):
-            st.caption(key)
-            st.text(str(request.get(key) or NO_VALUE))
-
-    with st.container(border=True):
-        st.subheader(str(label_of("trace_stages", "evaluation")))
-        evaluation = trace.get("evaluation") or {}
-        st.caption("공격 성공")
-        st.text(str(label_of("evaluation_statuses", evaluation.get("attack_success")) or NO_VALUE))
-        st.caption("정상 태스크 성공")
-        st.text(str(label_of("evaluation_statuses", evaluation.get("normal_task_success")) or NO_VALUE))
-        st.caption("evaluator_version")
-        st.text(str(evaluation.get("evaluator_version") or NO_VALUE))
-        if evaluation.get("reason"):
-            st.caption("판정 근거")
-            st.text(str(evaluation["reason"]))
-        for key, title in (("policy_version", "평가 정책"), ("reviewer", "검토자"), ("evaluated_at", "평가 시각")):
-            st.caption(title)
-            st.text(text_or_missing(evaluation.get(key)))
 
     with st.expander("모델 호출 기록 (마스킹됨)"):
         for call in trace.get("model_calls") or []:
@@ -251,20 +337,6 @@ def render_meta(trace):
             for message in call.get("messages") or []:
                 st.caption(message.get("role") or NO_VALUE)
                 show_text(message.get("content") or "")
-
-    with st.container(border=True):
-        st.subheader("탐지 대상별 독립 평가")
-        rows = trace.get("detector_evaluation") or []
-        if not rows:
-            st.caption("탐지 대상별 평가 기록 없음")
-        else:
-            st.dataframe([{"단계": label_of("trace_stages", item.get("stage")),
-                           "대상": item.get("target_ref") or "사용자 입력",
-                           "정답": label_of("detector_gold_labels", item.get("gold_label")) or NO_VALUE,
-                           "분석": label_of("detector_analysis_statuses", item.get("analysis_status")) or NO_VALUE,
-                           "정답 버전": item.get("gold_version") or NO_VALUE,
-                           "검토자": item.get("reviewer") or NO_VALUE,
-                           "근거": item.get("reason") or NO_VALUE} for item in rows], hide_index=True)
 
 
 def render_comparison(column, results, experiment):
@@ -298,12 +370,7 @@ def render_comparison(column, results, experiment):
             if item["error"]:
                 st.error(f"{item['error'].get('code') or '오류'}: {item['error'].get('message') or ''}")
             if item["trace"]:
-                render_header(item["trace"])
-                left, right = st.columns([2, 1])
-                with left:
-                    render_timeline(item["trace"])
-                with right:
-                    render_meta(item["trace"])
+                render_result(item["trace"])
 
 
 def run_many(settings, case_id, scenario, dataset_version, corpus_version):
@@ -502,10 +569,7 @@ with tab_single:
         error = result["error"]
         trace = result["trace"]
 
-        if trace:
-            render_header(trace)
-
-        # 오류 상자: 404·422의 detail, 또는 trace 안의 error
+        # 오류 상자: 404·422의 detail, 또는 trace 안의 error (결과보다 먼저 보이게)
         if error:
             title = error["code"] or "오류"
             if error["status"]:
@@ -514,11 +578,7 @@ with tab_single:
             st.text(error["message"] or "")
 
         if trace:
-            left, right = st.columns([2, 1])
-            with left:
-                render_timeline(trace)
-            with right:
-                render_meta(trace)
+            render_result(trace)
 
 # 4개 모드 비교: 같은 케이스를 네 방어 모드로 차례로 실행해 나란히 놓는다
 with tab_compare:

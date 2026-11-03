@@ -16,7 +16,7 @@ from batch_core import (  # noqa: E402
     csv_report_error, decision_rows, decision_status_text, detector_rows, filter_options, get_batch, get_csv, get_report,
     group_title, kpi_cards, md_safe, list_batches, option_text, payload_rows, plan_rows_for_runs, reason_text,
     report_json_bytes, baseline_rows, scatter_points, scope_text, batch_status_text, status_counts_text,
-    metric_rows, sample_rows, policy_rows,
+    metric_rows, sample_rows, policy_rows, TABLE_METRICS,
     summary_rows, warnings_for,
 )
 from ui_core import label_of, load_run  # noqa: E402
@@ -144,31 +144,33 @@ with st.expander("배치 정보 (예산·조건·데이터 출처·고정 해시
     else:
         st.caption("이 리포트에는 가격표 스냅샷이 기록되어 있지 않습니다. 비용 미확인을 0으로 바꾸지 않습니다.")
 
-# 필터
+# 필터: 평소에는 접어 두고, 제목에 지금 적용 중인 필터를 보여 준다 (#48: KPI를 먼저 보이게)
 options = filter_options(summary, report)
-with st.form("filters_form"):
-    st.markdown("**필터** — 바꾸면 서버가 같은 저장 결과로 다시 집계합니다 (모델 호출 없음)")
-    chosen = {}
-    columns = st.columns(4)
-    shown = [f for f in ANALYSIS_FILTERS if options.get(f[0])]
-    for i, (key, title, _) in enumerate(shown):
-        values = [None] + options[key]
-        current = filters.get(key)
-        chosen[key] = columns[i % 4].selectbox(
-            title, values,
-            index=values.index(current) if current in values else 0,
-            format_func=lambda v, k=key: "전체" if v is None else option_text(k, v, summary),
-            key=f"filter_{batch_id}_{key}",
-        )
-    applied = st.form_submit_button("필터 적용")
+filter_names = dict((f[0], f[1]) for f in ANALYSIS_FILTERS)
+applied_text = " · ".join(f"{filter_names[k]}={option_text(k, v, summary)}" for k, v in filters.items())
+with st.expander(f"필터 — {applied_text if filters else '전체 (적용한 필터 없음)'}", expanded=False):
+    with st.form("filters_form"):
+        st.caption("바꾸면 서버가 같은 저장 결과로 다시 집계합니다 (모델 호출 없음)")
+        chosen = {}
+        columns = st.columns(4)
+        shown = [f for f in ANALYSIS_FILTERS if options.get(f[0])]
+        for i, (key, title, _) in enumerate(shown):
+            values = [None] + options[key]
+            current = filters.get(key)
+            chosen[key] = columns[i % 4].selectbox(
+                title, values,
+                index=values.index(current) if current in values else 0,
+                format_func=lambda v, k=key: "전체" if v is None else option_text(k, v, summary),
+                key=f"filter_{batch_id}_{key}",
+            )
+        applied = st.form_submit_button("필터 적용")
 if applied:
     st.session_state["filters"][batch_id] = {k: v for k, v in chosen.items() if v is not None}
     st.session_state.pop("batch_csv", None)
     st.session_state.pop("batch_trace", None)
     st.rerun()
 if filters:
-    st.caption("적용 중인 필터: " + " · ".join(f"{dict((f[0], f[1]) for f in ANALYSIS_FILTERS)[k]}={option_text(k, v, summary)}"
-                                          for k, v in filters.items()))
+    st.caption(md_safe("적용 중인 필터: " + applied_text))
 
 if report_error:
     show_error(report_error)
@@ -209,8 +211,14 @@ with tab_kpi:
 
     st.subheader("조건별 비교표")
     rows = comparison_rows(report)
-    table([{k: v for k, v in r.items() if k != "group_id"} for r in rows])
-    st.caption("비율 칸은 '값 (분자/분모)'입니다. CI·제외 사유는 위 KPI 카드나 내보내기 파일에서 볼 수 있습니다.")
+    # 핵심 열(조건 → 주요 지표 → 추천 판단)을 앞에, 출처·변형 같은 구분 열은 뒤에 둔다. 값은 그대로.
+    first = ["방어 조건", "앱", "언어"] + [METRICS[k][0] for k in TABLE_METRICS] + ["비용 합계(USD)", "추천 판단"]
+    columns_in_rows = [k for k in (rows[0] if rows else {}) if k != "group_id"]
+    order = [c for c in first if c in columns_in_rows] + [c for c in columns_in_rows if c not in first]
+    table([{k: v for k, v in r.items() if k != "group_id"} for r in rows], column_order=order,
+          column_config={"방어 조건": st.column_config.TextColumn(pinned=True)})
+    st.caption("비율 칸은 '값 (분자/분모)'입니다. 왼쪽 '방어 조건' 열은 가로로 넘겨도 고정됩니다. "
+               "CI·제외 사유는 위 KPI 카드나 내보내기 파일에서 볼 수 있습니다.")
 
 # ---------------------------------------------------------------------------
 # 4. Trade-off 산점도

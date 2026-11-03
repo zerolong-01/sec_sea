@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT / "frontend"))
 
 import case_browser as cb  # noqa: E402
 import research_core as rc  # noqa: E402
+import status_style as ss  # noqa: E402
 
 CASES = [json.loads(line) for line in (ROOT / "data/week2/cases.v0.1.jsonl").read_text(encoding="utf-8").splitlines()
          if line.strip()]
@@ -279,6 +280,51 @@ class PageTest(unittest.TestCase):
                 self.assertTrue(app.button(key=key).disabled, key)
         post.assert_not_called()
 
+
+
+class StatusStyleTest(unittest.TestCase):
+    """상태는 색만이 아니라 아이콘·글자와 함께 보인다. 공격 '성공'은 나쁜 결과로 칠한다."""
+
+    def test_badge_keeps_text_and_icon(self):
+        self.assertEqual(ss.badge("완료", "good"), ":green-badge[✅ 완료]")
+        self.assertIn("\\$", ss.badge("$0.1", "neutral"))
+        self.assertIn("\\]", ss.badge("a]b", "neutral"))
+
+    def test_attack_success_is_bad_and_normal_success_is_good(self):
+        self.assertEqual(ss.evaluation_tone("attack", "success"), "bad")
+        self.assertEqual(ss.evaluation_tone("attack", "failure"), "good")
+        self.assertEqual(ss.evaluation_tone("normal", "success"), "good")
+        self.assertEqual(ss.evaluation_tone("normal", "failure"), "bad")
+        for value in ("not_evaluated", "review_needed"):
+            self.assertEqual(ss.evaluation_tone("attack", value), "pending")
+            self.assertIn("세지 않음", ss.evaluation_meaning("normal", value))
+        self.assertEqual(ss.evaluation_tone("attack", None), "neutral")
+
+    def test_run_output_and_decision_tones(self):
+        self.assertEqual(ss.run_tone("failed"), "bad")
+        self.assertEqual(ss.run_tone("blocked"), "blocked")
+        self.assertEqual(ss.run_tone(None), "neutral")
+        self.assertEqual(ss.output_tone("error"), "bad")
+        self.assertEqual(ss.decision_tone(["allow", "quarantine"]), "blocked")
+        self.assertEqual(ss.decision_tone([]), "neutral")
+
+
+class ResultLayoutTest(unittest.TestCase):
+    def test_result_reads_conditions_then_summary_then_trace(self):
+        from streamlit.testing.v1 import AppTest
+        trace = json.loads((ROOT / "docs/examples/week2/a006-D2.json").read_text(encoding="utf-8"))["response"]["trace"]
+        with patch("requests.post") as post:
+            app = AppTest.from_file(str(ROOT / "frontend/app.py"), default_timeout=30)
+            app.session_state["result"] = {"trace": trace, "error": None}
+            app.run()
+        self.assertFalse(app.exception, app.exception)
+        post.assert_not_called()
+        marks = [e.value for e in app.markdown]
+        heads = [m for m in marks if m.startswith("#####")]
+        self.assertEqual(heads, ["##### ① 실행 조건·상태", "##### ② 출력과 평가 요약", "##### ③ 단계별 trace·판정 근거"])
+        self.assertIn(":blue-badge[🛡️ 방어로 차단됨]", marks)
+        shown = "\n".join(str(e.value) for e in [*app.text, *app.code, *app.caption, *app.markdown])
+        self.assertNotIn("CANARY_EDU_SECRET_2026", shown)
 
 if __name__ == "__main__":
     unittest.main()

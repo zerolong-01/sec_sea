@@ -215,7 +215,9 @@ class ScreenTests(unittest.TestCase):
             app.session_state["result"] = {"trace": trace, "error": None}
             app.run()
             self.assertFalse(app.exception, name)
-            self.assertIn(ui_core.label_of("run_statuses", trace["status"]), [e.value for e in app.text])
+            # 4주차부터 실행 상태는 색 배지(markdown)로 보인다. 글자는 그대로 함께 나온다.
+            status = ui_core.label_of("run_statuses", trace["status"])
+            self.assertTrue(any(status in e.value for e in [*app.text, *app.markdown]), name)
             shown = "\n".join(str(e.value) for e in [*app.text, *app.code, *app.caption])
             self.assertNotIn("CANARY_EDU_SECRET_2026", shown)
             if trace.get("error"):
