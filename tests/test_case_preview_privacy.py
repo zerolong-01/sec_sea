@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from urllib.parse import quote
@@ -120,7 +121,27 @@ class CasePreviewPrivacyTests(unittest.TestCase):
                     self.assertIn("마스킹 자료를 읽을 수 없습니다", app.error[0].value)
                     self.assertEqual(len(app.code), 0)
                     self.assertEqual(len(app.dataframe), 0)
+                    for key in ("run_case", "run_compare", "run_positions"):
+                        self.assertTrue(app.button(key=key).disabled)
                     post.assert_not_called()
+
+    def test_broken_preview_rules_keep_saved_public_trace_lookup_available(self):
+        trace = json.loads((ROOT / "docs/examples/week2/a006-D2.json").read_text(encoding="utf-8"))["response"]["trace"]
+        with tempfile.TemporaryDirectory() as temporary:
+            env = {"DATA_DIR": str(ROOT / "data"), "MVP_MANIFEST": str(ROOT / "data/mvp-manifest.v0.1.json"),
+                   "EVALUATION_RULES_FILE": str(Path(temporary) / "missing.json")}
+            response = SimpleNamespace(status_code=200, json=lambda: trace)
+            with patch.dict(os.environ, env), patch("requests.get", return_value=response) as get, \
+                    patch("requests.post") as post:
+                app = AppTest.from_file(str(ROOT / "frontend/app.py"), default_timeout=30).run()
+                app.text_input(key="stored_run_id").set_value(trace["run_id"])
+                app.button(key="load_run").click().run()
+                self.assertFalse(app.exception, app.exception)
+                self.assertIn(trace["run_id"], [e.value for e in app.text])
+                self.assertIn(trace["input"]["user_input"], [e.value for e in app.code])
+                self.assertNotIn("case_selector", [e.key for e in app.radio])
+                get.assert_called_once()
+                post.assert_not_called()
 
     def test_missing_or_malformed_corpus_refuses_to_build_a_display_redactor(self):
         with tempfile.TemporaryDirectory() as temporary:

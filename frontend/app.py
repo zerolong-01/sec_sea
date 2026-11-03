@@ -400,6 +400,7 @@ st.title("LLM Defense Trade-off Lab")
 st.write("방어 모드 실행 · trace 확인")
 
 cases = load_cases()
+case_redaction_error = False
 try:
     case_redactor = cb.load_redactor(
         DATA_DIR, cases, rules_path=os.environ.get("EVALUATION_RULES_FILE"),
@@ -407,7 +408,7 @@ try:
     ) if cases else None
 except (OSError, ValueError, KeyError, TypeError, AttributeError):
     st.error("케이스 표시용 마스킹 자료를 읽을 수 없습니다. 데이터와 평가 규칙 설정을 확인하세요.")
-    st.stop()
+    cases, case_redactor, case_redaction_error = [], None, True
 case = None
 
 # '케이스 찾기' 탭에서 고른 케이스는 다음 실행 때 사이드바 선택으로 옮긴다
@@ -439,6 +440,9 @@ with st.sidebar:
         scenario = case["scenario"]
         dataset_version = case["source_version"]
         st.info(f"실행할 케이스: **{case_id}**  \n{cb.summary(case, redactor=case_redactor)}")
+    elif case_redaction_error:
+        st.caption("마스킹 자료를 복구하면 케이스를 고를 수 있습니다. 저장 결과 조회는 사용할 수 있습니다.")
+        case_id, scenario, dataset_version = "", "rag_chat", MANIFEST["dataset_version"]
     else:
         st.warning("케이스 파일(data/cases.v0.1.jsonl)이 아직 없습니다. 아래 값으로 테스트 요청만 보낼 수 있습니다.")
         case_id = st.text_input("테스트용 case_id", "test_case_001")
@@ -462,7 +466,7 @@ with st.sidebar:
                             format_func=lambda value: label_of("defense_positions", value),
                             disabled=mode not in D2_MODES, key="defense_position")
 
-    blocked = cb.run_block_reason(case)
+    blocked = "케이스 표시용 마스킹 자료를 먼저 확인하세요." if case_redaction_error else cb.run_block_reason(case)
     if blocked:
         st.warning(blocked)
     button_text = "재실행" if "result" in st.session_state else "실행"
@@ -485,7 +489,9 @@ def reset_case_filters():
 
 # 케이스 찾기: 검색·필터·정렬·페이지. 여기서는 모델을 부르지 않는다 (선택만 함)
 with tab_find:
-    if not cases:
+    if case_redaction_error:
+        st.info("마스킹 자료를 확인한 뒤 케이스를 탐색할 수 있습니다.")
+    elif not cases:
         st.info("케이스 파일이 없어 검색할 수 없습니다.")
     else:
         top = st.columns([3, 1])
