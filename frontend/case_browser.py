@@ -3,13 +3,19 @@
 Streamlit을 쓰지 않으므로 화면 없이 테스트할 수 있다.
 여기 있는 함수는 모두 읽기 전용이라 모델이나 서버를 부르지 않는다.
 """
-import re
+import json
+import sys
+from pathlib import Path
 
-from ui_core import NO_VALUE, label_of
+from ui_core import NO_VALUE, ROOT, label_of
+
+# Streamlit can start with only frontend/ on its import path.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from backend.app.privacy import CANARY_PATTERN, DisplayRedactor
 
 PAGE_SIZE = 10
 SUMMARY_LENGTH = 48
-CANARY_PATTERN = re.compile(r"CANARY_[A-Z0-9_]+")  # backend/app/privacy.py와 같은 공개 마스킹 규칙
 HOLDOUT = "holdout"
 
 SORT_OPTIONS = {
@@ -29,28 +35,64 @@ ATTACK_TYPE_LABELS = {
 }
 
 
-def mask(text):
-    """미리보기·목록에 보이는 글자에서 합성 보호값(CANARY_...)을 가린다."""
-    return CANARY_PATTERN.sub("[MASKED_CANARY]", str(text or ""))
+def load_redactor(data_dir, cases, *, rules_path=None, credentials=()):
+    """현재 데이터·평가 규칙의 알려진 보호값으로 표시 전용 마스킹을 준비한다.
+
+    원문·규칙·인증정보를 전역 캐시나 session_state에 넣지 않는다. 모델/설정 제공자는
+    불러오지 않으며, 지정한 자료를 읽을 수 없으면 원문 표시 대신 호출자에게 실패를 알린다.
+    """
+    corpus = [json.loads(line) for line in
+              (Path(data_dir) / "corpus.v0.1.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    if any(not isinstance(doc, dict) or not isinstance(doc.get("content"), str) for doc in corpus):
+        raise ValueError("Invalid display redaction corpus")
+    canaries = set(CANARY_PATTERN.findall(json.dumps(corpus, ensure_ascii=False)))
+    canaries.update(CANARY_PATTERN.findall(json.dumps(cases, ensure_ascii=False)))
+    protected = set()
+    if rules_path:
+        path = Path(rules_path)
+        if not path.is_absolute():
+            path = ROOT / path
+        rules = json.loads(path.read_text(encoding="utf-8"))["rules"]
+        if not isinstance(rules, list):
+            raise ValueError("Invalid display redaction rules")
+        for rule in rules:
+            if not isinstance(rule, dict):
+                raise ValueError("Invalid display redaction rule")
+            canary = rule.get("canary")
+            values = rule.get("protected_values", [])
+            if ((canary is not None and (not isinstance(canary, str) or not canary)) or
+                    not isinstance(values, list) or any(not isinstance(v, str) or not v for v in values)):
+                raise ValueError("Invalid display redaction targets")
+            if canary:
+                canaries.add(canary)
+            protected.update(values)
+    return DisplayRedactor(canaries=canaries, protected_values=protected, credentials=credentials)
 
 
-def summary(case, length=SUMMARY_LENGTH):
+def mask(text, *, redactor=None):
+    """현재 자료의 보호값과 인코딩을 백엔드 공개 trace와 같은 규칙으로 가린다."""
+    text = str(text or "")
+    redactor = redactor or DisplayRedactor(canaries=CANARY_PATTERN.findall(text))
+    return redactor(text)
+
+
+def summary(case, length=SUMMARY_LENGTH, *, redactor=None):
     """목록에 보일 짧은 입력 요약 (마스킹 후 자름)."""
-    text = " ".join(mask(case.get("user_input")).split())
+    text = " ".join(mask(case.get("user_input"), redactor=redactor).split())
     return text if len(text) <= length else text[:length - 1] + "…"
 
 
-def matches(case, query):
+def matches(case, query, *, redactor=None):
     """검색어가 케이스 ID나 입력 내용(마스킹된 글자 기준)에 있으면 True. 대소문자 무시."""
     words = [w for w in str(query or "").lower().split() if w]
     if not words:
         return True
-    haystack = " ".join([case.get("case_id", ""), mask(case.get("user_input")),
-                         ATTACK_TYPE_LABELS.get(case.get("attack_type"), "")]).lower()
+    haystack = mask(" ".join([case.get("case_id", ""), case.get("user_input", ""),
+                             ATTACK_TYPE_LABELS.get(case.get("attack_type"), "")]), redactor=redactor).lower()
     return all(word in haystack for word in words)
 
 
-def filter_cases(cases, query="", scenario=None, label=None, language=None, include_holdout=False):
+def filter_cases(cases, query="", scenario=None, label=None, language=None, include_holdout=False, *, redactor=None):
     """조건에 맞는 케이스만 남긴다. None은 '전체'. holdout은 따로 켜야 보인다."""
     result = []
     for case in cases:
@@ -62,7 +104,7 @@ def filter_cases(cases, query="", scenario=None, label=None, language=None, incl
             continue
         if language and case.get("language") != language:
             continue
-        if not matches(case, query):
+        if not matches(case, query, redactor=redactor):
             continue
         result.append(case)
     return result
@@ -100,22 +142,22 @@ def option_values(cases, key):
     return sorted({c.get(key) for c in cases if c.get(key)})
 
 
-def row(case, selected_id=None):
+def row(case, selected_id=None, *, redactor=None):
     """목록 표 한 줄."""
-    return {
+    return (redactor or DisplayRedactor())({
         "선택": "▶" if case.get("case_id") == selected_id else "",
         "케이스 ID": case.get("case_id"),
-        "입력 요약": summary(case),
+        "입력 요약": summary(case, redactor=redactor),
         "앱": label_of("scenarios", case.get("scenario")),
         "라벨": label_of("case_labels", case.get("label")),
         "언어": label_of("languages", case.get("language")),
         "구분": label_of("splits", case.get("split")),
-    }
+    })
 
 
-def preview(case):
+def preview(case, *, redactor=None):
     """선택한 케이스 미리보기. 판정 정답·목표값이 들어 있을 수 있는 칸(성공 기준, 공격 목표)은 넣지 않는다."""
-    return [
+    return [(name, mask(value, redactor=redactor)) for name, value in [
         ("케이스 ID", case.get("case_id") or NO_VALUE),
         ("앱", label_of("scenarios", case.get("scenario"))),
         ("라벨", label_of("case_labels", case.get("label"))),
@@ -124,12 +166,13 @@ def preview(case):
         ("공격 유형", ATTACK_TYPE_LABELS.get(case.get("attack_type"), case.get("attack_type") or "해당 없음")),
         ("참조 문서", ", ".join(case.get("source_document_ids") or []) or NO_VALUE),
         ("데이터 버전", case.get("source_version") or NO_VALUE),
-    ]
+    ]]
 
 
-def case_text(case):
-    return " · ".join([case["case_id"], label_of("case_labels", case.get("label")),
-                       label_of("scenarios", case.get("scenario")), label_of("languages", case.get("language"))])
+def case_text(case, *, redactor=None):
+    return mask(" · ".join([case["case_id"], label_of("case_labels", case.get("label")),
+                       label_of("scenarios", case.get("scenario")), label_of("languages", case.get("language"))]),
+                redactor=redactor)
 
 
 def selection_note(selected, visible):
