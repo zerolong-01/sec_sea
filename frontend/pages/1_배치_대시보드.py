@@ -20,6 +20,7 @@ from batch_core import (  # noqa: E402
     summary_rows, warnings_for,
 )
 from ui_core import label_of, load_run  # noqa: E402
+from research_core import get_sources, original_source_badges  # noqa: E402
 from batch_chart import SELECTION, selected_group, tradeoff_chart  # noqa: E402
 
 st.set_page_config(page_title="배치 대시보드", layout="wide")
@@ -53,6 +54,7 @@ if st.button("배치 목록 새로고침", key="reload_batches") or "batches" no
     with st.spinner("배치 목록 조회 중"):
         st.session_state["batches"] = list_batches()
     st.session_state.pop("report_cache", None)
+    st.session_state.pop("evaluation_sources", None)
     st.session_state.pop("batch_csv", None)
     st.session_state.pop("batch_trace", None)
 
@@ -66,7 +68,7 @@ if not batches:
             "python -m scripts.mvp serve --fixture-model --runs-dir runs/week3-handoff/runs", language=None)
     st.stop()
 
-with st.expander(f"저장된 배치 {len(batches)}개", expanded=len(batches) > 1):
+with st.expander(f"저장된 배치 {len(batches)}개 (목록 펼치기)", expanded=False):
     table(summary_rows(batches))
 
 batch_ids = [b["batch_id"] for b in batches]
@@ -99,6 +101,17 @@ if summary_error:
 
 for note in warnings_for(summary, report):
     st.warning(note)
+
+# 평가 출처 (#48): 이 화면은 원래 자동 평가만 보여 준다. AI 연구 판정은 별도 페이지에서.
+source_cache = st.session_state.setdefault("evaluation_sources", {})
+if batch_id not in source_cache:
+    source_cache[batch_id] = get_sources(batch_id)
+eval_sources, _ = source_cache[batch_id]
+with st.container(border=True):
+    source_cols = st.columns(4)
+    for col, (name, value) in zip(source_cols, original_source_badges(report, eval_sources)):
+        col.caption(name)
+        col.markdown(f"**{md_safe(value)}**")
 
 cols = st.columns(4)
 cols[0].metric("배치 상태", batch_status_text(summary.get("status")))

@@ -20,7 +20,7 @@ python -m scripts.mvp serve --fixture-model    # 서버 + 화면 켜기 (가짜 
 
 ## 2. 화면 구성
 
-탭이 3개 있습니다. 케이스는 왼쪽에서 고릅니다 (기본: a006, b006, h007).
+탭이 4개 있습니다. 대표 케이스(a006, b006, h007)는 왼쪽에서 바로 고르고, 다른 케이스는 **케이스 찾기** 탭에서 검색해 고릅니다 (7절).
 
 **한 번 실행**
 - 고른 방어 모드로 1건 실행
@@ -232,12 +232,44 @@ python -m unittest discover -s tests -p "test_batch_*.py" -v
 streamlit이 설치된 환경에서는 화면 테스트(정상, 연결 실패, 빈 목록)도 실행합니다.
 값이 채워진 경우는 fixture를 복사해 일부만 바꾼 합성 값이며 실제 결과가 아닙니다.
 
-## 7. 파일 구성
+## 7. 4주차 (#48): 케이스 찾기 · 평가 출처 · AI 연구 판정 보기
+
+**케이스 찾기** (첫 페이지 첫 탭) — 예전 "모든 케이스 보기"의 긴 목록을 대신합니다.
+
+- 케이스 ID·입력 내용 검색, 앱·라벨·언어 필터, 정렬, 한 페이지 10건, 필터 초기화
+- 고른 케이스는 왼쪽 위 **실행할 케이스**에 항상 보이고, 검색·페이지를 바꿔도 유지됩니다. 필터에서 빠지면 노란 안내가 나옵니다
+- 미리보기에는 입력 요약과 속성만 보이고 보호값(`CANARY_...`)은 가려집니다. 성공 기준·공격 목표 칸은 보여 주지 않습니다
+- 최종 평가용(holdout) 케이스는 기본으로 숨기고, 켜서 보더라도 실행 버튼 3개가 모두 막힙니다 (#43·#45)
+- 검색·필터·페이지·미리보기는 서버를 부르지 않습니다. 실행 버튼을 눌러야 모델을 호출합니다
+- 기존 검증 스크립트가 쓰는 `case_selector` 라디오(대표 케이스 바로 선택)는 그대로 둡니다
+
+**평가 출처 표시** (배치 대시보드 위쪽) — 이 화면이 원래 자동 평가라는 것, 사람 검토 여부, 리포트 해시, 그리고 이 배치에 AI 연구 판정이 따로 있는지(`GET .../evaluation-sources`)를 보여 줍니다.
+
+**AI 연구 판정 보기** (왼쪽 메뉴 두 번째 페이지) — #43의 두 AI 판정을 원래 평가와 **섞지 않고** 따로 보여 줍니다.
+
+| 화면 | 서버 API / 필드 |
+| --- | --- |
+| 배치 선택 | 공개 연구판 3개 배치 + 이 PC의 저장 배치, `GET .../evaluation-sources`의 `research.available` |
+| 출처·상태 칸 | `evaluation_source`, `evaluation_version`, `provenance.review_route/human_review/decision_status/applied_to_original_store/model_calls`, `decisions.status/holdout_authorized` |
+| 최종 출력 지표 표 | `POST .../research/report`의 `groups[].metrics.*` (값·분자/분모·coverage·family·제외). 지표별 출처는 `provenance.metric_sources` |
+| D2 검사 대상 정답 | `target_gold_groups[].fresh_ai_gold_counts` — 건수이며 FNR/FPR이 아님 |
+| 실행별 판정 | `members[]` (원래 평가 vs AI 판정). trace는 원래 실행 기록이 있는 PC에서만 열림 |
+| 이 보기의 한계 | `capabilities` — 제공하지 않는 값과 이유 |
+| 내보내기 | 보고서 JSON, `POST .../research/export.csv` (헤더·해시·필터·값을 화면과 대조한 뒤에만 내려받기) |
+
+필터는 서버가 지원하는 묶음(출처·앱·방어 조건·공격 목표·변형·심각도)만 씁니다. 연구판 수치는 화면에서 다시 계산하지 않습니다.
+
+통합 인수 체크리스트: [verification/week4-integration-acceptance.md](verification/week4-integration-acceptance.md)
+
+## 8. 파일 구성
 
 | 파일 | 역할 |
 | --- | --- |
-| `app.py` | 화면 (한 번 실행, 4개 모드 비교, D2 위치 비교) |
-| `pages/1_배치_대시보드.py` | 배치 대시보드 화면 (3주차) |
+| `app.py` | 화면 (케이스 찾기, 한 번 실행, 4개 모드 비교, D2 위치 비교) |
+| `pages/1_배치_대시보드.py` | 배치 대시보드 화면 (3주차, 4주차 평가 출처 표시) |
+| `pages/2_연구_판정_보기.py` | AI 연구 판정 보기 (4주차) |
+| `case_browser.py` | 케이스 찾기의 검색·필터·페이지·미리보기 |
+| `research_core.py` | 평가 출처·연구 판정 API 요청과 표시용 값 |
 | `ui_core.py` | 화면과 검증이 같이 쓰는 부분 (서버 요청, 비교 표, 조건 확인) |
 | `batch_core.py` | 배치 대시보드의 서버 요청과 표시용 값 만들기 |
 | `verify_ui.py` | 통합 검증 스크립트 |
@@ -249,7 +281,7 @@ streamlit이 설치된 환경에서는 화면 테스트(정상, 연결 실패, �
 - 차트·정책·특수 상태 보완의 오프라인 검증: [verification/week3-dashboard-completion.md](verification/week3-dashboard-completion.md)
 - 3분 시연 순서: [verification/week3-demo-guide.md](verification/week3-demo-guide.md)
 
-## 8. 사람의 확인이 필요한 일
+## 9. 사람의 확인이 필요한 일
 
 - 평가 담당의 정상 성공·과도 변환·목표값 노출·D2 정답 검토
 - 팀의 서비스 기준값·우선순위·통계 정책 합의. 동결 전에는 최종 추천을 내리지 않음
