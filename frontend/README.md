@@ -282,6 +282,23 @@ streamlit이 설치된 환경에서는 화면 테스트(정상, 연결 실패, �
 
 통합 인수 체크리스트: [verification/week4-integration-acceptance.md](verification/week4-integration-acceptance.md)
 
+### 보고서·다중 모델·상세 trace 연결 (2026-11-04)
+
+- **보고서 원본 공격 비교**는 최종 보고서 4.2절의 고정 4개 case·6조건·3반복 72개 출력 관측을 표시합니다. 정규 648건에 포함된 부분집합이며 새로운 실행이 아닙니다. 합산 기술통계와 목표별 결과를 구분하고, 원래 자동 평가를 대체하지 않습니다.
+- **모델 비교**는 `/api/v1/model-experiments`에 저장된 실험을 고릅니다. 같은 cohort의 모델별 ASR·정상 성공·두 FPR·지연·토큰·비용을 원래 분모/제외·정상 기준과 함께 표시합니다. 모델 우승자나 최종 추천을 화면에서 계산하지 않습니다. fixture/real 실행 범위와 누락 모델도 표시합니다.
+- 두 화면은 서버 JSON의 식별·버전·출처·canonical SHA를 확인합니다. CSV의 필터·근거·모델/행 소속·분자/분모·null이 화면과 같을 때만 다운로드를 제공합니다. 필터/선택 변경 시 이전 trace와 CSV를 표시하지 않습니다.
+- 연구 판정·보고서·모델 비교에서 실행 번호를 누르면 첫 페이지와 같은 상세 trace를 봅니다. 이 trace의 평가는 저장된 원래 자동 평가이며, AI 연구 판정과 별도입니다. 404 기록 부재와 연결/서버 오류를 구분하고 새로고침으로 재조회할 수 있습니다.
+
+`verify_week4`와 `verify_model_experiment`는 이 연결을 CI에서도 확인합니다. 원본 저장소가 있으면 조회만 검증할 수 있습니다:
+
+```text
+python -m scripts.verify_result_views --runs-dir runs/week3-live-2026-10-20/runs --research-batch-id batch-bd093a919251 --comparison --require-trace --output runs/views-legacy.json
+python -m scripts.verify_real_ui --runs-dir runs/week3-live-2026-10-20/runs --batch-id batch-bd093a919251 --dashboard-only --output runs/dashboard-legacy.json
+```
+
+출력은 새 경로로 지정합니다. 원본이 없으면 공개 연구/보고서만 볼 수 있으며 실제 trace 검증을 완료한 것으로 기록하지 않습니다.
+RAG 전용 ID에 의존하지 않는 비교 UI 검증은 `scripts.verify_main_comparisons`이며, 이메일 경로도 Ubuntu/Windows CI에 포함합니다.
+
 ## 8. 파일 구성
 
 | 파일 | 역할 |
@@ -289,6 +306,11 @@ streamlit이 설치된 환경에서는 화면 테스트(정상, 연결 실패, �
 | `app.py` | 화면 (케이스 찾기, 한 번 실행, 4개 모드 비교, D2 위치 비교) |
 | `pages/1_배치_대시보드.py` | 배치 대시보드 화면 (3주차, 4주차 평가 출처 표시) |
 | `pages/2_연구_판정_보기.py` | AI 연구 판정 보기 (4주차) |
+| `pages/3_보고서_원본공격_비교.py` | 최종 보고서와 같은 고정 원본 공격 비교·JSON/CSV·trace |
+| `pages/4_모델_비교.py` | 저장된 다중 모델 실험·필터·JSON/CSV·trace |
+| `trace_view.py` | 첫 페이지와 결과 조회 페이지가 공유하는 상세 trace |
+| `report_integrity.py` | 보고서 identity/hash 및 CSV의 값·메타데이터·행 소속 대조 |
+| `comparison_core.py`, `experiment_core.py` | 보고서/다중 모델의 읽기 전용 요청과 표시 매핑 |
 | `case_browser.py` | 케이스 찾기의 검색·필터·페이지·미리보기 |
 | `status_style.py` | 상태를 색·아이콘·글자로 함께 보여 주는 규칙 |
 | `research_core.py` | 평가 출처·연구 판정 API 요청과 표시용 값 |
@@ -306,7 +328,7 @@ streamlit이 설치된 환경에서는 화면 테스트(정상, 연결 실패, �
 ## 9. 사람의 확인이 필요한 일
 
 - 평가 담당의 정상 성공·과도 변환·목표값 노출·D2 정답 검토
-- 팀의 서비스 기준값·우선순위·통계 정책 합의. 동결 전에는 최종 추천을 내리지 않음
+- dev용 서비스 기준값·우선순위·통계 정책은 #43에서 `adopted_for_dev`로 채택했습니다. 실제 사람 인수·독립 검토·충분한 증거와 최종 추천 권한은 별도로 확인합니다
 
 수동 검토 입력(`PUT .../reviews/{run_id}`) 전용 화면은 선택 기능입니다. #35 필수 범위의 저장 결과 조회·필터·내보내기와 구분합니다.
 전부 실패·빈/한 결과·부분 완료·비용 미확인·탈락/동률은 공개 fixture·합성 리포트로 검증하며 실제 모델 실험과 혼동하지 않습니다.
