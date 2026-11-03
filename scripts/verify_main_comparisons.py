@@ -16,8 +16,8 @@ from scripts.verify_week2 import fixture_environment
 
 def verify(data_dir, output, evaluation_rules=None):
     from streamlit.testing.v1 import AppTest
+    import requests
     sys.path.insert(0, str(ROOT / "frontend"))
-    from ui_core import COMPARE_SAME, compare_verdict, summary_row
 
     output, data_dir = Path(output).resolve(), Path(data_dir).resolve()
     require(not output.is_relative_to(data_dir) and not data_dir.is_relative_to(output), "Output overlaps source data")
@@ -31,7 +31,16 @@ def verify(data_dir, output, evaluation_rules=None):
         with services(bundle, runs, 0, 0, demo=False, environment_overrides=overrides,
                       service_logs_dir=output / "service-logs") as (url, _, env, _):
             require(request_json(url + "/health")["model_provider"] == "fixture_http", "Expected local HTTP fixture")
-            with patch.dict(os.environ, env):
+            original_request = requests.sessions.Session.request
+            fixture_backend = url
+
+            def fixture_request(session, method, url, **kwargs):
+                require(url.startswith(fixture_backend + "/"), "UI attempted a request outside its fixture backend")
+                return original_request(session, method, url, **kwargs)
+
+            with patch.dict(os.environ, env), patch("ui_core.BACKEND_URL", url), \
+                    patch.object(requests.sessions.Session, "request", new=fixture_request):
+                from ui_core import COMPARE_SAME, compare_verdict, summary_row
                 app = AppTest.from_file(str(ROOT / "frontend/app.py"), default_timeout=60).run()
 
                 def check(state_key, experiment, column):
@@ -72,7 +81,8 @@ def verify(data_dir, output, evaluation_rules=None):
               "real_model_quality_verified": False, "dataset_version": bundle.manifest.dataset_version,
               "cases": checked, "comparison_runs": len(checked), "wire_calls": before,
               "selected_case_request_match": True, "ui_api_store_table_match": True,
-              "read_model_calls": 0, "canary_masking_checked": True, "holdout_executed": False}
+              "read_model_calls": 0, "fixture_backend_only": True,
+              "canary_masking_checked": True, "holdout_executed": False}
     atomic_json(output / "verification-report.json", result)
     return result
 

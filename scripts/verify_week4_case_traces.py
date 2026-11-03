@@ -107,7 +107,7 @@ def verify(audit_root, output):
               "verification_actor": "Codex_automated_read_only_UI_replay_not_human_acceptance",
               "selection_index": INDEX.relative_to(ROOT).as_posix(), "selection_sha256": digest(selected),
               "implementation_sha256": {name: file_hash(ROOT / name) for name in (
-                  "frontend/app.py", "frontend/case_browser.py", "backend/app/privacy.py",
+                  "frontend/app.py", "frontend/trace_view.py", "frontend/case_browser.py", "backend/app/privacy.py",
                   "scripts/verify_week4_case_traces.py")}, "selected_runs": len(results),
               "model_calls": 0, "source_files_unchanged": True,
               "source_inventory_sha256": digest(before), "cases": results,
