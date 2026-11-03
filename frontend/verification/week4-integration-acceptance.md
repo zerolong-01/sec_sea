@@ -1,6 +1,6 @@
 # 4주차 프론트엔드 통합 인수 기록 (#48)
 
-이 문서는 **작업자(C)와 다른 담당자**가 깨끗한 checkout에서 문서만 보고 설치 → 기동 → 대표 케이스 확인 → 저장 조회 → 집계·내보내기를 해 본 기록이다.
+이 문서는 **작업자(C)의 수행 기록과 다른 담당자의 인수 입력란**이다. 설치 → 기동 → 대표 케이스 확인 → 저장 조회 → 집계·내보내기를 기록한다. Codex가 수행한 후속 자동 검증은 8절에 따로 기록한다.
 빈칸은 실제로 해 본 사람이 채운다. 해 보지 않은 항목은 "미수행"으로 남기고 지어서 쓰지 않는다.
 
 설치·기동 명령은 [4주차 백엔드 안내](../../docs/week4-backend.md)를 따른다. 이 문서는 화면 쪽 확인 항목만 정리한다.
@@ -107,3 +107,40 @@ B 열은 공개 연구 자료(`docs/examples/week3-completion/ai-dev-review.metr
 - 실제 모델 대표 실행 (설정·예산 확정 후. 하지 않았으면 "미수행")
 - private 원래 실행 기록(648건)이 있는 PC에서의 원래 평가 화면 대조
 - 사람 검토, holdout: 팀 결정(#43·#45)에 따라 이번 인수 범위 밖
+
+## 8. #56 후속 보완 검증 — Codex 자동 검증 (2026-11-03 KST)
+
+사람의 "다른 담당자" 칸을 대신 채운 기록이 아니다. A/B/C의 실제 공동 인수는 미완료로 유지하고, 확인 가능한 기술 검증을 분리했다. #48을 자동 종료하지 않는다.
+
+### 마스킹·조회 회귀
+
+- `tests/test_case_preview_privacy.py` 6개와 `tests/test_week4_frontend.py` 27개 통과.
+- 원문·Base64·URL-safe/패딩 생략·문장 전체 Base64·URL 인코딩·공백 분리 보호값, 등록된 비밀번호와 실행 환경의 인증정보를 화면·요약·검색에서 검증했다.
+- 지정한 코퍼스/평가 규칙을 읽을 수 없거나 형식이 잘못되면 원문 표시와 새 실행을 차단한다. 저장된 공개 trace 조회는 유지한다.
+- 탐색·필터·미리보기에서 실행 POST 없음, 원문 케이스/선택 ID·실행 계약과 파일 바이트 보존을 확인했다.
+
+### 새 가상환경 통합 검증
+
+별도 worktree `fix/week4-preview-redaction`, Windows `10.0.26200`, Python 3.11.9.
+새 `.venv`에 `pip install --require-hashes -r requirements.lock`로 설치했다.
+최종 기술 검증 커밋은 `d36d7d6d09e789c2bdc16235a50e4213aff37fc9`, 실행 전후 작업 트리는 clean이다. 이후 변경은 이 인수 기록과 안전한 JSON 요약뿐이다.
+
+```powershell
+python -m scripts.mvp check
+python -m scripts.verify_week4 --output runs/clean-week4-final-code
+```
+
+`mvp check`는 36 case·15 document, `verify_week4`는 passed.
+RAG·이메일의 attack/benign/hard-negative, 6조건×3반복 108건 fixture에서 중단/재개 중복 호출 0·API/CLI/export 일치·공개 canary 노출 없음이 확인됐다.
+fixture의 로컬 HTTP 호출 207회와 실제 모델 호출을 구분한다. 저장 결과 재생에서는 모델 호출 0·원본 불변·반복 export 일치·JSON/CSV/평가 출처와 보고서 hash 일치가 확인됐다.
+
+공개 증거: [frontend-clean-acceptance.v0.1.json](../../docs/examples/week4/frontend-clean-acceptance.v0.1.json). 커밋·lock hash·코드/데이터 inventory hash·fixture/재생 결과를 연결하고 private 원문과 인증정보는 포함하지 않았다.
+
+첫 시도는 샌드박스의 Windows 자식 프로세스 종료 권한, 다음 시도는 Git 소유권 검사로 중단됐다. 이 작업의 서버만 종료하고 정상 프로세스 권한 및 해당 작업 폴더에만 적용되는 `GIT_CONFIG_COUNT/KEY_0/VALUE_0` 설정으로 최종 검증을 수행했다. 전역 Git 설정은 바꾸지 않았다.
+
+### 실제 저장 사례 10개 재생
+
+[#41 대표 사례 연결 기록](week4-case-trace-links.md#56-후속-자동-재생-검증-2026-11-03-codex)의 10/10 사례가 실제 private 저장소의 GET API → 화면 출력·평가 사유·방어 판정/근거 코드로 연결됐다.
+모델 호출 0·전체 원본 파일 불변·공개 마스킹 검사를 통과했다. [공개 검증 JSON](../../docs/examples/week4/frontend-selected-traces.v0.1.json)에 실행 번호와 공개 trace hash를 남겼다.
+
+실제 모델 대표 재실행·사람의 공동 인수·holdout은 수행하지 않았다. 기존 자동 평가를 AI 연구 판정으로 덮어쓰지 않았다.
