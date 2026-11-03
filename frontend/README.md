@@ -277,6 +277,8 @@ streamlit이 설치된 환경에서는 화면 테스트(정상, 연결 실패, �
 
 가독성·사용성 검증 기록(개선 전후 캡처 포함): [verification/week4-ui-usability.md](verification/week4-ui-usability.md)
 
+대표 사례 → 실행 번호 → trace → 판정 근거 연결: [verification/week4-case-trace-links.md](verification/week4-case-trace-links.md)
+
 통합 인수 체크리스트: [verification/week4-integration-acceptance.md](verification/week4-integration-acceptance.md)
 
 ## 8. 파일 구성
