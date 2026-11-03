@@ -62,7 +62,9 @@ def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> d
     with TestClient(create_app(settings)) as client:
         def request(method, url, json=None, **kwargs):
             path = urlsplit(url).path
-            allowed = ((method == "GET" and path in ("/api/v1/batches", f"/api/v1/batches/{batch_id}")) or
+            # 4주차(#48): 대시보드가 평가 출처 표시를 위해 읽기 전용 GET evaluation-sources를 부른다
+            allowed = ((method == "GET" and path in ("/api/v1/batches", f"/api/v1/batches/{batch_id}",
+                                                     f"/api/v1/batches/{batch_id}/evaluation-sources")) or
                        (method == "GET" and path.startswith("/api/v1/runs/")) or
                        (method == "POST" and path in (f"/api/v1/batches/{batch_id}/report",
                                                        f"/api/v1/batches/{batch_id}/export.csv")))

@@ -201,7 +201,9 @@ class ScreenTests(unittest.TestCase):
         self.assertIn("생성 호출 기록 없음 · 탐지 호출 기록 없음", shown)
         self.assertIn("실행 종류: 기록 없음", shown)
         self.assertIn("미확인", shown)
-        self.assertIn("기록 없음", app.dataframe[0].value["프롬프트 포함"].tolist())
+        # 4주차에 '케이스 찾기' 탭의 표가 앞에 생겨서, 열 이름으로 타임라인 표를 찾는다
+        timeline = next(frame.value for frame in app.dataframe if "프롬프트 포함" in frame.value.columns)
+        self.assertIn("기록 없음", timeline["프롬프트 포함"].tolist())
         row = ui_core.summary_row("방어 모드", "무방어", trace, None)
         self.assertEqual(row["상태"], ui_core.NO_VALUE)
         self.assertEqual(row["프롬프트 포함 문서"], ui_core.NO_VALUE)
@@ -213,7 +215,9 @@ class ScreenTests(unittest.TestCase):
             app.session_state["result"] = {"trace": trace, "error": None}
             app.run()
             self.assertFalse(app.exception, name)
-            self.assertIn(ui_core.label_of("run_statuses", trace["status"]), [e.value for e in app.text])
+            # 4주차부터 실행 상태는 색 배지(markdown)로 보인다. 글자는 그대로 함께 나온다.
+            status = ui_core.label_of("run_statuses", trace["status"])
+            self.assertTrue(any(status in e.value for e in [*app.text, *app.markdown]), name)
             shown = "\n".join(str(e.value) for e in [*app.text, *app.code, *app.caption])
             self.assertNotIn("CANARY_EDU_SECRET_2026", shown)
             if trace.get("error"):

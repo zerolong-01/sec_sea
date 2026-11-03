@@ -158,6 +158,9 @@ class CompletionPageTests(unittest.TestCase):
                 return Response(summary or SUMMARY)
             if method == "POST" and url.endswith("/report"):
                 return Response(report)
+            if method == "GET" and url.endswith("/evaluation-sources"):  # 4주차 평가 출처 표시 (#48)
+                return Response({"batch_id": REPORT["batch_id"], "default": "original_saved_evaluation",
+                                 "research": {"available": False}})
             raise AssertionError(f"Unexpected request: {method} {url}")
         context = patch("requests.request", side_effect=request)
         context.start()
