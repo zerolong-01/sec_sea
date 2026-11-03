@@ -12,6 +12,7 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from urllib.parse import urlsplit
+import requests
 
 from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
@@ -165,6 +166,47 @@ class PipelineViewTests(unittest.TestCase):
             unknown["rows"][0]["metrics"]["cost_per_request_usd"]["value"] = None
             self.assertIn("기록 없음", ec.rows(unknown)[0]["요청당 비용 (USD)"])
             self.assertNotEqual(ec.rows(report)[0]["요청당 비용 (USD)"], ec.rows(unknown)[0]["요청당 비용 (USD)"])
+
+    def test_research_trace_has_full_evidence_and_connection_failure_is_not_reported_as_missing_store(self):
+        batch = "batch-bd093a919251"
+        page = str(ROOT / "frontend/pages/2_연구_판정_보기.py")
+        with patch("requests.request", side_effect=self.request):
+            app = AppTest.from_file(page, default_timeout=30)
+            app.session_state["research_batch"] = batch
+            app.run()
+            run_id = app.selectbox(key="research_run").value
+            report = self.client.post(f"/api/v1/batches/{batch}/research/report", json={}).json()
+            member = next(m for m in report["members"] if m["kind"] == "final_output" and m["run_id"] == run_id)
+            model = experiment_report(ROOT, self.runs, self.experiment_id)
+            local_run = model.rows[0]["run_ids"][0]
+            trace = self.client.get(f"/api/v1/runs/{local_run}").json()
+            trace["run_id"] = run_id
+            trace["request"]["case_id"] = member["case_id"]
+            response = SimpleNamespace(status_code=200, json=lambda: trace)
+            with patch("requests.get", return_value=response):
+                app.button(key="research_load_trace").click().run()
+            self.assertFalse(app.exception, app.exception)
+            self.assertIn(run_id, [e.value for e in app.text])
+            self.assertIn(trace["evaluation"]["reason"], [e.value for e in app.text])
+            with patch("requests.get", side_effect=requests.ConnectionError("offline")):
+                app.button(key="research_load_trace").click().run()
+            self.assertFalse(app.exception, app.exception)
+            self.assertTrue(any("CONNECTION_ERROR" in e.value for e in app.error))
+            self.assertFalse(any("원래 실행 기록이 없습니다" in e.value for e in app.info))
+            self.assertNotIn(run_id, [e.value for e in app.text])
+            app.button(key="research_reload").click().run()
+            self.assertFalse(app.error, app.error)
+
+    def test_same_run_id_with_wrong_research_case_is_refused_before_trace_rendering(self):
+        with patch("requests.request", side_effect=self.request):
+            app = AppTest.from_file(str(ROOT / "frontend/pages/2_연구_판정_보기.py"), default_timeout=30).run()
+            run_id = app.selectbox(key="research_run").value
+            invalid = {"run_id": run_id, "request": {"case_id": "wrong_case"}, "output": {"display_text": "DO_NOT_RENDER"}}
+            with patch("requests.get", return_value=SimpleNamespace(status_code=200, json=lambda: invalid)):
+                app.button(key="research_load_trace").click().run()
+            self.assertFalse(app.exception, app.exception)
+            self.assertTrue(any("SNAPSHOT_MISMATCH" in e.value for e in app.error))
+            self.assertNotIn("DO_NOT_RENDER", [e.value for e in app.code])
 
 
 if __name__ == "__main__":
