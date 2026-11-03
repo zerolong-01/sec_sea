@@ -402,15 +402,17 @@ if run_clicked:
 
 tab_find, tab_single, tab_compare, tab_position = st.tabs(["케이스 찾기", "한 번 실행", "4개 모드 비교", "D2 위치 비교"])
 
+def reset_case_filters():
+    """'필터 초기화' 버튼 콜백. 화면을 다시 그리기 전에 실행돼 체크박스까지 확실히 기본값으로 돌아간다."""
+    st.session_state.update(case_query="", case_scenario=None, case_label=None, case_language=None,
+                            case_holdout=False, case_sort=next(iter(cb.SORT_OPTIONS)), case_page=1)
+
+
 # 케이스 찾기: 검색·필터·정렬·페이지. 여기서는 모델을 부르지 않는다 (선택만 함)
-FILTER_KEYS = ("case_query", "case_scenario", "case_label", "case_language", "case_holdout", "case_sort")
 with tab_find:
     if not cases:
         st.info("케이스 파일이 없어 검색할 수 없습니다.")
     else:
-        if st.session_state.pop("reset_case_filters", False):
-            for key in FILTER_KEYS + ("case_page",):
-                st.session_state.pop(key, None)
         top = st.columns([3, 1])
         query = top[0].text_input("검색 (케이스 ID 또는 입력 내용)", key="case_query",
                                   placeholder="예: a006, 주민등록번호, 회의")
@@ -435,9 +437,7 @@ with tab_find:
 
         info = st.columns([3, 1])
         if st.session_state.get("case_query") or any(v for v in signature[1:5]):
-            if info[1].button("필터 초기화", key="case_reset"):
-                st.session_state["reset_case_filters"] = True
-                st.rerun()
+            info[1].button("필터 초기화", key="case_reset", on_click=reset_case_filters)
         if not found:
             info[0].caption(f"전체 {len(cases)}건 중 0건")
             st.info("검색 결과가 없습니다. 검색어를 줄이거나 **필터 초기화**를 눌러 보세요.")
@@ -461,9 +461,9 @@ with tab_find:
                     pv[index % 4].write(value)
                 with st.expander("입력 전체 보기 (보호값은 가려짐)"):
                     st.code(cb.mask(picked.get("user_input")), language=None, wrap_lines=True)
-                if cb.run_block_reason(picked):
-                    st.warning(cb.run_block_reason(picked))
-                if pick == case_id:
+                if cb.run_block_reason(picked):  # holdout은 보기만. 선택 버튼을 주지 않는다
+                    st.warning(cb.run_block_reason(picked) + " 미리보기만 할 수 있고 실행할 케이스로 고를 수 없습니다.")
+                elif pick == case_id:
                     st.success(f"{pick}가 실행할 케이스로 선택돼 있습니다. 왼쪽에서 방어를 고르고 실행하세요.")
                 elif st.button(f"{pick} 선택", type="primary", key="case_choose"):
                     st.session_state["pending_case"] = picked

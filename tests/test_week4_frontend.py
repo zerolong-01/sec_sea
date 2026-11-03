@@ -7,6 +7,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -252,6 +253,31 @@ class PageTest(unittest.TestCase):
                 app.button(key="case_choose").click().run()
         post.assert_not_called()
         self.assertEqual(app.radio(key="case_selector").value["case_id"], "h007")
+
+    def test_holdout_has_no_select_button_and_run_is_blocked(self):
+        from streamlit.testing.v1 import AppTest
+        holdout = next(c for c in CASES if c["split"] == "holdout")
+        # 기본 data/ 폴더에는 holdout이 없으므로 holdout이 있는 week2 데이터로 화면을 연다
+        with patch("requests.post") as post, patch.dict(os.environ, {"DATA_DIR": str(ROOT / "data/week2")}):
+            app = AppTest.from_file(str(ROOT / "frontend/app.py"), default_timeout=30)
+            app.run()
+            app.checkbox(key="case_holdout").check().run()
+            app.text_input(key="case_query").set_value(holdout["case_id"]).run()
+            self.assertFalse(app.exception, app.exception)
+            self.assertEqual(app.selectbox(key="case_pick").value, holdout["case_id"])
+            self.assertNotIn("case_choose", [b.key for b in app.button])
+            self.assertNotEqual(app.radio(key="case_selector").value["case_id"], holdout["case_id"])
+            # 필터 초기화는 holdout 체크도 푼다
+            app.button(key="case_reset").click().run()
+            self.assertFalse(app.checkbox(key="case_holdout").value)
+            self.assertEqual(app.text_input(key="case_query").value, "")
+            # 예전 세션처럼 holdout이 이미 왼쪽에 들어가 있어도 실행 버튼 3개는 막혀야 한다
+            app.session_state["pending_case"] = holdout
+            app.run()
+            self.assertEqual(app.radio(key="case_selector").value["case_id"], holdout["case_id"])
+            for key in ("run_case", "run_compare", "run_positions"):
+                self.assertTrue(app.button(key=key).disabled, key)
+        post.assert_not_called()
 
 
 if __name__ == "__main__":
