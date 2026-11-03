@@ -41,6 +41,8 @@ jobs:
           python -m scripts.week3_data check
       - name: Pipeline regression tests
         run: python -m unittest discover -s tests -v
+      - name: Week-four report tables match backend AI evidence
+        run: python -m scripts.week4_report_comparison --check-docs --output runs/week4-report-comparison-ci
       - name: Backend regression tests
         working-directory: backend
         run: python -m unittest discover -s tests -v

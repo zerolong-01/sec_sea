@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Path, status, Response
+from fastapi import FastAPI, HTTPException, Path, status, Request, Response
 from fastapi.responses import JSONResponse
 
 from .batch import BatchRunner
 from .batch_analysis import aggregate, report_csv
 from .batch_models import BatchFilters, BatchReport, BatchReview, BatchSummary
-from .research_models import ResearchFilters, ResearchReport
+from .research_models import ResearchComparisonReport, ResearchFilters, ResearchReport
+from .research_comparison import comparison_csv, original_attack_comparison
 from .research_reports import available_sources, research_report, research_csv
 
 from .config import Settings
@@ -103,6 +104,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
         except (ValueError, OSError, KeyError) as exc:
             raise HTTPException(422, detail={"code": "INVALID_RESEARCH_EVIDENCE"}) from exc
+
+    @app.get(RESEARCH_API_PATHS["ORIGINAL_ATTACKS"], response_model=ResearchComparisonReport)
+    def get_original_attack_comparison(request: Request):
+        if request.query_params:
+            raise HTTPException(422, detail={"code": "UNSUPPORTED_COMPARISON_FILTER"})
+        try:
+            return original_attack_comparison()
+        except (ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_RESEARCH_EVIDENCE"}) from exc
+
+    @app.get(RESEARCH_API_PATHS["ORIGINAL_ATTACKS_CSV"])
+    def get_original_attack_comparison_csv(request: Request):
+        report = get_original_attack_comparison(request)
+        return Response(comparison_csv(report), media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": 'attachment; filename="week4-original-attacks.csv"',
+                                 "X-Report-SHA256": report.report_sha256,
+                                 "X-Report-Version": report.report_version,
+                                 "X-Evaluation-Source": report.evaluation_source})
 
     @app.post(RESEARCH_API_PATHS["REPORT"], response_model=ResearchReport)
     def get_research_report(batch_id: str, filters: ResearchFilters):

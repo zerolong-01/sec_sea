@@ -30,6 +30,7 @@
 | 개별 평가 | `docs/examples/week3-completion/ai-dev-review.members.v0.1.jsonl` |
 | 지표 집계 | `docs/examples/week3-completion/ai-dev-review.metrics.v0.1.jsonl` |
 | 평가·검토 정책 | `configs/week3-ai-dev-review-policy.v0.1.json` |
+| 원본 공격 비교표 JSON/CSV·문서 검산 | [백엔드 재현 명세](../../docs/week4-backend.md#최종-보고서의-원본-공격-비교표-재현), `python -m scripts.week4_report_comparison --check-docs` |
 | 배치·원본 위치 및 해시 | `configs/week4-release-index.v0.1.json` |
 | B 공개 JSON/CSV 결과 | `docs/examples/week4/v0.2/` |
 | C 화면 재생 검증 | `docs/examples/week3-live/ui-verification-report.json` |
