@@ -317,3 +317,5 @@ PowerShell은 `$env:PRICING_FILE = "configs/pricing-openai-2026-10-20.json"`과
 [기술 검증 기록](week4-backend-acceptance.md), [공개 sample](examples/week4/README.md)을 참조한다.
 CI는 이번 후보 commit의 Ubuntu/Windows Checks를 확인한다. 과거 head의 pass를 옮기지 않는다.
 private 원결과 재생성·다른 담당자의 환경 실행·실제 A/B/C 인수·C 화면 대조는 각각 별도 증빙이 필요하다.
+2026-11-04의 [연결 점검](pipeline-integration-2026-11-04.md)은 현재 Windows 환경에서 수행한 정규 648건 원본 재생·자동 화면 대조를 추가한다.
+과거 인수 환경의 자료 부재 기록, 새 실제 모델 재실행, 다른 담당자의 사람 인수와는 구분한다.

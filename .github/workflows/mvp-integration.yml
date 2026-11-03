@@ -50,6 +50,10 @@ jobs:
         run: python -m scripts.mvp verify
       - name: D1/D2 HTTP fixture and UI handoff
         run: python -m scripts.mvp verify-week2
+      - name: Email four-mode and D2-position UI connections
+        run: |
+          python -m scripts.week2_data prepare-email --output runs/email-ui-data-ci
+          python -m scripts.verify_main_comparisons --data-dir runs/email-ui-data-ci --evaluation-rules configs/evaluation-week2.json --output runs/email-ui-comparison-ci
       - name: Week-two data, evaluator and target-gold handoff
         run: python -m scripts.week2_data verify-handoff --output runs/week2-data-ci
       - name: Week-three two-app batch, resume and report handoff

@@ -13,12 +13,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import research_core as rc  # noqa: E402
 from batch_core import list_batches, md_safe, report_json_bytes  # noqa: E402
-from ui_core import load_run  # noqa: E402
+from trace_view import render_saved_trace  # noqa: E402
 
 st.set_page_config(page_title="연구 판정 보기", layout="wide")
 st.title("AI 연구 판정 보기")
 st.warning("이 화면은 **원래 자동 평가가 아닙니다.** 같은 계열 AI 두 개가 따로 판정하고 세 번째 AI가 불일치를 "
            "조정한 연구 판정(#43)입니다. 사람 검토는 하지 않았고, 원래 평가·배치 대시보드 수치에는 적용되지 않습니다.")
+
+if st.button("연구 자료 새로고침", key="research_reload"):
+    for key in ("research_sources", "research_cache", "research_csv", "research_trace"):
+        st.session_state.pop(key, None)
+    st.rerun()
 
 
 def show_error(error):
@@ -147,19 +152,8 @@ with tab_runs:
     with st.expander("D2 검사 대상별 AI 정답"):
         table(rc.member_rows(report, kind="detector_target"))
     if runs:
-        run_id = st.selectbox("마스킹된 trace를 볼 실행 번호", [r["실행 번호"] for r in runs], key="research_run")
-        if st.button("trace 조회", key="research_load_trace"):
-            st.session_state["research_trace"] = (report_key, run_id, load_run(run_id))
-        loaded = st.session_state.get("research_trace")
-        if loaded and loaded[0] == report_key and loaded[1] == run_id:
-            trace, error = loaded[2]
-            if error:
-                st.info("이 PC에는 이 배치의 원래 실행 기록이 없어 trace를 볼 수 없습니다. "
-                        "원래 실행 기록(runs 폴더)이 있는 PC에서 서버를 켜야 합니다.")
-                show_error(error)
-            elif trace:
-                st.caption(f"상태 {trace.get('status')} · 케이스 {(trace.get('request') or {}).get('case_id')}")
-                st.code((trace.get("output") or {}).get("display_text") or "기록 없음", language=None, wrap_lines=True)
+        render_saved_trace([r["실행 번호"] for r in runs], key="research", report_key=report_key,
+                           expected_cases={r["실행 번호"]: r["케이스"] for r in runs})
 
 with tab_limits:
     st.caption("이 연구판이 일부러 제공하지 않는 값입니다. 비어 있다고 0이나 '문제 없음'으로 읽지 않습니다.")

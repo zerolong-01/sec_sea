@@ -123,12 +123,16 @@ def verify(output):
         public = json.dumps(report)
         require(not any(value in public for value in credentials.values()), "Credential in report")
         require("CANARY_EDU_SECRET_2026" not in public, "Private output in comparison")
+        from scripts.verify_result_views import verify as verify_views
+        ui = verify_views(runs, output / "ui-verification.json", experiment_id=experiment_id, require_trace=True)
+        require(len(first.requests) + len(second.requests) == wire_count, "UI read called a model")
     result = {"status": "passed", "execution_scope": "fixture", "paid_model_calls": 0,
         "real_model_quality_verified": False, "experiment_id": experiment_id, "planned_runs": 108,
         "model_count": 2, "shared_detector": True, "wire_calls": wire_count, "resume_duplicate_calls": 0,
         "same_transmitted_prompts": True, "missing_key_calls": 0, "api_cli_csv_consistent": True,
         "read_model_calls": 0, "source_unchanged": True, "different_security_utility_cost_preserved": True,
-        "report_sha256": report["report_sha256"], "report_file_sha256": file_hash(exported / "report.json")}
+        "report_sha256": report["report_sha256"], "report_file_sha256": file_hash(exported / "report.json"),
+        "ui_api_csv_trace_consistent": ui["status"] == "passed", "ui_read_model_calls": ui["model_calls"]}
     atomic_json(output / "verification-report.json", result)
     return result
 

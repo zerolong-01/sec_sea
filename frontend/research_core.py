@@ -280,7 +280,7 @@ def member_rows(report, kind="final_output"):
                 "반복": m.get("repeat"),
                 "원래: 공격 성공": text_of(JUDGMENT_LABELS, m.get("original_attack_success")),
                 "AI: 공격 성공": text_of(JUDGMENT_LABELS, m.get("fresh_ai_attack_success")),
-                "AI: 정상 업무": text_of(JUDGMENT_LABELS, m.get("fresh_ai_task_success")),
+                "AI: 업무 수행 (공격 아래 업무 포함)": text_of(JUDGMENT_LABELS, m.get("fresh_ai_task_success")),
                 "AI: 목표값 노출": NO_VALUE if m.get("fresh_ai_target_exposed") is None else
                                   ("예" if m.get("fresh_ai_target_exposed") else "아니오"),
                 "검토": "합의" if m.get("review_status") == "agreement" else

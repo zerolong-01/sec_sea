@@ -2,7 +2,9 @@
 
 하나의 실험 명세로 2–16개 대상 모델에 같은 데이터·방어 조건을 실행한다.
 모델마다 독립 배치를 만들고 ASR, 정상 작업 성공률, 정상/hard-negative 오탐률,
-지연, 토큰, 비용을 같은 조건의 행으로 비교한다. 프론트엔드는 변경하지 않았다.
+지연, 토큰, 비용을 같은 조건의 행으로 비교한다. 최신 dev의 **모델 비교** 페이지는 이 저장 결과를
+읽는 별도 화면이다. 원래 평가·모델 소속·필터·보고서 hash를 유지하며 CSV와 상세 trace로 연결한다.
+실행 버튼을 추가하지 않았고 AI 연구 판정이나 모델 간 우승자 선정과 구분한다.
 
 ## 빠른 검증
 
@@ -21,6 +23,8 @@ python -m scripts.verify_model_experiment --output runs/model-comparison-demo
 전송 프롬프트 일치, 공통 탐지기, 모델별 보안성·정상 기능·비용 차이,
 CLI/API/CSV 일치, 키 없는 저장 결과 조회와 근거 자료 불변을 확인한다.
 결과는 출력 폴더의 `verification-report.json`, 비교 파일은 `export/`에 저장한다.
+현재 검증은 필터 전후 화면 표·JSON·CSV·trace와 모델 호출 0 조회도 확인하며 `ui-verification.json`에 기록한다.
+시연하려면 `python -m scripts.mvp serve --fixture-model --runs-dir runs/model-comparison-demo/runs`로 기동하고 왼쪽 **모델 비교**를 선택한다.
 
 ## 실제 모델 설정
 

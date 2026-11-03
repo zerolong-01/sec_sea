@@ -17,7 +17,7 @@ from scripts.data_contract import CANARY_PATTERN, ROOT, load_bundle, require
 from scripts.verify_real_api import public_trace_reader, runner_trace
 
 
-def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> dict:
+def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False, output=None) -> dict:
     """Replay the saved batch dashboard through the real read-only API, offline."""
     import streamlit as st
     from fastapi.testclient import TestClient
@@ -33,6 +33,10 @@ def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> d
     from ui_core import BACKEND_URL
 
     runs_dir = Path(runs_dir).resolve()
+    if output is not None:
+        output = Path(output).resolve()
+        require(not output.exists() and not output.is_relative_to(runs_dir),
+                "Use a new verification output outside the original store")
     batch_store = BatchStore(runs_dir)
     state = batch_store.get(batch_id)
     scope = state.execution_settings["execution_scope"]
@@ -165,7 +169,7 @@ def verify_dashboard(runs_dir: Path, batch_id: str, *, allow_fixture=False) -> d
         "privacy_correctness_evidence": "independent_backend_privacy_tests",
         "projection_consistency_is_not_independent_masking_verification": True,
         "contexts": checked, "read_api_requests": len(api_calls)}
-    atomic_json(runs_dir.parent / "dashboard-verification-report.json", result)
+    atomic_json(output or runs_dir.parent / "dashboard-verification-report.json", result)
     return result
 
 
@@ -248,9 +252,12 @@ def main(argv=None):
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument("--case-ids", nargs="+")
     parser.add_argument("--dashboard-only", action="store_true", help="저장 배치 대시보드/API/CSV/trace만 오프라인 검증")
+    parser.add_argument("--output", type=Path, help="dashboard-only 검증 결과의 새 파일 경로 (원본 저장소 밖)")
     args = parser.parse_args(argv)
     try:
-        report = (verify_dashboard(args.runs_dir.resolve(), args.batch_id) if args.dashboard_only else
+        if args.output and not args.dashboard_only:
+            parser.error("--output requires --dashboard-only")
+        report = (verify_dashboard(args.runs_dir.resolve(), args.batch_id, output=args.output) if args.dashboard_only else
                   verify(args.runs_dir.resolve(), args.batch_id, data_dir=args.data_dir, case_ids=args.case_ids))
         print(json.dumps(report, ensure_ascii=False))
         return 0

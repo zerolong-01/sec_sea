@@ -84,6 +84,8 @@ def verify(output, fixture_output=None):
         require(requests.get(base + "/evaluation-sources", timeout=10).json()["research"]["available"], "Missing source inventory")
         require(requests.post(base + "/report", json={}, timeout=10).status_code == 404, "Overlay replaced missing original store")
     require(tree_hashes(runs) == before, "HTTP/replay modified original artifacts")
+    from scripts.verify_result_views import verify as verify_views
+    views = verify_views(runs, output / "public-result-ui.json", research_batch_id=public_id, comparison=True)
     result = {"status": "passed", "verified_at": datetime.now(timezone.utc).isoformat(),
               "platform": platform.platform(), "python": platform.python_version(),
               "fixture": fixture, "original_report_sha256": original["report_sha256"],
@@ -97,6 +99,8 @@ def verify(output, fixture_output=None):
               "saved_private_real_replay": "not_performed_this_command_checks_fixture_and_public_overlay_only",
               "real_model_rerun": "not_performed", "human_ABC_acceptance": "pending",
               "holdout_executed": False, "candidate_remote_CI": "check_this_commit_on_ubuntu_and_windows"}
+    result["public_report_ui_csv_match"] = views["status"] == "passed"
+    result["public_report_ui_model_calls"] = views["model_calls"]
     atomic_json(output / "release-manifest.json", inventory())
     atomic_json(output / "verification-report.json", result)
     return result
