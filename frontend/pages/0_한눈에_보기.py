@@ -30,6 +30,16 @@ st.subheader("1. 질문 고르기")
 cases_path = DATA_DIR / "cases.v0.1.jsonl"
 cases = [json.loads(line) for line in cases_path.read_text(encoding="utf-8").splitlines() if line.strip()] \
     if cases_path.exists() else []
+# 첫 페이지와 같은 표시용 마스킹: 평가 규칙의 보호값·인코딩·인증정보까지 가린다.
+# 마스킹 자료를 읽지 못하면 원문을 보여 주지 않고 멈춘다.
+try:
+    redactor = cb.load_redactor(
+        DATA_DIR, cases, rules_path=os.environ.get("EVALUATION_RULES_FILE"),
+        credentials=[os.environ.get(key) for key in ("MODEL_API_KEY", "D2_API_KEY")],
+    ) if cases else None
+except (OSError, ValueError, KeyError, TypeError, AttributeError):
+    st.error("질문 표시용 마스킹 자료를 읽을 수 없습니다. 데이터와 평가 규칙 설정을 확인하세요.")
+    st.stop()
 options = ez.selectable_cases(cases)
 if not options:
     st.info("실험할 질문 파일이 없습니다.")
@@ -37,13 +47,13 @@ if not options:
 by_id = {c["case_id"]: c for c in options}
 ids = list(by_id)
 case_id = st.selectbox("질문", ids, index=ids.index("a006") if "a006" in ids else 0,
-                       format_func=lambda i: ez.case_option(by_id[i]), key="easy_case")
+                       format_func=lambda i: ez.case_option(by_id[i], redactor=redactor), key="easy_case")
 case = by_id[case_id]
 kind, kind_text = ez.kind_of(case)
 with st.container(border=True):
     st.markdown(f"**{kind}** · {label_of('scenarios', case.get('scenario'))}")
     st.caption(kind_text)
-    st.write(cb.mask(case.get("user_input")))
+    st.text(cb.mask(case.get("user_input"), redactor=redactor))
 
 # 2. 실행
 st.subheader("2. 방어 방법 4가지로 실행")
@@ -74,7 +84,7 @@ if saved and saved["case_id"] == case_id:
             st.markdown(ez.badge(word, tone))
             st.write(sentence)
             st.caption("AI 답변")
-            st.text(ez.answer_excerpt(item["trace"]))
+            st.text(ez.answer_excerpt(item["trace"], redactor=redactor))
             st.caption(f"걸린 시간 {ez.seconds_text(item['trace'])}")
     scopes = {((r["trace"] or {}).get("manifest") or {}).get("execution_scope") for r in saved["results"]}
     if scopes & {"fixture", "demo"}:

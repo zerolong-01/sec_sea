@@ -44,8 +44,8 @@ def selectable_cases(cases):
     return sorted(usable, key=lambda c: (order.get(c.get("label"), 9), c.get("scenario") or "", c.get("case_id") or ""))
 
 
-def case_option(case):
-    return f"{kind_of(case)[0]} · {case.get('case_id')} · {cb.summary(case, 40)}"
+def case_option(case, *, redactor=None):
+    return f"{kind_of(case)[0]} · {case.get('case_id')} · {cb.summary(case, 40, redactor=redactor)}"
 
 
 def _blocked(trace):
@@ -82,10 +82,10 @@ def verdict(label, trace, error=None):
     return "pending", "막지 않음", "막지 않고 답했습니다. 답이 정확한지는 아직 판정 전입니다."
 
 
-def answer_excerpt(trace, limit=160):
-    """AI 답변 앞부분. 비밀값은 이미 가려진 공개 trace의 값이다."""
+def answer_excerpt(trace, limit=160, *, redactor=None):
+    """AI 답변 앞부분. 공개 trace는 이미 가려져 있지만, 화면 마스킹을 한 번 더 적용한다."""
     output = (trace or {}).get("output") or {}
-    text = (output.get("display_text") or "").strip()
+    text = cb.mask(output.get("display_text") or "", redactor=redactor).strip()
     if not text:
         return "답변이 나오지 않았습니다 (방어가 막았거나 생성하지 않음)."
     text = text.replace("[MASKED_CANARY]", "(비밀값 — 화면에서는 가림)")
@@ -99,52 +99,48 @@ def seconds_text(trace):
     return "1초 미만" if ms < 1000 else f"{ms / 1000:.1f}초"
 
 
+# 결과 요약에서 한 단어 결론별로 쓰는 문장 (몇 가지가 그 결론인지 실제 개수대로 붙인다)
+ATTACK_CLAUSES = [
+    ("막음", "공격을 막았습니다", False),
+    ("뚫림", "공격에 뚫렸습니다", True),
+    ("답변 차단", "방어가 답변을 막았지만 공격 성공 여부는 아직 판정 전입니다", True),
+    ("판정 대기", "답했지만 공격 성공 여부는 아직 판정 전입니다", True),
+    ("실행 오류", "실행 오류로 결과가 없습니다", True),
+]
+NORMAL_CLAUSES = [
+    ("잘 답함", "제대로 답했습니다", False),
+    ("막지 않음", "막지 않고 답했지만, 답이 정확한지는 아직 판정 전입니다", False),
+    ("괜히 막음", "정상 질문을 괜히 막았습니다", True),
+    ("답이 부족함", "답은 했지만 부족했습니다", True),
+    ("실행 오류", "실행 오류로 결과가 없습니다", True),
+]
+
+
 def headline(label, results):
-    """결과 맨 위 한 줄 결론. results는 [(모드, 톤, 결론, 풀이)]. 개수만 세고 순위는 매기지 않는다."""
+    """결과 맨 위 한 줄 결론. results는 [(모드, 톤, 결론, 풀이)].
+    결론별 실제 개수를 그대로 말하고, '모두'는 전부가 같은 결론일 때만 쓴다. 순위는 매기지 않는다."""
     total = len(results)
-
-    def pick(word):
-        return [mode_name(m) for m, _, w, _ in results if w == word]
-
-    waiting = sum(1 for _, tone, w, _ in results if tone == "pending" and w not in ("막지 않음", "답변 차단"))
-    errors = len(pick("실행 오류"))
-    if total and errors == total:
+    if not total:
+        return "결과가 없습니다."
+    names = {}
+    for mode, _, word, _ in results:
+        names.setdefault(word, []).append(mode_name(mode))
+    if len(names.get("실행 오류", [])) == total:
         return "실행하지 못했습니다. 서버가 켜져 있는지 확인한 뒤 다시 실행해 주세요."
-    if label == "attack":
-        blocked, broken = pick("막음"), pick("뚫림")
-        if broken and not blocked:
-            text = f"방어 방식 {total}가지 모두 공격에 뚫렸습니다."
-        elif blocked and not broken:
-            text = f"방어 방식 {len(blocked)}가지가 모두 공격을 막았습니다."
-        elif blocked or broken:
-            text = f"{total}가지 중 {len(blocked)}가지는 공격을 막았고, {len(broken)}가지는 뚫렸습니다 (뚫린 방식: {', '.join(broken)})."
-        else:
-            stopped = pick("답변 차단")
-            text = "이 질문은 공격이 통했는지 사람이 확인해야 하는 종류라, 아직 공식 판정이 없습니다."
-            if stopped:
-                text += f" 그중 방어가 답변 자체를 막은 방식: {', '.join(stopped)}."
-            waiting = 0
-    else:
-        good, over, poor, answered = pick("잘 답함"), pick("괜히 막음"), pick("답이 부족함"), pick("막지 않음")
-        clauses = []
-        if over:
-            clauses.append(f"{len(over)}가지는 정상 질문을 괜히 막았습니다 ({', '.join(over)}).")
-        if poor:
-            clauses.append(f"{len(poor)}가지는 답은 했지만 부족했습니다 ({', '.join(poor)}).")
-        if good:
-            clauses.append(f"{len(good)}가지는 제대로 답했습니다.")
-        if answered:
-            clauses.append(f"{len(answered)}가지는 막지 않고 답했지만, 답이 정확한지는 아직 판정 전입니다.")
-        if len(clauses) == 1 and (good or answered) and len(good or answered) == total:
-            text = (f"방어 방식 {total}가지 모두 제대로 답했습니다." if good else
-                    f"방어 방식 {total}가지 모두 정상 질문을 막지 않고 답했습니다. 답이 정확한지는 아직 판정 전입니다.")
-        else:
-            text = f"{total}가지 중 " + " ".join(clauses)
-    if waiting:
-        text += f" {waiting}가지는 아직 판정 대기입니다."
-    if errors:
-        text += f" {errors}가지는 실행 오류입니다."
-    return text
+    clauses = ATTACK_CLAUSES if label == "attack" else NORMAL_CLAUSES
+    known = {word for word, _, _ in clauses}
+    sentences = []
+    for word, text, show_names in clauses:
+        found = names.get(word, [])
+        if not found:
+            continue
+        if len(found) == total:
+            return f"방어 방식 {total}가지 모두 {text}."
+        sentences.append(f"{len(found)}가지는 {text}" + (f" ({', '.join(found)})." if show_names else "."))
+    others = [n for word, group in names.items() if word not in known for n in group]
+    if others:
+        sentences.append(f"{len(others)}가지는 기타 결과입니다 ({', '.join(others)}).")
+    return f"{total}가지 중 " + " ".join(sentences)
 
 
 def takeaway(label, results):
