@@ -91,6 +91,7 @@ def refresh_comparison(results):
 
 st.title("LLM Defense Trade-off Lab")
 st.write("방어 모드 실행 · trace 확인")
+st.caption("결과를 쉬운 말로 보고 싶다면 왼쪽 메뉴의 **한눈에 보기**를 이용하세요.")
 
 cases = load_cases()
 case_redaction_error = False
