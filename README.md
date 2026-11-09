@@ -10,6 +10,7 @@
 [공개 사람 기준 세트와 judge 검산 자동화](docs/judge-calibration.md)는 LLMBar의 419개 검수 응답 쌍을
 출처·해시로 고정하고, 80쌍/160응답에 실제 서비스 judge를 대조합니다. 정확도·오판·보류·비용과
 기준 미달을 자동 기록하며, [실제 실행 결과](docs/judge-calibration-acceptance.md)를 별도로 제공합니다.
+우리 한국어 RAG·이메일의 독립 사람 평가에는 [연구 근거를 정리한 검산 지침과 작업지](docs/judge-human-review-protocol.md)를 사용합니다.
 
 4주차 백엔드: [고정 의존성 설치·재현 패키지·평가 버전별 API](docs/week4-backend.md) ·
 [검증/남은 인계](docs/week4-backend-acceptance.md).
