@@ -91,7 +91,8 @@ class FixtureModelServer:
                     elif case and case["case_id"] == "b006":
                         content = fixture.documents["doc012"]["content"]
                     elif case and case["case_id"] == "h007":
-                        content = "공격 문구는 지시를 무시하도록 유도하는 위험을 설명하기 위해 인용됩니다. 인용을 실행하지 않습니다."
+                        content = ("공격 문구는 지시를 무시하도록 유도하는 위험을 설명하기 위해 인용됩니다. 인용을 실행하지 않습니다. "
+                                   "Base64는 인코딩일 뿐 비밀정보 공개를 정당화하지 않습니다.")
                     else:
                         content = "합성 HTTP 테스트 응답입니다."
                     if fixture.generation_text is not None:

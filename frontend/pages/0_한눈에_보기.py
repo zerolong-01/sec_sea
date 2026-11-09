@@ -14,6 +14,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import case_browser as cb  # noqa: E402
 import easy_core as ez  # noqa: E402
 from ui_core import BOTH, ROOT, label_of, run_case  # noqa: E402
+from task_evaluation_core import digest, effective_trace  # noqa: E402
+import ui_core  # noqa: E402
+from task_evaluation_view import render_group, render_task_evaluation, saved_report  # noqa: E402
 
 DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT / "data")).resolve()
 MANIFEST_PATH = Path(os.environ.get("MVP_MANIFEST", DATA_DIR / "mvp-manifest.v0.1.json"))
@@ -35,7 +38,7 @@ cases = [json.loads(line) for line in cases_path.read_text(encoding="utf-8").spl
 try:
     redactor = cb.load_redactor(
         DATA_DIR, cases, rules_path=os.environ.get("EVALUATION_RULES_FILE"),
-        credentials=[os.environ.get(key) for key in ("MODEL_API_KEY", "D2_API_KEY")],
+        credentials=[os.environ.get(key) for key in ("MODEL_API_KEY", "D2_API_KEY", "JUDGE_API_KEY")],
     ) if cases else None
 except (OSError, ValueError, KeyError, TypeError, AttributeError):
     st.error("질문 표시용 마스킹 자료를 읽을 수 없습니다. 데이터와 평가 규칙 설정을 확인하세요.")
@@ -58,6 +61,7 @@ with st.container(border=True):
 # 2. 실행
 st.subheader("2. 방어 방법 4가지로 실행")
 manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8")) if MANIFEST_PATH.exists() else {}
+scope = digest([ui_core.BACKEND_URL, str(DATA_DIR), case, manifest])
 if st.button("실행", type="primary", key="easy_run"):
     results = []
     progress = st.progress(0.0, text="실행 준비")
@@ -67,13 +71,15 @@ if st.button("실행", type="primary", key="easy_run"):
                                 manifest.get("corpus_version"), mode, BOTH)
         results.append({"mode": mode, "trace": trace, "error": error})
     progress.empty()
-    st.session_state["easy_results"] = {"case_id": case_id, "label": case.get("label"), "results": results}
+    st.session_state["easy_results"] = {"case_id": case_id, "scope": scope, "label": case.get("label"), "results": results}
 
 # 3. 결과
 saved = st.session_state.get("easy_results")
-if saved and saved["case_id"] == case_id:
+if saved and saved["case_id"] == case_id and saved.get("scope") == scope:
     st.subheader("3. 결과")
-    judged = [(r["mode"], *ez.verdict(saved["label"], r["trace"], r["error"])) for r in saved["results"]]
+    render_group([r["trace"] for r in saved["results"]], key="easy_tasks")
+    judged = [(r["mode"], *ez.verdict(saved["label"], effective_trace(r["trace"], saved_report(r["trace"])) if r["trace"] else None,
+                                    r["error"])) for r in saved["results"]]
     with st.container(border=True):
         st.markdown(f"**{ez.headline(saved['label'], judged)}**")
         st.write(ez.takeaway(saved["label"], judged))
@@ -86,6 +92,8 @@ if saved and saved["case_id"] == case_id:
             st.caption("AI 답변")
             st.text(ez.answer_excerpt(item["trace"], redactor=redactor))
             st.caption(f"걸린 시간 {ez.seconds_text(item['trace'])}")
+            if item["trace"]:
+                render_task_evaluation(item["trace"], key=f"easy_task_{mode}_{item['trace']['run_id']}")
     scopes = {((r["trace"] or {}).get("manifest") or {}).get("execution_scope") for r in saved["results"]}
     if scopes & {"fixture", "demo"}:
         st.caption("지금은 연습용 고정 응답으로 실행했습니다. 실제 AI 모델 결과와 다를 수 있습니다.")

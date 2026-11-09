@@ -64,3 +64,5 @@ jobs:
         run: python -m scripts.verify_model_experiment --output runs/model-experiment-ci
       - name: Week-five normal-task judge and immutable evaluation history
         run: python -m scripts.verify_week5 --output runs/week5-task-evaluation-ci
+      - name: Week-five easy view, judgment reviews and matching CSV
+        run: python -m scripts.verify_week5_ui --output runs/week5-task-evaluation-ui-ci

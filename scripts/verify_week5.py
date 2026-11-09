@@ -108,7 +108,7 @@ def verify(output):
     result = {"status": "passed", "verified_at": datetime.now(timezone.utc).isoformat(),
         "execution_scope": "fixture", "modes": modes, "judge_calls": 8, "read_model_calls": 0,
         "api_csv_match": True, "original_files_unchanged": True, "human_labeled_dev_comparison": "pending",
-        "frontend_automatic_evaluation_display": "handoff_pending", "paid_model_execution": "not_performed"}
+        "frontend_automatic_evaluation_display": "see_separate_verify_week5_ui", "paid_model_execution": "not_performed"}
     atomic_json(output / "verification-report.json", result)
     return result
 

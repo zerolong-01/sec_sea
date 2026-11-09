@@ -2,9 +2,10 @@
 
 > 프롬프트 인젝션 방어의 효과와 부작용을 한 화면에서 비교하는 LLM 보안 백테스팅 플랫폼
 
-5주차 백엔드: [정상 태스크 자동 판정 API·재평가 이력·비용 계측](docs/week5-backend.md) ·
+5주차 백엔드·화면 연결: [정상 태스크 자동 판정·재평가 이력·비용 계측](docs/week5-backend.md) ·
 [검증과 A/C 인계](docs/week5-backend-acceptance.md).
 `python -m scripts.verify_week5 --output runs/week5-handoff`로 외부 모델 없이 검증합니다.
+화면 버튼부터 저장·재전송·수동 수정·CSV까지는 `python -m scripts.verify_week5_ui --output runs/week5-ui-handoff`로 검증합니다.
 
 4주차 백엔드: [고정 의존성 설치·재현 패키지·평가 버전별 API](docs/week4-backend.md) ·
 [검증/남은 인계](docs/week4-backend-acceptance.md).
