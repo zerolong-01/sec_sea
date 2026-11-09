@@ -380,7 +380,16 @@
     "DETECTION": {
       "value": "detection",
       "label_ko": "인젝션 탐지"
+    },
+    "EVALUATION": {
+      "value": "evaluation",
+      "label_ko": "정상 태스크 판정"
     }
+  },
+  "task_evaluation_api_paths": {
+    "RUN": "/api/v1/runs/{run_id}/task-evaluations",
+    "CSV": "/api/v1/runs/{run_id}/task-evaluations/export.csv",
+    "REVIEW": "/api/v1/runs/{run_id}/task-evaluations/{evaluation_id}/review"
   },
   "research_export": {
     "report_version": "week4-public-overlay-v0.2",

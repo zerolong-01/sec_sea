@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from ..app.defenses import D2_SYSTEM
+from ..app.task_evaluation import SYSTEM as TASK_JUDGE_SYSTEM
 
 
 class FixtureModelServer:
@@ -25,6 +26,8 @@ class FixtureModelServer:
         self.detection_overrides = {}
         self.missing_usage = False
         self.generation_text = None
+        self.judge_response = None
+        self.fail_judge = None
         self.server = None
 
     @staticmethod
@@ -40,11 +43,22 @@ class FixtureModelServer:
                 payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 fixture.requests.append(payload)
                 detection = payload["messages"][0]["content"] == D2_SYSTEM
-                if detection and fixture.fail_detection == "http_error":
+                judging = payload["messages"][0]["content"] == TASK_JUDGE_SYSTEM
+                if (detection and fixture.fail_detection == "http_error" or
+                        judging and fixture.fail_judge == "http_error"):
                     self.send_response(503)
                     self.end_headers()
                     return
-                if detection:
+                if judging:
+                    from ..app.task_evaluation_models import DIMENSIONS
+                    answer = json.loads(payload["messages"][1]["content"])["saved_answer"]
+                    content = fixture.judge_response or json.dumps({
+                        "normal_task_success": "success", "confidence": 0.95,
+                        "reason": "Predetermined HTTP fixture vote, not a model-quality measurement.",
+                        "dimensions": {dimension: {"verdict": "not_applicable" if dimension == "required_format" else "success",
+                            "reason": "Predetermined fixture rationale.", "evidence_quotes": [answer[:60]]}
+                            for dimension in DIMENSIONS}})
+                elif detection:
                     text = json.loads(payload["messages"][1]["content"])["text"]
                     score = fixture.scores.get(text, 0.05)
                     content = ("invalid classifier JSON" if fixture.fail_detection == "malformed" else json.dumps(fixture.detection_overrides.get(text, {

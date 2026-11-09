@@ -14,6 +14,8 @@ from .research_reports import available_sources, research_report, research_csv
 
 from .config import Settings
 from .storage import ConcurrentWriterError
+from .task_evaluation import EvaluationConflict, EvaluationRejected, TaskEvaluationService, task_evaluation_csv
+from .task_evaluation_models import (TaskEvaluationReport, TaskEvaluationRequest, TaskReviewRequest)
 from .experiment_models import EXPERIMENT_ID_PATTERN, ExperimentReport, ExperimentSummary
 from .experiment_reports import experiment_csv, experiment_report
 from .experiments import ExperimentRunner
@@ -32,7 +34,7 @@ from .service import (
     UnsupportedDefenseMode,
     build_provider,
 )
-from .shared_variables import BATCH_API_PATHS, RESEARCH_API_PATHS, KEYS, SchemaVersion
+from .shared_variables import BATCH_API_PATHS, RESEARCH_API_PATHS, TASK_EVALUATION_API_PATHS, KEYS, SchemaVersion
 
 RunId = Annotated[str, Path(pattern=RUN_ID_PATTERN)]
 ExperimentId = Annotated[str, Path(pattern=EXPERIMENT_ID_PATTERN)]
@@ -43,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     repository = ExperimentRepository(settings.data_dir)
     trace_store = RunTraceStore(settings.runs_dir)
     service = RunService(settings, repository, trace_store, build_provider(settings))
+    task_evaluations = TaskEvaluationService(settings, service, trace_store)
 
     app = FastAPI(
         title="LLM Defense Trade-off Lab API",
@@ -64,6 +67,44 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Never include raw validation input, private evidence or file contents
         # in an error response. The same rule applies to review/report routes.
         return JSONResponse(status_code=500, content={"detail": {"code": "INVALID_TRACE"}})
+
+    def task_evaluation_action(action):
+        try:
+            return action()
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "RUN_OR_EVIDENCE_NOT_FOUND"}) from exc
+        except ConcurrentWriterError:
+            raise
+        except ArtifactValidationError:
+            raise
+        except EvaluationConflict as exc:
+            raise HTTPException(409, detail={"code": str(exc)}) from exc
+        except EvaluationRejected as exc:
+            raise HTTPException(422, detail={"code": str(exc)}) from exc
+        except (ValueError, KeyError, TypeError, OSError) as exc:
+            # Never echo validation input, provider payloads or private evidence.
+            raise HTTPException(422, detail={"code": "INVALID_TASK_EVALUATION"}) from exc
+
+    @app.get(TASK_EVALUATION_API_PATHS["RUN"], response_model=TaskEvaluationReport)
+    def get_task_evaluations(run_id: RunId):
+        return task_evaluation_action(lambda: task_evaluations.report(run_id))
+
+    @app.post(TASK_EVALUATION_API_PATHS["RUN"], response_model=TaskEvaluationReport)
+    def execute_task_evaluation(run_id: RunId, request: TaskEvaluationRequest):
+        return task_evaluation_action(lambda: task_evaluations.execute(run_id, request))
+
+    @app.put(TASK_EVALUATION_API_PATHS["REVIEW"], response_model=TaskEvaluationReport)
+    def review_task_evaluation(run_id: RunId, evaluation_id: RunId, request: TaskReviewRequest):
+        return task_evaluation_action(lambda: task_evaluations.review(run_id, evaluation_id, request))
+
+    @app.get(TASK_EVALUATION_API_PATHS["CSV"])
+    def export_task_evaluations(run_id: RunId):
+        report = get_task_evaluations(run_id)
+        return Response(task_evaluation_csv(report), media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="normal-task-evaluations.csv"',
+                     "X-Report-SHA256": report.report_sha256,
+                     "X-Report-Version": report.report_version,
+                     "X-Evaluation-Source": report.evaluation_source})
 
     def read_experiment(action):
         try:

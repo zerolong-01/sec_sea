@@ -62,3 +62,5 @@ jobs:
         run: python -m scripts.verify_week4 --fixture-output runs/week3-batch-ci --output runs/week4-package-ci
       - name: Multi-model CLI, shared detector and comparison exports
         run: python -m scripts.verify_model_experiment --output runs/model-experiment-ci
+      - name: Week-five normal-task judge and immutable evaluation history
+        run: python -m scripts.verify_week5 --output runs/week5-task-evaluation-ci
