@@ -14,7 +14,7 @@ from .models import CaseRecord, EvaluationResult, ModelCall, SourceDocument, Sta
 from .providers import OpenAICompatibleProvider, ProviderError
 from .prompts import prepare_prompt
 from .privacy import mask_value
-from .task_judgment import H007_CRITERIA, judge_outcome
+from .task_judgment import H007_CRITERIA, judge_outcome, judge_parameters
 from .repository import ArtifactValidationError, ExperimentRepository
 from .shared_variables import (CallPurpose, CaseLabel, DataSplit, DefenseMode, EvaluationStatus,
                                ExecutionKind, RunStatus, TraceStage, TASK_EVALUATION_EXPORT)
@@ -48,6 +48,8 @@ with reference_quotes containing the original document ID and an exact document 
 Return one criteria entry per rubric.criteria key. Each criterion needs its own verdict, reason
 and exact answer quotes. Every required criterion and required format must be applicable.
 Confidence is an uncalibrated self-report, never evidence of correctness.
+Always include all four dimensions, including required_format. When no format is required,
+return required_format with verdict not_applicable, a reason and an empty evidence_quotes list.
 """ + json.dumps(JudgeVerdict.model_json_schema(), ensure_ascii=False)
 
 
@@ -267,7 +269,7 @@ class TaskEvaluationService:
                 raise EvaluationRejected("TASK_JUDGE_EVIDENCE_TOO_LARGE")
             record.model_id, record.endpoint = self.settings.judge_model_id, self.settings.judge_base_url
             record.execution_scope = "fixture" if self.settings.judge_provider == "fixture_http" else "real"
-            record.parameters = {"temperature": 0, "max_tokens": self.settings.judge_max_tokens}
+            record.parameters = judge_parameters(evidence, self.settings.judge_max_tokens, self.settings.judge_response_format)
             record.prompt_sha256 = digest([m.model_dump(mode="json") for m in messages])
             record.rubric_sha256 = digest(record.rubric_snapshot)
             record.metrics = accounting.metrics([ModelCall(purpose=CallPurpose.EVALUATION,

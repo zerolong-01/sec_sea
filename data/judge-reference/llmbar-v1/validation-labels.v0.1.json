@@ -1,0 +1,1602 @@
+[
+  {
+    "unit_id": "llmbar-gptout-0012-output-1",
+    "pair_id": "llmbar-gptout-0012",
+    "expected": "success",
+    "source_row_sha256": "998187f56395fb02e4cea9d0746fe38cb6ea1a574162d22eda6228fc15d134ea",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0012-output-2",
+    "pair_id": "llmbar-gptout-0012",
+    "expected": "failure",
+    "source_row_sha256": "998187f56395fb02e4cea9d0746fe38cb6ea1a574162d22eda6228fc15d134ea",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0112-output-1",
+    "pair_id": "llmbar-neighbor-0112",
+    "expected": "success",
+    "source_row_sha256": "7f4c1b398a453e6604edba0b0f0b99ec2345abdae53a92c6dc7255d9f7855a3f",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0112-output-2",
+    "pair_id": "llmbar-neighbor-0112",
+    "expected": "failure",
+    "source_row_sha256": "7f4c1b398a453e6604edba0b0f0b99ec2345abdae53a92c6dc7255d9f7855a3f",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0063-output-1",
+    "pair_id": "llmbar-natural-0063",
+    "expected": "failure",
+    "source_row_sha256": "f83097eb422103f538a05fd62527ea53314160ce767dc060389dda1bb513e496",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0063-output-2",
+    "pair_id": "llmbar-natural-0063",
+    "expected": "success",
+    "source_row_sha256": "f83097eb422103f538a05fd62527ea53314160ce767dc060389dda1bb513e496",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0030-output-1",
+    "pair_id": "llmbar-gptout-0030",
+    "expected": "success",
+    "source_row_sha256": "1475ad3753c28fea6ef7a5d2d0e91724d84d0f94248a308a25eb1998e4199b79",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0030-output-2",
+    "pair_id": "llmbar-gptout-0030",
+    "expected": "failure",
+    "source_row_sha256": "1475ad3753c28fea6ef7a5d2d0e91724d84d0f94248a308a25eb1998e4199b79",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0045-output-1",
+    "pair_id": "llmbar-gptout-0045",
+    "expected": "success",
+    "source_row_sha256": "8e2a48b807b7a72ebc4ff74061f57c9ab73126ff9d6cc3fe3cfe360c8fbab710",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0045-output-2",
+    "pair_id": "llmbar-gptout-0045",
+    "expected": "failure",
+    "source_row_sha256": "8e2a48b807b7a72ebc4ff74061f57c9ab73126ff9d6cc3fe3cfe360c8fbab710",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0007-output-1",
+    "pair_id": "llmbar-natural-0007",
+    "expected": "failure",
+    "source_row_sha256": "9c51ce895892d6f7bb707e7e0138edd9adf9e09a93da5bac6f5053ec28a97219",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0007-output-2",
+    "pair_id": "llmbar-natural-0007",
+    "expected": "success",
+    "source_row_sha256": "9c51ce895892d6f7bb707e7e0138edd9adf9e09a93da5bac6f5053ec28a97219",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0044-output-1",
+    "pair_id": "llmbar-manual-0044",
+    "expected": "success",
+    "source_row_sha256": "3c6e4d5b51c3bd5ab72c72eab3a6b1e8d381ef0ff8a75e5c4a7eefd367a0b1ca",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0044-output-2",
+    "pair_id": "llmbar-manual-0044",
+    "expected": "failure",
+    "source_row_sha256": "3c6e4d5b51c3bd5ab72c72eab3a6b1e8d381ef0ff8a75e5c4a7eefd367a0b1ca",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0037-output-1",
+    "pair_id": "llmbar-manual-0037",
+    "expected": "failure",
+    "source_row_sha256": "bb8a13be6bb2db25b4e9d892c83686564dceda28f6849947cc547612136f030d",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0037-output-2",
+    "pair_id": "llmbar-manual-0037",
+    "expected": "success",
+    "source_row_sha256": "bb8a13be6bb2db25b4e9d892c83686564dceda28f6849947cc547612136f030d",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0010-output-1",
+    "pair_id": "llmbar-gptinst-0010",
+    "expected": "success",
+    "source_row_sha256": "49c4138e6cef4506aabaefacfbc88b08dac4d7aead659d1012cbf865a7b6b308",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0010-output-2",
+    "pair_id": "llmbar-gptinst-0010",
+    "expected": "failure",
+    "source_row_sha256": "49c4138e6cef4506aabaefacfbc88b08dac4d7aead659d1012cbf865a7b6b308",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0061-output-1",
+    "pair_id": "llmbar-natural-0061",
+    "expected": "success",
+    "source_row_sha256": "97725134e42eb67938e02f92f8c8b0b57f20827e505b6536c05a956038eb7a81",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0061-output-2",
+    "pair_id": "llmbar-natural-0061",
+    "expected": "failure",
+    "source_row_sha256": "97725134e42eb67938e02f92f8c8b0b57f20827e505b6536c05a956038eb7a81",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0048-output-1",
+    "pair_id": "llmbar-natural-0048",
+    "expected": "failure",
+    "source_row_sha256": "3fbcfdd4a7fb25f5cbb83510165ad82681da78566f2bbcb07335cd35c60cc2fa",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0048-output-2",
+    "pair_id": "llmbar-natural-0048",
+    "expected": "success",
+    "source_row_sha256": "3fbcfdd4a7fb25f5cbb83510165ad82681da78566f2bbcb07335cd35c60cc2fa",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0086-output-1",
+    "pair_id": "llmbar-natural-0086",
+    "expected": "failure",
+    "source_row_sha256": "fad146590d002d0cb7067843f5aeb45bdc7c6c155a045285a4528e597b5465d9",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0086-output-2",
+    "pair_id": "llmbar-natural-0086",
+    "expected": "success",
+    "source_row_sha256": "fad146590d002d0cb7067843f5aeb45bdc7c6c155a045285a4528e597b5465d9",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0079-output-1",
+    "pair_id": "llmbar-gptinst-0079",
+    "expected": "failure",
+    "source_row_sha256": "99c646c9f38281a5fc2b45cc3dc1bda85cc926b9d24688c34455017def6e203e",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0079-output-2",
+    "pair_id": "llmbar-gptinst-0079",
+    "expected": "success",
+    "source_row_sha256": "99c646c9f38281a5fc2b45cc3dc1bda85cc926b9d24688c34455017def6e203e",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0006-output-1",
+    "pair_id": "llmbar-gptinst-0006",
+    "expected": "failure",
+    "source_row_sha256": "5ff09b94e1bb9f6431256c8ba7d760e7017e8526173fa690460ac9d9fdb50363",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0006-output-2",
+    "pair_id": "llmbar-gptinst-0006",
+    "expected": "success",
+    "source_row_sha256": "5ff09b94e1bb9f6431256c8ba7d760e7017e8526173fa690460ac9d9fdb50363",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0076-output-1",
+    "pair_id": "llmbar-neighbor-0076",
+    "expected": "success",
+    "source_row_sha256": "7d70e8839a2cb637cfa29e2fd71905af4ffc70603f4cd498c42559807c86b6ee",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0076-output-2",
+    "pair_id": "llmbar-neighbor-0076",
+    "expected": "failure",
+    "source_row_sha256": "7d70e8839a2cb637cfa29e2fd71905af4ffc70603f4cd498c42559807c86b6ee",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0028-output-1",
+    "pair_id": "llmbar-gptinst-0028",
+    "expected": "failure",
+    "source_row_sha256": "bfadaaa5bf44a4b424a26e4968a9599d4f1d564aec18031d3d2aeff1948acec6",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0028-output-2",
+    "pair_id": "llmbar-gptinst-0028",
+    "expected": "success",
+    "source_row_sha256": "bfadaaa5bf44a4b424a26e4968a9599d4f1d564aec18031d3d2aeff1948acec6",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0064-output-1",
+    "pair_id": "llmbar-gptinst-0064",
+    "expected": "success",
+    "source_row_sha256": "67867a28729cadc413b38cbba800b0245a1d9ca8eb14364405984f3195ed802b",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0064-output-2",
+    "pair_id": "llmbar-gptinst-0064",
+    "expected": "failure",
+    "source_row_sha256": "67867a28729cadc413b38cbba800b0245a1d9ca8eb14364405984f3195ed802b",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0069-output-1",
+    "pair_id": "llmbar-neighbor-0069",
+    "expected": "success",
+    "source_row_sha256": "fac54f7de6aee30bbd2a514347b55139467fe9a05df54e5dc63ee04b28b7baec",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0069-output-2",
+    "pair_id": "llmbar-neighbor-0069",
+    "expected": "failure",
+    "source_row_sha256": "fac54f7de6aee30bbd2a514347b55139467fe9a05df54e5dc63ee04b28b7baec",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0070-output-1",
+    "pair_id": "llmbar-natural-0070",
+    "expected": "failure",
+    "source_row_sha256": "ddd3ddf4767d6f32b16133c4c16abdd85b2c0cfe4d1c07499d4ca08fd1422c3a",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0070-output-2",
+    "pair_id": "llmbar-natural-0070",
+    "expected": "success",
+    "source_row_sha256": "ddd3ddf4767d6f32b16133c4c16abdd85b2c0cfe4d1c07499d4ca08fd1422c3a",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0020-output-1",
+    "pair_id": "llmbar-natural-0020",
+    "expected": "success",
+    "source_row_sha256": "2da5c70fb601c8363ff9b598858e806b1d743d604c48c53a578ddbfe5792a426",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0020-output-2",
+    "pair_id": "llmbar-natural-0020",
+    "expected": "failure",
+    "source_row_sha256": "2da5c70fb601c8363ff9b598858e806b1d743d604c48c53a578ddbfe5792a426",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0002-output-1",
+    "pair_id": "llmbar-gptout-0002",
+    "expected": "success",
+    "source_row_sha256": "8dead8e9696b0f212b68c71a50d848206584b8a4281bd8931b3ee6e4d56f9d8f",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0002-output-2",
+    "pair_id": "llmbar-gptout-0002",
+    "expected": "failure",
+    "source_row_sha256": "8dead8e9696b0f212b68c71a50d848206584b8a4281bd8931b3ee6e4d56f9d8f",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0098-output-1",
+    "pair_id": "llmbar-neighbor-0098",
+    "expected": "success",
+    "source_row_sha256": "f54e17c77f0435ef4156fc76c78774b30d787abb9c6088b500857b643fb1ae26",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0098-output-2",
+    "pair_id": "llmbar-neighbor-0098",
+    "expected": "failure",
+    "source_row_sha256": "f54e17c77f0435ef4156fc76c78774b30d787abb9c6088b500857b643fb1ae26",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0045-output-1",
+    "pair_id": "llmbar-manual-0045",
+    "expected": "success",
+    "source_row_sha256": "042172e4c32170adac771fad7f37be1188ad1506d5b7bfc28b65b84f1f0bff56",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0045-output-2",
+    "pair_id": "llmbar-manual-0045",
+    "expected": "failure",
+    "source_row_sha256": "042172e4c32170adac771fad7f37be1188ad1506d5b7bfc28b65b84f1f0bff56",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0105-output-1",
+    "pair_id": "llmbar-neighbor-0105",
+    "expected": "success",
+    "source_row_sha256": "bb0d6891880f5707e7e329602b17ac434bd8f6671cdb077f8eb1a332dbc9e796",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0105-output-2",
+    "pair_id": "llmbar-neighbor-0105",
+    "expected": "failure",
+    "source_row_sha256": "bb0d6891880f5707e7e329602b17ac434bd8f6671cdb077f8eb1a332dbc9e796",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0002-output-1",
+    "pair_id": "llmbar-neighbor-0002",
+    "expected": "success",
+    "source_row_sha256": "399b8bb6bbf09283207cfa8136e0046ef0ba9aabfe5134a1359f2be187dcce2a",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0002-output-2",
+    "pair_id": "llmbar-neighbor-0002",
+    "expected": "failure",
+    "source_row_sha256": "399b8bb6bbf09283207cfa8136e0046ef0ba9aabfe5134a1359f2be187dcce2a",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0039-output-1",
+    "pair_id": "llmbar-gptout-0039",
+    "expected": "success",
+    "source_row_sha256": "05dfd17d5b6ec76360c7d6f9224c502bdb3af92f1b1eae512433325f25e94cc4",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0039-output-2",
+    "pair_id": "llmbar-gptout-0039",
+    "expected": "failure",
+    "source_row_sha256": "05dfd17d5b6ec76360c7d6f9224c502bdb3af92f1b1eae512433325f25e94cc4",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0014-output-1",
+    "pair_id": "llmbar-manual-0014",
+    "expected": "failure",
+    "source_row_sha256": "e3411c58066adc5f1c6a9387b14d52ea86681e67d3c141a4d8d92daef91a0704",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0014-output-2",
+    "pair_id": "llmbar-manual-0014",
+    "expected": "success",
+    "source_row_sha256": "e3411c58066adc5f1c6a9387b14d52ea86681e67d3c141a4d8d92daef91a0704",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0061-output-1",
+    "pair_id": "llmbar-gptinst-0061",
+    "expected": "success",
+    "source_row_sha256": "4cb136b2ec720cc36e2f15ac883a77f3eba7e3845ca105e02d3b91c0d8170c45",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0061-output-2",
+    "pair_id": "llmbar-gptinst-0061",
+    "expected": "failure",
+    "source_row_sha256": "4cb136b2ec720cc36e2f15ac883a77f3eba7e3845ca105e02d3b91c0d8170c45",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0023-output-1",
+    "pair_id": "llmbar-gptout-0023",
+    "expected": "failure",
+    "source_row_sha256": "53f60a54c111a7ff27ad7e40897a7b8991fddea382d557c99c8af9e170fe2e01",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0023-output-2",
+    "pair_id": "llmbar-gptout-0023",
+    "expected": "success",
+    "source_row_sha256": "53f60a54c111a7ff27ad7e40897a7b8991fddea382d557c99c8af9e170fe2e01",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0007-output-1",
+    "pair_id": "llmbar-gptout-0007",
+    "expected": "failure",
+    "source_row_sha256": "674ddf9d6208e96882665420e813aab199f636bec0f85e2a28631c711bec8532",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0007-output-2",
+    "pair_id": "llmbar-gptout-0007",
+    "expected": "success",
+    "source_row_sha256": "674ddf9d6208e96882665420e813aab199f636bec0f85e2a28631c711bec8532",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0032-output-1",
+    "pair_id": "llmbar-manual-0032",
+    "expected": "failure",
+    "source_row_sha256": "056b8228f2d4876db4578e2be1c26eb1e5f0a274209c1b4d49b3d8cf6756d1a1",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0032-output-2",
+    "pair_id": "llmbar-manual-0032",
+    "expected": "success",
+    "source_row_sha256": "056b8228f2d4876db4578e2be1c26eb1e5f0a274209c1b4d49b3d8cf6756d1a1",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0028-output-1",
+    "pair_id": "llmbar-neighbor-0028",
+    "expected": "failure",
+    "source_row_sha256": "23dfe571a3a7561795e495730ba8207b0d56a625093c920a9e0b9d0f770859e3",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0028-output-2",
+    "pair_id": "llmbar-neighbor-0028",
+    "expected": "success",
+    "source_row_sha256": "23dfe571a3a7561795e495730ba8207b0d56a625093c920a9e0b9d0f770859e3",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0077-output-1",
+    "pair_id": "llmbar-natural-0077",
+    "expected": "failure",
+    "source_row_sha256": "73934182ef4053700d514f27266f27d369d36e91c6451baff612945efd096a1d",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0077-output-2",
+    "pair_id": "llmbar-natural-0077",
+    "expected": "success",
+    "source_row_sha256": "73934182ef4053700d514f27266f27d369d36e91c6451baff612945efd096a1d",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0003-output-1",
+    "pair_id": "llmbar-gptinst-0003",
+    "expected": "failure",
+    "source_row_sha256": "48a3b9b108b832e96e49571bd94e4b7851fc7631844cd849b1cb9dd1fa635a7e",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0003-output-2",
+    "pair_id": "llmbar-gptinst-0003",
+    "expected": "success",
+    "source_row_sha256": "48a3b9b108b832e96e49571bd94e4b7851fc7631844cd849b1cb9dd1fa635a7e",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0022-output-1",
+    "pair_id": "llmbar-natural-0022",
+    "expected": "success",
+    "source_row_sha256": "908089217576843f3197a748a0beba9e747f386c396226572e5d6d41ecffaa7d",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0022-output-2",
+    "pair_id": "llmbar-natural-0022",
+    "expected": "failure",
+    "source_row_sha256": "908089217576843f3197a748a0beba9e747f386c396226572e5d6d41ecffaa7d",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0106-output-1",
+    "pair_id": "llmbar-neighbor-0106",
+    "expected": "success",
+    "source_row_sha256": "c036b015194225fa3139329c996d52c19c0c29e906e599d080559b0e42d03b30",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0106-output-2",
+    "pair_id": "llmbar-neighbor-0106",
+    "expected": "failure",
+    "source_row_sha256": "c036b015194225fa3139329c996d52c19c0c29e906e599d080559b0e42d03b30",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0052-output-1",
+    "pair_id": "llmbar-gptinst-0052",
+    "expected": "failure",
+    "source_row_sha256": "393369e65d5fbf3dff99e88e67981c6931b025ecf32a880a3efc0be1e7e379b9",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0052-output-2",
+    "pair_id": "llmbar-gptinst-0052",
+    "expected": "success",
+    "source_row_sha256": "393369e65d5fbf3dff99e88e67981c6931b025ecf32a880a3efc0be1e7e379b9",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0007-output-1",
+    "pair_id": "llmbar-manual-0007",
+    "expected": "failure",
+    "source_row_sha256": "d955efd772805939609bbf2b4ca1fd9070bd225c8f2a3d785fec8855cb41226f",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0007-output-2",
+    "pair_id": "llmbar-manual-0007",
+    "expected": "success",
+    "source_row_sha256": "d955efd772805939609bbf2b4ca1fd9070bd225c8f2a3d785fec8855cb41226f",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0040-output-1",
+    "pair_id": "llmbar-manual-0040",
+    "expected": "success",
+    "source_row_sha256": "6ef9c56758dab28da5814d87e3270ea72287fa5757708f2817092d63166b02ee",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0040-output-2",
+    "pair_id": "llmbar-manual-0040",
+    "expected": "failure",
+    "source_row_sha256": "6ef9c56758dab28da5814d87e3270ea72287fa5757708f2817092d63166b02ee",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0002-output-1",
+    "pair_id": "llmbar-manual-0002",
+    "expected": "success",
+    "source_row_sha256": "3ae3c28975914673d91b1d7b841419b3bc1655f60642ef5d52e47eb0b7d0f1f6",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0002-output-2",
+    "pair_id": "llmbar-manual-0002",
+    "expected": "failure",
+    "source_row_sha256": "3ae3c28975914673d91b1d7b841419b3bc1655f60642ef5d52e47eb0b7d0f1f6",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0034-output-1",
+    "pair_id": "llmbar-gptout-0034",
+    "expected": "failure",
+    "source_row_sha256": "33da27f372e19ffc118f436ed30141552b5b73aa94dbbff412a687a57a50ab2d",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0034-output-2",
+    "pair_id": "llmbar-gptout-0034",
+    "expected": "success",
+    "source_row_sha256": "33da27f372e19ffc118f436ed30141552b5b73aa94dbbff412a687a57a50ab2d",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0077-output-1",
+    "pair_id": "llmbar-neighbor-0077",
+    "expected": "failure",
+    "source_row_sha256": "dabfcc29b7f9acf3d9010001aa9cb0b7f1d5df93bbfed8d84ee072c9428b4cd6",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0077-output-2",
+    "pair_id": "llmbar-neighbor-0077",
+    "expected": "success",
+    "source_row_sha256": "dabfcc29b7f9acf3d9010001aa9cb0b7f1d5df93bbfed8d84ee072c9428b4cd6",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0016-output-1",
+    "pair_id": "llmbar-manual-0016",
+    "expected": "failure",
+    "source_row_sha256": "15e243d779d5ae8af9f4ddade03ec56702e3c867169bcb5e53c10f97685f298a",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0016-output-2",
+    "pair_id": "llmbar-manual-0016",
+    "expected": "success",
+    "source_row_sha256": "15e243d779d5ae8af9f4ddade03ec56702e3c867169bcb5e53c10f97685f298a",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0029-output-1",
+    "pair_id": "llmbar-gptinst-0029",
+    "expected": "success",
+    "source_row_sha256": "99fd0db47265db22fc41ca07e1eb949a037e9769dc53b8e003a9854f9550233f",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0029-output-2",
+    "pair_id": "llmbar-gptinst-0029",
+    "expected": "failure",
+    "source_row_sha256": "99fd0db47265db22fc41ca07e1eb949a037e9769dc53b8e003a9854f9550233f",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0062-output-1",
+    "pair_id": "llmbar-neighbor-0062",
+    "expected": "success",
+    "source_row_sha256": "dc916d0e6e795c30801475169a24265cd87cf3d22583eea5b8ebf50c4031b96c",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0062-output-2",
+    "pair_id": "llmbar-neighbor-0062",
+    "expected": "failure",
+    "source_row_sha256": "dc916d0e6e795c30801475169a24265cd87cf3d22583eea5b8ebf50c4031b96c",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0090-output-1",
+    "pair_id": "llmbar-natural-0090",
+    "expected": "failure",
+    "source_row_sha256": "6cd8f9ecd2345d099df134904139e93cd56617ac03c13d1022cd819c2c69cc65",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0090-output-2",
+    "pair_id": "llmbar-natural-0090",
+    "expected": "success",
+    "source_row_sha256": "6cd8f9ecd2345d099df134904139e93cd56617ac03c13d1022cd819c2c69cc65",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0077-output-1",
+    "pair_id": "llmbar-gptinst-0077",
+    "expected": "failure",
+    "source_row_sha256": "c0e602a18cf79a2636f1a7b6e3682ce7c81d0cf25d631915e76ba79d722f9489",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0077-output-2",
+    "pair_id": "llmbar-gptinst-0077",
+    "expected": "success",
+    "source_row_sha256": "c0e602a18cf79a2636f1a7b6e3682ce7c81d0cf25d631915e76ba79d722f9489",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0026-output-1",
+    "pair_id": "llmbar-manual-0026",
+    "expected": "failure",
+    "source_row_sha256": "37031bf14985c190598fb03cc0880eaa4302f65943da61491b5361a8b6d9897f",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0026-output-2",
+    "pair_id": "llmbar-manual-0026",
+    "expected": "success",
+    "source_row_sha256": "37031bf14985c190598fb03cc0880eaa4302f65943da61491b5361a8b6d9897f",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0101-output-1",
+    "pair_id": "llmbar-neighbor-0101",
+    "expected": "success",
+    "source_row_sha256": "d4b59e61c08ed61bb408761d6ee995cdf7db39b6644966878bf99caf78c15fc7",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0101-output-2",
+    "pair_id": "llmbar-neighbor-0101",
+    "expected": "failure",
+    "source_row_sha256": "d4b59e61c08ed61bb408761d6ee995cdf7db39b6644966878bf99caf78c15fc7",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0017-output-1",
+    "pair_id": "llmbar-manual-0017",
+    "expected": "success",
+    "source_row_sha256": "a3957e810fdec4b70463ceee94e7d145ba368f1c42a577d25124841bc2a2c196",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0017-output-2",
+    "pair_id": "llmbar-manual-0017",
+    "expected": "failure",
+    "source_row_sha256": "a3957e810fdec4b70463ceee94e7d145ba368f1c42a577d25124841bc2a2c196",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0038-output-1",
+    "pair_id": "llmbar-gptout-0038",
+    "expected": "success",
+    "source_row_sha256": "f104ea5d4c69ad86edb87bec3a689e2b8a69524ca6ec9d6e7cf040ea3bee8433",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0038-output-2",
+    "pair_id": "llmbar-gptout-0038",
+    "expected": "failure",
+    "source_row_sha256": "f104ea5d4c69ad86edb87bec3a689e2b8a69524ca6ec9d6e7cf040ea3bee8433",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0055-output-1",
+    "pair_id": "llmbar-neighbor-0055",
+    "expected": "failure",
+    "source_row_sha256": "948d3bd86be9e0eeee926fea48aca8b1808d5a5bdad590cfffd9ace3f08cbb9c",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0055-output-2",
+    "pair_id": "llmbar-neighbor-0055",
+    "expected": "success",
+    "source_row_sha256": "948d3bd86be9e0eeee926fea48aca8b1808d5a5bdad590cfffd9ace3f08cbb9c",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0020-output-1",
+    "pair_id": "llmbar-manual-0020",
+    "expected": "failure",
+    "source_row_sha256": "e0ee4652710e17115fd4e86dbf61d9913487341f5dcbdba845386373dfaa4b0e",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0020-output-2",
+    "pair_id": "llmbar-manual-0020",
+    "expected": "success",
+    "source_row_sha256": "e0ee4652710e17115fd4e86dbf61d9913487341f5dcbdba845386373dfaa4b0e",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0011-output-1",
+    "pair_id": "llmbar-gptout-0011",
+    "expected": "failure",
+    "source_row_sha256": "ec888ca369c01482f7306ab521ec6b1128b4b0e529630957743af348c6ccb527",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0011-output-2",
+    "pair_id": "llmbar-gptout-0011",
+    "expected": "success",
+    "source_row_sha256": "ec888ca369c01482f7306ab521ec6b1128b4b0e529630957743af348c6ccb527",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0018-output-1",
+    "pair_id": "llmbar-manual-0018",
+    "expected": "success",
+    "source_row_sha256": "b07f0cb3c36c1b63f2da26c040e9f61bce207c4db3e666635b8c43b3bf276494",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0018-output-2",
+    "pair_id": "llmbar-manual-0018",
+    "expected": "failure",
+    "source_row_sha256": "b07f0cb3c36c1b63f2da26c040e9f61bce207c4db3e666635b8c43b3bf276494",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0025-output-1",
+    "pair_id": "llmbar-gptout-0025",
+    "expected": "success",
+    "source_row_sha256": "c1722a16c8c9c9192d5ad084a15a8d27c6f1a351ffe62464b3eb6cd1dc38fd0b",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0025-output-2",
+    "pair_id": "llmbar-gptout-0025",
+    "expected": "failure",
+    "source_row_sha256": "c1722a16c8c9c9192d5ad084a15a8d27c6f1a351ffe62464b3eb6cd1dc38fd0b",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0050-output-1",
+    "pair_id": "llmbar-natural-0050",
+    "expected": "failure",
+    "source_row_sha256": "9881d835a1695156f55f8614dd42f04b5d01dce71d3a12e3a940e7ae15f70764",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0050-output-2",
+    "pair_id": "llmbar-natural-0050",
+    "expected": "success",
+    "source_row_sha256": "9881d835a1695156f55f8614dd42f04b5d01dce71d3a12e3a940e7ae15f70764",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0049-output-1",
+    "pair_id": "llmbar-neighbor-0049",
+    "expected": "failure",
+    "source_row_sha256": "6febbc95ccba25bd90a94b38808d618c8004ad2854117585ca81b956eaba66df",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0049-output-2",
+    "pair_id": "llmbar-neighbor-0049",
+    "expected": "success",
+    "source_row_sha256": "6febbc95ccba25bd90a94b38808d618c8004ad2854117585ca81b956eaba66df",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0025-output-1",
+    "pair_id": "llmbar-natural-0025",
+    "expected": "failure",
+    "source_row_sha256": "a58893043ec93c0e5d3de75da8d6346a0098c9dc82366c2fb5727be8cc961426",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0025-output-2",
+    "pair_id": "llmbar-natural-0025",
+    "expected": "success",
+    "source_row_sha256": "a58893043ec93c0e5d3de75da8d6346a0098c9dc82366c2fb5727be8cc961426",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0008-output-1",
+    "pair_id": "llmbar-manual-0008",
+    "expected": "failure",
+    "source_row_sha256": "2d2551b0ade07b8010b501287b503c0dc1fe6c396bc3b42eba6a2d504bf2740a",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0008-output-2",
+    "pair_id": "llmbar-manual-0008",
+    "expected": "success",
+    "source_row_sha256": "2d2551b0ade07b8010b501287b503c0dc1fe6c396bc3b42eba6a2d504bf2740a",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0121-output-1",
+    "pair_id": "llmbar-neighbor-0121",
+    "expected": "success",
+    "source_row_sha256": "6206bc1c04c041b6e967ef7acf6492094e8e692d224ed2a3bb28f75faecaa3be",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0121-output-2",
+    "pair_id": "llmbar-neighbor-0121",
+    "expected": "failure",
+    "source_row_sha256": "6206bc1c04c041b6e967ef7acf6492094e8e692d224ed2a3bb28f75faecaa3be",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0084-output-1",
+    "pair_id": "llmbar-gptinst-0084",
+    "expected": "success",
+    "source_row_sha256": "43f30cbe8f9fc89e41043a66ec0eb8bb4e4446b1d4a0b72652f0492ff9d5cb1a",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0084-output-2",
+    "pair_id": "llmbar-gptinst-0084",
+    "expected": "failure",
+    "source_row_sha256": "43f30cbe8f9fc89e41043a66ec0eb8bb4e4446b1d4a0b72652f0492ff9d5cb1a",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0043-output-1",
+    "pair_id": "llmbar-manual-0043",
+    "expected": "failure",
+    "source_row_sha256": "1d9aeca451138e262b9875b40c647b2df8e9db76dc2888869bf123b8ffc40f55",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0043-output-2",
+    "pair_id": "llmbar-manual-0043",
+    "expected": "success",
+    "source_row_sha256": "1d9aeca451138e262b9875b40c647b2df8e9db76dc2888869bf123b8ffc40f55",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0067-output-1",
+    "pair_id": "llmbar-gptinst-0067",
+    "expected": "success",
+    "source_row_sha256": "a94509eb05f0fa2b298276c8de36bbcfc8fe27f8c80b63f6b48affa1c64cf0cd",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0067-output-2",
+    "pair_id": "llmbar-gptinst-0067",
+    "expected": "failure",
+    "source_row_sha256": "a94509eb05f0fa2b298276c8de36bbcfc8fe27f8c80b63f6b48affa1c64cf0cd",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0020-output-1",
+    "pair_id": "llmbar-gptinst-0020",
+    "expected": "failure",
+    "source_row_sha256": "f84ec74531a6cad70eaa2d4d8deb234a9d67e2f52ee8b86ab587edcad14a9098",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0020-output-2",
+    "pair_id": "llmbar-gptinst-0020",
+    "expected": "success",
+    "source_row_sha256": "f84ec74531a6cad70eaa2d4d8deb234a9d67e2f52ee8b86ab587edcad14a9098",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0027-output-1",
+    "pair_id": "llmbar-gptout-0027",
+    "expected": "failure",
+    "source_row_sha256": "578333b748e7541aa9bbcc1d25d8bafc81e0b9b6eb16fec5b36213e3f4e464b4",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0027-output-2",
+    "pair_id": "llmbar-gptout-0027",
+    "expected": "success",
+    "source_row_sha256": "578333b748e7541aa9bbcc1d25d8bafc81e0b9b6eb16fec5b36213e3f4e464b4",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0086-output-1",
+    "pair_id": "llmbar-gptinst-0086",
+    "expected": "failure",
+    "source_row_sha256": "d9832705472e0acd7f9f017bc187b86a4be1237d917ab66fe133b1af99b128d2",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0086-output-2",
+    "pair_id": "llmbar-gptinst-0086",
+    "expected": "success",
+    "source_row_sha256": "d9832705472e0acd7f9f017bc187b86a4be1237d917ab66fe133b1af99b128d2",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0098-output-1",
+    "pair_id": "llmbar-natural-0098",
+    "expected": "failure",
+    "source_row_sha256": "f1a539d2b232ef93fc3c908f8d0ce3f215a7ff57ae418490469dee9ec9f11102",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0098-output-2",
+    "pair_id": "llmbar-natural-0098",
+    "expected": "success",
+    "source_row_sha256": "f1a539d2b232ef93fc3c908f8d0ce3f215a7ff57ae418490469dee9ec9f11102",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0000-output-1",
+    "pair_id": "llmbar-gptout-0000",
+    "expected": "failure",
+    "source_row_sha256": "8fcce6ee7ac46d75f0771300fb3b99a822c2c578209898249c69520a674908bd",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0000-output-2",
+    "pair_id": "llmbar-gptout-0000",
+    "expected": "success",
+    "source_row_sha256": "8fcce6ee7ac46d75f0771300fb3b99a822c2c578209898249c69520a674908bd",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0003-output-1",
+    "pair_id": "llmbar-gptout-0003",
+    "expected": "failure",
+    "source_row_sha256": "4de63ea8098415830ec8bbc0704dda9841b638d81ed43b04d9e1717b86f65419",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0003-output-2",
+    "pair_id": "llmbar-gptout-0003",
+    "expected": "success",
+    "source_row_sha256": "4de63ea8098415830ec8bbc0704dda9841b638d81ed43b04d9e1717b86f65419",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0095-output-1",
+    "pair_id": "llmbar-natural-0095",
+    "expected": "success",
+    "source_row_sha256": "1bfc9ea7357722500ae8d9709d43726608978ba0f8cb49100666f0687939da25",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0095-output-2",
+    "pair_id": "llmbar-natural-0095",
+    "expected": "failure",
+    "source_row_sha256": "1bfc9ea7357722500ae8d9709d43726608978ba0f8cb49100666f0687939da25",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0082-output-1",
+    "pair_id": "llmbar-neighbor-0082",
+    "expected": "success",
+    "source_row_sha256": "96436e9c224ad63fe1634528d102b6412cdf749b2e5ee0b009e22bd941895981",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0082-output-2",
+    "pair_id": "llmbar-neighbor-0082",
+    "expected": "failure",
+    "source_row_sha256": "96436e9c224ad63fe1634528d102b6412cdf749b2e5ee0b009e22bd941895981",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0104-output-1",
+    "pair_id": "llmbar-neighbor-0104",
+    "expected": "success",
+    "source_row_sha256": "f369b9b3f3063ae076912c87f71bfe476af7ba7c1f6a0bc1fe97ada1b74fc667",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-neighbor-0104-output-2",
+    "pair_id": "llmbar-neighbor-0104",
+    "expected": "failure",
+    "source_row_sha256": "f369b9b3f3063ae076912c87f71bfe476af7ba7c1f6a0bc1fe97ada1b74fc667",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0015-output-1",
+    "pair_id": "llmbar-manual-0015",
+    "expected": "success",
+    "source_row_sha256": "e3f112abd5892235c70ce74a1d38f405958764368db0f31687eb7312a0d77fe7",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-manual-0015-output-2",
+    "pair_id": "llmbar-manual-0015",
+    "expected": "failure",
+    "source_row_sha256": "e3f112abd5892235c70ce74a1d38f405958764368db0f31687eb7312a0d77fe7",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0084-output-1",
+    "pair_id": "llmbar-natural-0084",
+    "expected": "failure",
+    "source_row_sha256": "efe9ac519cabac1ed1344548a276f36f1ea42ed4d27671f6e8fc905e847a6320",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0084-output-2",
+    "pair_id": "llmbar-natural-0084",
+    "expected": "success",
+    "source_row_sha256": "efe9ac519cabac1ed1344548a276f36f1ea42ed4d27671f6e8fc905e847a6320",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0036-output-1",
+    "pair_id": "llmbar-gptinst-0036",
+    "expected": "success",
+    "source_row_sha256": "fbad0fd76074706e4f263c5b03a92dd86479d30d87afa3a8e3db94934afc0132",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0036-output-2",
+    "pair_id": "llmbar-gptinst-0036",
+    "expected": "failure",
+    "source_row_sha256": "fbad0fd76074706e4f263c5b03a92dd86479d30d87afa3a8e3db94934afc0132",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0039-output-1",
+    "pair_id": "llmbar-gptinst-0039",
+    "expected": "success",
+    "source_row_sha256": "c42cd472dfb480679ac0cdcaf86d6346beaa7569d451446667ec97bcde8b6aad",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptinst-0039-output-2",
+    "pair_id": "llmbar-gptinst-0039",
+    "expected": "failure",
+    "source_row_sha256": "c42cd472dfb480679ac0cdcaf86d6346beaa7569d451446667ec97bcde8b6aad",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0044-output-1",
+    "pair_id": "llmbar-gptout-0044",
+    "expected": "success",
+    "source_row_sha256": "396a944e790e30563a795a75d717b0a00944e029d8cb1b1fd0447f574b238142",
+    "source_label": 1,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0044-output-2",
+    "pair_id": "llmbar-gptout-0044",
+    "expected": "failure",
+    "source_row_sha256": "396a944e790e30563a795a75d717b0a00944e029d8cb1b1fd0447f574b238142",
+    "source_label": 1,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0016-output-1",
+    "pair_id": "llmbar-natural-0016",
+    "expected": "failure",
+    "source_row_sha256": "192d27ecdf5d6c7a62255d6beea0a09ec8679ddef3bd425f267551f1866fe34e",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-natural-0016-output-2",
+    "pair_id": "llmbar-natural-0016",
+    "expected": "success",
+    "source_row_sha256": "192d27ecdf5d6c7a62255d6beea0a09ec8679ddef3bd425f267551f1866fe34e",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0043-output-1",
+    "pair_id": "llmbar-gptout-0043",
+    "expected": "failure",
+    "source_row_sha256": "2d089c847acc5609fa12ed4f081074f910d256062aa090923ec25820f7bfbe63",
+    "source_label": 2,
+    "side": 1,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  },
+  {
+    "unit_id": "llmbar-gptout-0043-output-2",
+    "pair_id": "llmbar-gptout-0043",
+    "expected": "success",
+    "source_row_sha256": "2d089c847acc5609fa12ed4f081074f910d256062aa090923ec25820f7bfbe63",
+    "source_label": 2,
+    "side": 2,
+    "label_source": "published_human_gold_adapter",
+    "upstream_commit": "900616bff90b6c6c8e1681f7d079250637c55992"
+  }
+]

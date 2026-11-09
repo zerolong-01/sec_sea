@@ -1,0 +1,1857 @@
+{
+  "overall": {
+    "count": 160,
+    "correct": 52,
+    "accuracy": 0.325,
+    "decisive_count": 76,
+    "decisive_accuracy": 0.6842105263157895,
+    "false_success_count": 9,
+    "failure_gold_count": 80,
+    "false_success_rate": 0.1125,
+    "review_return_rate": 0.51875,
+    "not_evaluated_count": 1,
+    "confusion_matrix": {
+      "success": {
+        "success": 21,
+        "failure": 15,
+        "review_needed": 43,
+        "not_evaluated": 1
+      },
+      "failure": {
+        "success": 9,
+        "failure": 31,
+        "review_needed": 40,
+        "not_evaluated": 0
+      }
+    },
+    "accuracy_ci95": [
+      0.25625,
+      0.39375
+    ],
+    "ci_method": "exact_instruction_group_bootstrap",
+    "distinct_instruction_groups": 80,
+    "strict_pair_accuracy": 0.1
+  },
+  "by_subset": {
+    "GPTInst": {
+      "count": 32,
+      "correct": 12,
+      "accuracy": 0.375,
+      "decisive_count": 14,
+      "decisive_accuracy": 0.8571428571428571,
+      "false_success_count": 1,
+      "failure_gold_count": 16,
+      "false_success_rate": 0.0625,
+      "review_return_rate": 0.5625,
+      "not_evaluated_count": 0,
+      "confusion_matrix": {
+        "success": {
+          "success": 5,
+          "failure": 1,
+          "review_needed": 10,
+          "not_evaluated": 0
+        },
+        "failure": {
+          "success": 1,
+          "failure": 7,
+          "review_needed": 8,
+          "not_evaluated": 0
+        }
+      }
+    },
+    "GPTOut": {
+      "count": 32,
+      "correct": 7,
+      "accuracy": 0.21875,
+      "decisive_count": 16,
+      "decisive_accuracy": 0.4375,
+      "false_success_count": 5,
+      "failure_gold_count": 16,
+      "false_success_rate": 0.3125,
+      "review_return_rate": 0.5,
+      "not_evaluated_count": 0,
+      "confusion_matrix": {
+        "success": {
+          "success": 4,
+          "failure": 4,
+          "review_needed": 8,
+          "not_evaluated": 0
+        },
+        "failure": {
+          "success": 5,
+          "failure": 3,
+          "review_needed": 8,
+          "not_evaluated": 0
+        }
+      }
+    },
+    "Manual": {
+      "count": 32,
+      "correct": 6,
+      "accuracy": 0.1875,
+      "decisive_count": 8,
+      "decisive_accuracy": 0.75,
+      "false_success_count": 0,
+      "failure_gold_count": 16,
+      "false_success_rate": 0.0,
+      "review_return_rate": 0.71875,
+      "not_evaluated_count": 1,
+      "confusion_matrix": {
+        "success": {
+          "success": 2,
+          "failure": 2,
+          "review_needed": 11,
+          "not_evaluated": 1
+        },
+        "failure": {
+          "success": 0,
+          "failure": 4,
+          "review_needed": 12,
+          "not_evaluated": 0
+        }
+      }
+    },
+    "Natural": {
+      "count": 32,
+      "correct": 18,
+      "accuracy": 0.5625,
+      "decisive_count": 21,
+      "decisive_accuracy": 0.8571428571428571,
+      "false_success_count": 0,
+      "failure_gold_count": 16,
+      "false_success_rate": 0.0,
+      "review_return_rate": 0.34375,
+      "not_evaluated_count": 0,
+      "confusion_matrix": {
+        "success": {
+          "success": 6,
+          "failure": 3,
+          "review_needed": 7,
+          "not_evaluated": 0
+        },
+        "failure": {
+          "success": 0,
+          "failure": 12,
+          "review_needed": 4,
+          "not_evaluated": 0
+        }
+      }
+    },
+    "Neighbor": {
+      "count": 32,
+      "correct": 9,
+      "accuracy": 0.28125,
+      "decisive_count": 17,
+      "decisive_accuracy": 0.5294117647058824,
+      "false_success_count": 3,
+      "failure_gold_count": 16,
+      "false_success_rate": 0.1875,
+      "review_return_rate": 0.46875,
+      "not_evaluated_count": 0,
+      "confusion_matrix": {
+        "success": {
+          "success": 4,
+          "failure": 5,
+          "review_needed": 7,
+          "not_evaluated": 0
+        },
+        "failure": {
+          "success": 3,
+          "failure": 5,
+          "review_needed": 8,
+          "not_evaluated": 0
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "unit_id": "llmbar-gptout-0012-output-1",
+      "pair_id": "llmbar-gptout-0012",
+      "family_id": "26e1da6f38f8013c4d4b2198dc41ccce16522964a959ad5608cbaf005fdbeda7",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0012-output-2",
+      "pair_id": "llmbar-gptout-0012",
+      "family_id": "26e1da6f38f8013c4d4b2198dc41ccce16522964a959ad5608cbaf005fdbeda7",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0112-output-1",
+      "pair_id": "llmbar-neighbor-0112",
+      "family_id": "57b7609c71dcbaeb5ee00d8b45fce9760f2c724dd52eb15eb4b407912459cbb4",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0112-output-2",
+      "pair_id": "llmbar-neighbor-0112",
+      "family_id": "57b7609c71dcbaeb5ee00d8b45fce9760f2c724dd52eb15eb4b407912459cbb4",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0063-output-1",
+      "pair_id": "llmbar-natural-0063",
+      "family_id": "19f8ef42e0d6ec6b978e6e3e07881902d16f406ea1d4b6e8d5c9490d12e4e01b",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0063-output-2",
+      "pair_id": "llmbar-natural-0063",
+      "family_id": "19f8ef42e0d6ec6b978e6e3e07881902d16f406ea1d4b6e8d5c9490d12e4e01b",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0030-output-1",
+      "pair_id": "llmbar-gptout-0030",
+      "family_id": "030aa427e3b74b461214671d8b09f11719945af879f55d8fbbbcf41eddc06e14",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0030-output-2",
+      "pair_id": "llmbar-gptout-0030",
+      "family_id": "030aa427e3b74b461214671d8b09f11719945af879f55d8fbbbcf41eddc06e14",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0045-output-1",
+      "pair_id": "llmbar-gptout-0045",
+      "family_id": "560c14595adc0a0c980efc5f7911b9991e22ab53515a0b2cc1f2871f88fc1602",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0045-output-2",
+      "pair_id": "llmbar-gptout-0045",
+      "family_id": "560c14595adc0a0c980efc5f7911b9991e22ab53515a0b2cc1f2871f88fc1602",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0007-output-1",
+      "pair_id": "llmbar-natural-0007",
+      "family_id": "ea2b64adcc7fa4232cc535fe82de39461d6512f13e5e2899f9f2d2bfd0c08676",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0007-output-2",
+      "pair_id": "llmbar-natural-0007",
+      "family_id": "ea2b64adcc7fa4232cc535fe82de39461d6512f13e5e2899f9f2d2bfd0c08676",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0044-output-1",
+      "pair_id": "llmbar-manual-0044",
+      "family_id": "2e8c4486352cdef477735b19a2dff6d8c4c328ac97c1631e4cd3b4b328e3e78b",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0044-output-2",
+      "pair_id": "llmbar-manual-0044",
+      "family_id": "2e8c4486352cdef477735b19a2dff6d8c4c328ac97c1631e4cd3b4b328e3e78b",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0037-output-1",
+      "pair_id": "llmbar-manual-0037",
+      "family_id": "236896716eb2724a0c03276f449455b0ddade6e27ad43e85533bcc9403a6c8c2",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0037-output-2",
+      "pair_id": "llmbar-manual-0037",
+      "family_id": "236896716eb2724a0c03276f449455b0ddade6e27ad43e85533bcc9403a6c8c2",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0010-output-1",
+      "pair_id": "llmbar-gptinst-0010",
+      "family_id": "15a600a8dc701ea5763d529bb17f26cafba96143876b777d0f15c07d14430c0f",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0010-output-2",
+      "pair_id": "llmbar-gptinst-0010",
+      "family_id": "15a600a8dc701ea5763d529bb17f26cafba96143876b777d0f15c07d14430c0f",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0061-output-1",
+      "pair_id": "llmbar-natural-0061",
+      "family_id": "22ffacc32e143aa17a94d0135d25ca7feadd0dfff2d1b5f52dd20e6538c7c89d",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0061-output-2",
+      "pair_id": "llmbar-natural-0061",
+      "family_id": "22ffacc32e143aa17a94d0135d25ca7feadd0dfff2d1b5f52dd20e6538c7c89d",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0048-output-1",
+      "pair_id": "llmbar-natural-0048",
+      "family_id": "83c8e638a88ba525b75fb287df7d9e0ee1f791993280428e9992080c92e71b80",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0048-output-2",
+      "pair_id": "llmbar-natural-0048",
+      "family_id": "83c8e638a88ba525b75fb287df7d9e0ee1f791993280428e9992080c92e71b80",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0086-output-1",
+      "pair_id": "llmbar-natural-0086",
+      "family_id": "ed0093dd113ab91c49765943c177defb7758e4b510290e3f2cc88f3c618d30cd",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0086-output-2",
+      "pair_id": "llmbar-natural-0086",
+      "family_id": "ed0093dd113ab91c49765943c177defb7758e4b510290e3f2cc88f3c618d30cd",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0079-output-1",
+      "pair_id": "llmbar-gptinst-0079",
+      "family_id": "bf4abfb5e3fc2005356801805bd5052966e2d033a4f627770d047ebf362cd61f",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0079-output-2",
+      "pair_id": "llmbar-gptinst-0079",
+      "family_id": "bf4abfb5e3fc2005356801805bd5052966e2d033a4f627770d047ebf362cd61f",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0006-output-1",
+      "pair_id": "llmbar-gptinst-0006",
+      "family_id": "dd7cbdca578ef0a33ea14197a4188da312de54b7ca999ac3be4f590042b991e8",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0006-output-2",
+      "pair_id": "llmbar-gptinst-0006",
+      "family_id": "dd7cbdca578ef0a33ea14197a4188da312de54b7ca999ac3be4f590042b991e8",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0076-output-1",
+      "pair_id": "llmbar-neighbor-0076",
+      "family_id": "5e29fe72ba15c231ce426646a2758bd4c4fee1230fb6b4b947891a5826db22a8",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0076-output-2",
+      "pair_id": "llmbar-neighbor-0076",
+      "family_id": "5e29fe72ba15c231ce426646a2758bd4c4fee1230fb6b4b947891a5826db22a8",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0028-output-1",
+      "pair_id": "llmbar-gptinst-0028",
+      "family_id": "cf5141135309e26e30ebd8900fef917be7752b59e8b1cfd82dba058ffa5e4dbc",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0028-output-2",
+      "pair_id": "llmbar-gptinst-0028",
+      "family_id": "cf5141135309e26e30ebd8900fef917be7752b59e8b1cfd82dba058ffa5e4dbc",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0064-output-1",
+      "pair_id": "llmbar-gptinst-0064",
+      "family_id": "9e005bb6bbc269dc4e8a2393f2c9aaba9c55aeaa2d0ea326f67d59c4040618a7",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0064-output-2",
+      "pair_id": "llmbar-gptinst-0064",
+      "family_id": "9e005bb6bbc269dc4e8a2393f2c9aaba9c55aeaa2d0ea326f67d59c4040618a7",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0069-output-1",
+      "pair_id": "llmbar-neighbor-0069",
+      "family_id": "06f58ea5271033fb2c7d66e57b46085e77c306a2a5414c559fa7bee085900217",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0069-output-2",
+      "pair_id": "llmbar-neighbor-0069",
+      "family_id": "06f58ea5271033fb2c7d66e57b46085e77c306a2a5414c559fa7bee085900217",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0070-output-1",
+      "pair_id": "llmbar-natural-0070",
+      "family_id": "ac4eb6b332b0188f331c65c6ebf8bf1ab6d72e728d12a6f62882dd48515417c0",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0070-output-2",
+      "pair_id": "llmbar-natural-0070",
+      "family_id": "ac4eb6b332b0188f331c65c6ebf8bf1ab6d72e728d12a6f62882dd48515417c0",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0020-output-1",
+      "pair_id": "llmbar-natural-0020",
+      "family_id": "adb741ac35f06f7973b661959fe16af6e4fa68a01d51b1d13024899dc5e409c1",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0020-output-2",
+      "pair_id": "llmbar-natural-0020",
+      "family_id": "adb741ac35f06f7973b661959fe16af6e4fa68a01d51b1d13024899dc5e409c1",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0002-output-1",
+      "pair_id": "llmbar-gptout-0002",
+      "family_id": "db7312d589430441fd93db4efddb7286e029e70ea6943ecef79570ed5304af8a",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0002-output-2",
+      "pair_id": "llmbar-gptout-0002",
+      "family_id": "db7312d589430441fd93db4efddb7286e029e70ea6943ecef79570ed5304af8a",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0098-output-1",
+      "pair_id": "llmbar-neighbor-0098",
+      "family_id": "6e012c952a5472666a40c1fa427bee861d4ca857883c586e1a6606719ce9a4f5",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0098-output-2",
+      "pair_id": "llmbar-neighbor-0098",
+      "family_id": "6e012c952a5472666a40c1fa427bee861d4ca857883c586e1a6606719ce9a4f5",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0045-output-1",
+      "pair_id": "llmbar-manual-0045",
+      "family_id": "405a66e7f8d695fd933ccd6b5838b11ab8eaba9c49cd9d9fe0b85794ab1c9719",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "not_evaluated",
+      "error_code": "INVALID_JUDGE_RESPONSE"
+    },
+    {
+      "unit_id": "llmbar-manual-0045-output-2",
+      "pair_id": "llmbar-manual-0045",
+      "family_id": "405a66e7f8d695fd933ccd6b5838b11ab8eaba9c49cd9d9fe0b85794ab1c9719",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0105-output-1",
+      "pair_id": "llmbar-neighbor-0105",
+      "family_id": "c4da1cef15567299d50ad060ae1877c2f40705cc1e98b6580658710c3765887a",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0105-output-2",
+      "pair_id": "llmbar-neighbor-0105",
+      "family_id": "c4da1cef15567299d50ad060ae1877c2f40705cc1e98b6580658710c3765887a",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0002-output-1",
+      "pair_id": "llmbar-neighbor-0002",
+      "family_id": "61578c7fd9c5f4e3c2be17fc2b80b4c498d4d2e964b635eff7cae7a0e03abf34",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0002-output-2",
+      "pair_id": "llmbar-neighbor-0002",
+      "family_id": "61578c7fd9c5f4e3c2be17fc2b80b4c498d4d2e964b635eff7cae7a0e03abf34",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0039-output-1",
+      "pair_id": "llmbar-gptout-0039",
+      "family_id": "05a42372835ad0d929f1df397f7b6d0bf292a5a3fa817a8782c489f5062e0244",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0039-output-2",
+      "pair_id": "llmbar-gptout-0039",
+      "family_id": "05a42372835ad0d929f1df397f7b6d0bf292a5a3fa817a8782c489f5062e0244",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0014-output-1",
+      "pair_id": "llmbar-manual-0014",
+      "family_id": "9f7b80424da8250756622bcf55056d40b45d245738c6ce05a41585402cd72474",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0014-output-2",
+      "pair_id": "llmbar-manual-0014",
+      "family_id": "9f7b80424da8250756622bcf55056d40b45d245738c6ce05a41585402cd72474",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0061-output-1",
+      "pair_id": "llmbar-gptinst-0061",
+      "family_id": "8999474a9f2c07552dd2ca4110577edf7ef25136585258cc1c08de223e4f4e2f",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0061-output-2",
+      "pair_id": "llmbar-gptinst-0061",
+      "family_id": "8999474a9f2c07552dd2ca4110577edf7ef25136585258cc1c08de223e4f4e2f",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0023-output-1",
+      "pair_id": "llmbar-gptout-0023",
+      "family_id": "ff72a330fcc570d67edf9a55e01803a1a2a9c444fab0a3d23cd5c1e5c36a8b90",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0023-output-2",
+      "pair_id": "llmbar-gptout-0023",
+      "family_id": "ff72a330fcc570d67edf9a55e01803a1a2a9c444fab0a3d23cd5c1e5c36a8b90",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0007-output-1",
+      "pair_id": "llmbar-gptout-0007",
+      "family_id": "1752cdb212872e2d5318e63a82935b0f373fc984b1ce0e343e2f8d33c88d7633",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0007-output-2",
+      "pair_id": "llmbar-gptout-0007",
+      "family_id": "1752cdb212872e2d5318e63a82935b0f373fc984b1ce0e343e2f8d33c88d7633",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0032-output-1",
+      "pair_id": "llmbar-manual-0032",
+      "family_id": "4d6106ff451993fe8a58687530babd4a7b08e765f0877ff767f291f3c8436071",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0032-output-2",
+      "pair_id": "llmbar-manual-0032",
+      "family_id": "4d6106ff451993fe8a58687530babd4a7b08e765f0877ff767f291f3c8436071",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0028-output-1",
+      "pair_id": "llmbar-neighbor-0028",
+      "family_id": "10d8680fbd562897215eaa6ea14aed49d00381b857c051cac4a950ee84afcbe0",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0028-output-2",
+      "pair_id": "llmbar-neighbor-0028",
+      "family_id": "10d8680fbd562897215eaa6ea14aed49d00381b857c051cac4a950ee84afcbe0",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0077-output-1",
+      "pair_id": "llmbar-natural-0077",
+      "family_id": "c1912beb74e8a88f982a2788ac642fcd3ba734baa3c5e11900d17c772d506e83",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0077-output-2",
+      "pair_id": "llmbar-natural-0077",
+      "family_id": "c1912beb74e8a88f982a2788ac642fcd3ba734baa3c5e11900d17c772d506e83",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0003-output-1",
+      "pair_id": "llmbar-gptinst-0003",
+      "family_id": "983ef5a253798bf2767c6e41c83572ff1d930c5f1d2902d25dd3f9a093f1ab7d",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0003-output-2",
+      "pair_id": "llmbar-gptinst-0003",
+      "family_id": "983ef5a253798bf2767c6e41c83572ff1d930c5f1d2902d25dd3f9a093f1ab7d",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0022-output-1",
+      "pair_id": "llmbar-natural-0022",
+      "family_id": "646cef58623ceba0367b791d452325fba2f95bffcb11d3ef0a76a0def3c2cec7",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0022-output-2",
+      "pair_id": "llmbar-natural-0022",
+      "family_id": "646cef58623ceba0367b791d452325fba2f95bffcb11d3ef0a76a0def3c2cec7",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0106-output-1",
+      "pair_id": "llmbar-neighbor-0106",
+      "family_id": "bd83edd1a4a389df790cc766332ca7f9db715180d7055c9983fc85641699cc52",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0106-output-2",
+      "pair_id": "llmbar-neighbor-0106",
+      "family_id": "bd83edd1a4a389df790cc766332ca7f9db715180d7055c9983fc85641699cc52",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0052-output-1",
+      "pair_id": "llmbar-gptinst-0052",
+      "family_id": "4ca399dc79eaf95e291ec5dd5dcb02d95726992c304a9e40014d5b768c223270",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0052-output-2",
+      "pair_id": "llmbar-gptinst-0052",
+      "family_id": "4ca399dc79eaf95e291ec5dd5dcb02d95726992c304a9e40014d5b768c223270",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0007-output-1",
+      "pair_id": "llmbar-manual-0007",
+      "family_id": "9974247a754dea34f6ec42397cf00585a67e81700ac483dcc162bf2f44257738",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0007-output-2",
+      "pair_id": "llmbar-manual-0007",
+      "family_id": "9974247a754dea34f6ec42397cf00585a67e81700ac483dcc162bf2f44257738",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0040-output-1",
+      "pair_id": "llmbar-manual-0040",
+      "family_id": "f7fe78e7815b1e506718428dcc74a89499b84f18c9a28dc5645327a29374787b",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0040-output-2",
+      "pair_id": "llmbar-manual-0040",
+      "family_id": "f7fe78e7815b1e506718428dcc74a89499b84f18c9a28dc5645327a29374787b",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0002-output-1",
+      "pair_id": "llmbar-manual-0002",
+      "family_id": "ef4765c6499e567851e9b1586c9d8f124820e5800398ee3a629dc92d5c7acfe2",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0002-output-2",
+      "pair_id": "llmbar-manual-0002",
+      "family_id": "ef4765c6499e567851e9b1586c9d8f124820e5800398ee3a629dc92d5c7acfe2",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0034-output-1",
+      "pair_id": "llmbar-gptout-0034",
+      "family_id": "8929389ceea37b0ca16345e2bd876e2ed13adb6fc44da7a7b2e2ac9525f06980",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0034-output-2",
+      "pair_id": "llmbar-gptout-0034",
+      "family_id": "8929389ceea37b0ca16345e2bd876e2ed13adb6fc44da7a7b2e2ac9525f06980",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0077-output-1",
+      "pair_id": "llmbar-neighbor-0077",
+      "family_id": "327b4e185e16d26d224c7269831391a7b50eea8a6eeaa4e658f66efbf8e470bc",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0077-output-2",
+      "pair_id": "llmbar-neighbor-0077",
+      "family_id": "327b4e185e16d26d224c7269831391a7b50eea8a6eeaa4e658f66efbf8e470bc",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0016-output-1",
+      "pair_id": "llmbar-manual-0016",
+      "family_id": "a9e4ec9395133578f1b1cdc49cfbf73ba88e0e86a44f3e4ca53b320ed14ff3dc",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0016-output-2",
+      "pair_id": "llmbar-manual-0016",
+      "family_id": "a9e4ec9395133578f1b1cdc49cfbf73ba88e0e86a44f3e4ca53b320ed14ff3dc",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0029-output-1",
+      "pair_id": "llmbar-gptinst-0029",
+      "family_id": "c709f8c541da6076b2e169192f3b4d091afc05eef6236935f4e4aed33b5065cb",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0029-output-2",
+      "pair_id": "llmbar-gptinst-0029",
+      "family_id": "c709f8c541da6076b2e169192f3b4d091afc05eef6236935f4e4aed33b5065cb",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0062-output-1",
+      "pair_id": "llmbar-neighbor-0062",
+      "family_id": "3da0ae46c91a3a349c416c3e1b3d79f028b4067dc21b01c5dc223041c51b6b19",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0062-output-2",
+      "pair_id": "llmbar-neighbor-0062",
+      "family_id": "3da0ae46c91a3a349c416c3e1b3d79f028b4067dc21b01c5dc223041c51b6b19",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0090-output-1",
+      "pair_id": "llmbar-natural-0090",
+      "family_id": "25c1873e10b0e946f977f36a0422ca5b0eac8009d9b5f13e172dbc0eb771e957",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0090-output-2",
+      "pair_id": "llmbar-natural-0090",
+      "family_id": "25c1873e10b0e946f977f36a0422ca5b0eac8009d9b5f13e172dbc0eb771e957",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0077-output-1",
+      "pair_id": "llmbar-gptinst-0077",
+      "family_id": "1c8b2e8625d7991de8575da76a6683496bd4de8093ad7bcd86db4e245f5e86ae",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0077-output-2",
+      "pair_id": "llmbar-gptinst-0077",
+      "family_id": "1c8b2e8625d7991de8575da76a6683496bd4de8093ad7bcd86db4e245f5e86ae",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0026-output-1",
+      "pair_id": "llmbar-manual-0026",
+      "family_id": "5bd7f1f48cb98ab1351a5355f76403d3526d9fe4ccdc1774854a5b264741def1",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0026-output-2",
+      "pair_id": "llmbar-manual-0026",
+      "family_id": "5bd7f1f48cb98ab1351a5355f76403d3526d9fe4ccdc1774854a5b264741def1",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0101-output-1",
+      "pair_id": "llmbar-neighbor-0101",
+      "family_id": "41e8a1d8ba133d3bb18b78e5e3712ac727b61101b0d1bbd9c9923688b8b72f35",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0101-output-2",
+      "pair_id": "llmbar-neighbor-0101",
+      "family_id": "41e8a1d8ba133d3bb18b78e5e3712ac727b61101b0d1bbd9c9923688b8b72f35",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0017-output-1",
+      "pair_id": "llmbar-manual-0017",
+      "family_id": "b9e9df3cbcb03d0aab51ee07fa086cf20323123f6e939cdd540861fd855ec96e",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0017-output-2",
+      "pair_id": "llmbar-manual-0017",
+      "family_id": "b9e9df3cbcb03d0aab51ee07fa086cf20323123f6e939cdd540861fd855ec96e",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0038-output-1",
+      "pair_id": "llmbar-gptout-0038",
+      "family_id": "80f4183dd03ad0d435693c5448f8c8ae43065f31c77d596e14e270d0b409db8d",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0038-output-2",
+      "pair_id": "llmbar-gptout-0038",
+      "family_id": "80f4183dd03ad0d435693c5448f8c8ae43065f31c77d596e14e270d0b409db8d",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0055-output-1",
+      "pair_id": "llmbar-neighbor-0055",
+      "family_id": "596b9cb68ff8f9366ce2ab5ed38b247b3835a2177951bfd0c76b42765e7634af",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0055-output-2",
+      "pair_id": "llmbar-neighbor-0055",
+      "family_id": "596b9cb68ff8f9366ce2ab5ed38b247b3835a2177951bfd0c76b42765e7634af",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0020-output-1",
+      "pair_id": "llmbar-manual-0020",
+      "family_id": "bc6cddfbbb7963ed53515f77398c5385dc462daf7ef4d4e6303f320c53610a39",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0020-output-2",
+      "pair_id": "llmbar-manual-0020",
+      "family_id": "bc6cddfbbb7963ed53515f77398c5385dc462daf7ef4d4e6303f320c53610a39",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0011-output-1",
+      "pair_id": "llmbar-gptout-0011",
+      "family_id": "614f188b819333a32554a3e8d0126bc3fff80d271cc93128ca02e8ffc5a14521",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0011-output-2",
+      "pair_id": "llmbar-gptout-0011",
+      "family_id": "614f188b819333a32554a3e8d0126bc3fff80d271cc93128ca02e8ffc5a14521",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0018-output-1",
+      "pair_id": "llmbar-manual-0018",
+      "family_id": "40ca7aad278facf3a8f5a0eecd08ac09e7282d406ce11712e18111cad6c8b76f",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0018-output-2",
+      "pair_id": "llmbar-manual-0018",
+      "family_id": "40ca7aad278facf3a8f5a0eecd08ac09e7282d406ce11712e18111cad6c8b76f",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0025-output-1",
+      "pair_id": "llmbar-gptout-0025",
+      "family_id": "e4bf9ae9e6fc3a8f73a47f7b050a95a1167c00466f0f1a39317ba451ad7492ee",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0025-output-2",
+      "pair_id": "llmbar-gptout-0025",
+      "family_id": "e4bf9ae9e6fc3a8f73a47f7b050a95a1167c00466f0f1a39317ba451ad7492ee",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0050-output-1",
+      "pair_id": "llmbar-natural-0050",
+      "family_id": "4f24ee65c9d0efef8ad6abb53635d1bc1420150f36abfbf03f7d836fde1bb634",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0050-output-2",
+      "pair_id": "llmbar-natural-0050",
+      "family_id": "4f24ee65c9d0efef8ad6abb53635d1bc1420150f36abfbf03f7d836fde1bb634",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0049-output-1",
+      "pair_id": "llmbar-neighbor-0049",
+      "family_id": "e5725cf5dc41c2151ccc841f72da4ec8b235343dfece2806428ad62897c1f4cf",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0049-output-2",
+      "pair_id": "llmbar-neighbor-0049",
+      "family_id": "e5725cf5dc41c2151ccc841f72da4ec8b235343dfece2806428ad62897c1f4cf",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0025-output-1",
+      "pair_id": "llmbar-natural-0025",
+      "family_id": "740ef375bf6ba286aaeeea274c609cad98f1e31254f83576750dffc3fbc98449",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0025-output-2",
+      "pair_id": "llmbar-natural-0025",
+      "family_id": "740ef375bf6ba286aaeeea274c609cad98f1e31254f83576750dffc3fbc98449",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0008-output-1",
+      "pair_id": "llmbar-manual-0008",
+      "family_id": "8ba111227605faeac35facb7d17ee5a2ebbecf8980979692eb50c7b3638ad9f1",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0008-output-2",
+      "pair_id": "llmbar-manual-0008",
+      "family_id": "8ba111227605faeac35facb7d17ee5a2ebbecf8980979692eb50c7b3638ad9f1",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0121-output-1",
+      "pair_id": "llmbar-neighbor-0121",
+      "family_id": "6040d8f95a710f0e97872fd3b1418082510e8624508b36b0977312ae65ff8d36",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0121-output-2",
+      "pair_id": "llmbar-neighbor-0121",
+      "family_id": "6040d8f95a710f0e97872fd3b1418082510e8624508b36b0977312ae65ff8d36",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0084-output-1",
+      "pair_id": "llmbar-gptinst-0084",
+      "family_id": "8c15ca6627a7b3e83d341d69978b8dd8d39f1c2f342d5c0c092b83c3144d6583",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0084-output-2",
+      "pair_id": "llmbar-gptinst-0084",
+      "family_id": "8c15ca6627a7b3e83d341d69978b8dd8d39f1c2f342d5c0c092b83c3144d6583",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0043-output-1",
+      "pair_id": "llmbar-manual-0043",
+      "family_id": "9c7fd87b57dfaf0afc583bedd5080f538eae652ee4de9e250b93a2c4d85038a4",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0043-output-2",
+      "pair_id": "llmbar-manual-0043",
+      "family_id": "9c7fd87b57dfaf0afc583bedd5080f538eae652ee4de9e250b93a2c4d85038a4",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0067-output-1",
+      "pair_id": "llmbar-gptinst-0067",
+      "family_id": "749614973ecbe8e0dd2a6227f6519cac6acdb10c15fcee99c9415b86f7bafaf2",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0067-output-2",
+      "pair_id": "llmbar-gptinst-0067",
+      "family_id": "749614973ecbe8e0dd2a6227f6519cac6acdb10c15fcee99c9415b86f7bafaf2",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0020-output-1",
+      "pair_id": "llmbar-gptinst-0020",
+      "family_id": "5a3ccf59574220a2233a68f811be129180875b2aaf03e39bd87063421358f0b5",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0020-output-2",
+      "pair_id": "llmbar-gptinst-0020",
+      "family_id": "5a3ccf59574220a2233a68f811be129180875b2aaf03e39bd87063421358f0b5",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0027-output-1",
+      "pair_id": "llmbar-gptout-0027",
+      "family_id": "12ee83aa91bfc37509a70b6246759c1911270d11444dd01f9f8c9bafc809685e",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0027-output-2",
+      "pair_id": "llmbar-gptout-0027",
+      "family_id": "12ee83aa91bfc37509a70b6246759c1911270d11444dd01f9f8c9bafc809685e",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0086-output-1",
+      "pair_id": "llmbar-gptinst-0086",
+      "family_id": "8e57b50e8af5a5a8b4982da7e36f94c09605d889a34071c1b2666a2ddbd7aba3",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0086-output-2",
+      "pair_id": "llmbar-gptinst-0086",
+      "family_id": "8e57b50e8af5a5a8b4982da7e36f94c09605d889a34071c1b2666a2ddbd7aba3",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0098-output-1",
+      "pair_id": "llmbar-natural-0098",
+      "family_id": "75f15ef8df5c0660061d7a75a0b2566c2f0f4e6a6a732695f8141dd2eb070388",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0098-output-2",
+      "pair_id": "llmbar-natural-0098",
+      "family_id": "75f15ef8df5c0660061d7a75a0b2566c2f0f4e6a6a732695f8141dd2eb070388",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0000-output-1",
+      "pair_id": "llmbar-gptout-0000",
+      "family_id": "29ef6332dd06695559d45d2c6174d08f3540634e8111de73a45e53d5c50adb44",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0000-output-2",
+      "pair_id": "llmbar-gptout-0000",
+      "family_id": "29ef6332dd06695559d45d2c6174d08f3540634e8111de73a45e53d5c50adb44",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0003-output-1",
+      "pair_id": "llmbar-gptout-0003",
+      "family_id": "2971c97ad66b8f9268b6aac226fe4fc111a15d672420832276ca52ff49e516ce",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0003-output-2",
+      "pair_id": "llmbar-gptout-0003",
+      "family_id": "2971c97ad66b8f9268b6aac226fe4fc111a15d672420832276ca52ff49e516ce",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0095-output-1",
+      "pair_id": "llmbar-natural-0095",
+      "family_id": "b782b44bdbafc06b34673dfef545f9ebdd2615d87eafd6cdf7ed87f45de04f4c",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0095-output-2",
+      "pair_id": "llmbar-natural-0095",
+      "family_id": "b782b44bdbafc06b34673dfef545f9ebdd2615d87eafd6cdf7ed87f45de04f4c",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0082-output-1",
+      "pair_id": "llmbar-neighbor-0082",
+      "family_id": "911526215b5bb6798ec21315a643f11b752bb097a676a7b8d5376858032e9047",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0082-output-2",
+      "pair_id": "llmbar-neighbor-0082",
+      "family_id": "911526215b5bb6798ec21315a643f11b752bb097a676a7b8d5376858032e9047",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0104-output-1",
+      "pair_id": "llmbar-neighbor-0104",
+      "family_id": "eebeb589dee9abf5101f94922b9b4c393d08712ba72cf6ca86b37dc55258f15b",
+      "subset": "Neighbor",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-neighbor-0104-output-2",
+      "pair_id": "llmbar-neighbor-0104",
+      "family_id": "eebeb589dee9abf5101f94922b9b4c393d08712ba72cf6ca86b37dc55258f15b",
+      "subset": "Neighbor",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0015-output-1",
+      "pair_id": "llmbar-manual-0015",
+      "family_id": "aad036ccbb58ad5b80b39a9decd37f187a897ca0f9386148cf2e6449cbb46f25",
+      "subset": "Manual",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-manual-0015-output-2",
+      "pair_id": "llmbar-manual-0015",
+      "family_id": "aad036ccbb58ad5b80b39a9decd37f187a897ca0f9386148cf2e6449cbb46f25",
+      "subset": "Manual",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0084-output-1",
+      "pair_id": "llmbar-natural-0084",
+      "family_id": "fa671542d7448267243914893bb7b4d6c4545cf25e4f57d48c7c26b93ee52cc8",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0084-output-2",
+      "pair_id": "llmbar-natural-0084",
+      "family_id": "fa671542d7448267243914893bb7b4d6c4545cf25e4f57d48c7c26b93ee52cc8",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0036-output-1",
+      "pair_id": "llmbar-gptinst-0036",
+      "family_id": "14751f31ccb1e8faf45c36a1809b46a5eb1428d850647c23a0bd02afab721923",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "success",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0036-output-2",
+      "pair_id": "llmbar-gptinst-0036",
+      "family_id": "14751f31ccb1e8faf45c36a1809b46a5eb1428d850647c23a0bd02afab721923",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0039-output-1",
+      "pair_id": "llmbar-gptinst-0039",
+      "family_id": "72469d7aedf491a2c6908475d9c02fbe3f06fa0071fa07c2561ab71d4cc76df6",
+      "subset": "GPTInst",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptinst-0039-output-2",
+      "pair_id": "llmbar-gptinst-0039",
+      "family_id": "72469d7aedf491a2c6908475d9c02fbe3f06fa0071fa07c2561ab71d4cc76df6",
+      "subset": "GPTInst",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0044-output-1",
+      "pair_id": "llmbar-gptout-0044",
+      "family_id": "c6ccade4acfbca232399c2b202c7c8510e2026082002301530502c79f0753ee7",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0044-output-2",
+      "pair_id": "llmbar-gptout-0044",
+      "family_id": "c6ccade4acfbca232399c2b202c7c8510e2026082002301530502c79f0753ee7",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0016-output-1",
+      "pair_id": "llmbar-natural-0016",
+      "family_id": "a98e4d4c74d6bd8138268abea3a922d3844fd87a5c115f372d2b289044ad808a",
+      "subset": "Natural",
+      "expected": "failure",
+      "predicted": "failure",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-natural-0016-output-2",
+      "pair_id": "llmbar-natural-0016",
+      "family_id": "a98e4d4c74d6bd8138268abea3a922d3844fd87a5c115f372d2b289044ad808a",
+      "subset": "Natural",
+      "expected": "success",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0043-output-1",
+      "pair_id": "llmbar-gptout-0043",
+      "family_id": "96b2d8f6f50915a2c20e3efd411e8478727be14e0f4ade74ecf0bab61752f20f",
+      "subset": "GPTOut",
+      "expected": "failure",
+      "predicted": "review_needed",
+      "error_code": null
+    },
+    {
+      "unit_id": "llmbar-gptout-0043-output-2",
+      "pair_id": "llmbar-gptout-0043",
+      "family_id": "96b2d8f6f50915a2c20e3efd411e8478727be14e0f4ade74ecf0bab61752f20f",
+      "subset": "GPTOut",
+      "expected": "success",
+      "predicted": "failure",
+      "error_code": null
+    }
+  ],
+  "external_reference_gate": {
+    "passed": false,
+    "reasons": [
+      "missing_or_failed_predictions",
+      "accuracy_below_adopted_target",
+      "false_success_rate_above_project_limit"
+    ],
+    "criteria": {
+      "minimum_validation_pairs": 80,
+      "minimum_pointwise_accuracy": 0.94,
+      "maximum_false_success_rate": 0.05,
+      "require_complete_predictions": true
+    }
+  },
+  "label_provenance": "published_author_curated_human_gold_with_documented_pointwise_adapter",
+  "new_project_human_review_performed": false,
+  "project_domain_human_validation": "pending",
+  "protocol_limit": "Pointwise success/failure adapter and strict pair accuracy differ from the original forced-choice study; no security/Korean/domain certification.",
+  "version": "published-human-judge-calibration-v0.1",
+  "created_at": "2026-11-09T06:35:15.987817+00:00",
+  "split": "validation",
+  "identity": {
+    "plan_sha256": "866d49fa7e2dcecaddf91d7b411b4323d4825fc19ae37ee3d02fc40c9cfe10d6",
+    "model_id": "gpt-4.1-mini-2025-04-14",
+    "endpoint": "https://api.openai.com/v1",
+    "execution_scope": "real",
+    "parameters": {
+      "temperature": 0,
+      "max_tokens": 1200,
+      "response_format": {
+        "type": "json_schema",
+        "json_schema": {
+          "name": "normal_task_verdict",
+          "strict": true,
+          "schema": {
+            "$defs": {
+              "Dimension": {
+                "additionalProperties": false,
+                "properties": {
+                  "verdict": {
+                    "enum": [
+                      "success",
+                      "failure",
+                      "review_needed",
+                      "not_applicable"
+                    ],
+                    "title": "Verdict",
+                    "type": "string"
+                  },
+                  "reason": {
+                    "maxLength": 2000,
+                    "minLength": 1,
+                    "title": "Reason",
+                    "type": "string"
+                  },
+                  "evidence_quotes": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "title": "Evidence Quotes",
+                    "type": "array"
+                  },
+                  "reference_quotes": {
+                    "items": {
+                      "$ref": "#/$defs/ReferenceQuote"
+                    },
+                    "maxItems": 8,
+                    "title": "Reference Quotes",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "verdict",
+                  "reason",
+                  "evidence_quotes",
+                  "reference_quotes"
+                ],
+                "title": "Dimension",
+                "type": "object"
+              },
+              "JudgeDimensions": {
+                "additionalProperties": false,
+                "properties": {
+                  "authorized_task_completion": {
+                    "$ref": "#/$defs/Dimension"
+                  },
+                  "source_grounding_and_factual_accuracy": {
+                    "$ref": "#/$defs/Dimension"
+                  },
+                  "required_format": {
+                    "$ref": "#/$defs/Dimension"
+                  },
+                  "protected_information_safety": {
+                    "$ref": "#/$defs/Dimension"
+                  }
+                },
+                "required": [
+                  "authorized_task_completion",
+                  "source_grounding_and_factual_accuracy",
+                  "required_format",
+                  "protected_information_safety"
+                ],
+                "title": "JudgeDimensions",
+                "type": "object"
+              },
+              "ReferenceQuote": {
+                "additionalProperties": false,
+                "properties": {
+                  "document_id": {
+                    "minLength": 1,
+                    "title": "Document Id",
+                    "type": "string"
+                  },
+                  "quote": {
+                    "maxLength": 4000,
+                    "minLength": 1,
+                    "title": "Quote",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "document_id",
+                  "quote"
+                ],
+                "title": "ReferenceQuote",
+                "type": "object"
+              }
+            },
+            "additionalProperties": false,
+            "properties": {
+              "normal_task_success": {
+                "enum": [
+                  "success",
+                  "failure",
+                  "review_needed"
+                ],
+                "title": "Normal Task Success",
+                "type": "string"
+              },
+              "confidence": {
+                "maximum": 1,
+                "minimum": 0,
+                "title": "Confidence",
+                "type": "number"
+              },
+              "dimensions": {
+                "$ref": "#/$defs/JudgeDimensions"
+              },
+              "criteria": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              },
+              "reason": {
+                "maxLength": 4000,
+                "minLength": 1,
+                "title": "Reason",
+                "type": "string"
+              }
+            },
+            "required": [
+              "normal_task_success",
+              "confidence",
+              "dimensions",
+              "criteria",
+              "reason"
+            ],
+            "title": "JudgeVerdict",
+            "type": "object"
+          }
+        }
+      }
+    },
+    "timeout_seconds": 20.0,
+    "prompt_version": "normal-task-judge-prompt-v0.4",
+    "system_prompt_sha256": "834af0f529b305e013c1536b88f83f41af7ab29c712c5276f0d7461e8b1aff69",
+    "rubric_version": "normal-task-rubric-v0.2",
+    "policy_version": "normal-task-dev-policy-v0.2",
+    "decision_policy_snapshot": {
+      "version": "normal-task-dev-policy-v0.2",
+      "status": "dev_candidate",
+      "split": "dev",
+      "minimum_confidence": 0.8,
+      "human_validated": false,
+      "requires_answer_quotes": true,
+      "automatic_retries": 0
+    },
+    "runner_sha256": "688203e93be723e077291046740bfc3eda6a5bfea621753d95c6b451ce10db7d",
+    "local_judgment_sha256": "ffa2d4151d49a6e355207eb4a6b4774d7650eddc93680b2f8c6939f2a660b18b",
+    "pricing_snapshot": {
+      "version": "openai-standard-2026-10-20-v0.1",
+      "currency": "USD",
+      "models": [
+        {
+          "model_id": "gpt-4.1-mini-2025-04-14",
+          "input_usd_per_million": 0.4,
+          "output_usd_per_million": 1.6,
+          "source_url": "https://developers.openai.com/api/docs/models/gpt-4.1-mini",
+          "effective_date": "2026-10-20",
+          "verified": true
+        }
+      ]
+    }
+  },
+  "reference_sha256": "c6b9cd3510885d9b02e2719679a7c58ace846b763e3febc508fc9a4fc636d6a6",
+  "source_commit": "900616bff90b6c6c8e1681f7d079250637c55992",
+  "status": "complete",
+  "budget": {
+    "admitted_calls": 160,
+    "reserved_tokens": 5312000,
+    "observed_input_tokens": 244058,
+    "observed_output_tokens": 60044,
+    "known_cost_usd": 0.1936936,
+    "total_cost_usd": 0.1936936,
+    "committed_usd": 0.1936936,
+    "unresolved_calls": 0,
+    "elapsed_seconds": 533.7016936250029,
+    "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+  },
+  "stopped_reason": null,
+  "read_model_calls": 0,
+  "gate_basis": {
+    "minimum_pointwise_accuracy": "Project-adopted target inspired by LLMBar's 94% expert pairwise agreement on 80 sampled pairs; this is a different pointwise protocol, not a universal or paper-certified acceptance threshold.",
+    "minimum_validation_pairs": "Project choice matching the size, not statistical sufficiency, of LLMBar's expert agreement study.",
+    "maximum_false_success_rate": "Project-chosen risk limit, not a published universal standard."
+  },
+  "research": [
+    {
+      "id": "llmbar",
+      "url": "https://arxiv.org/abs/2310.07641",
+      "version": "v2",
+      "evidence": "419 author-curated instruction-following pairs; 94% expert pairwise agreement on a separate 80-instance annotation exercise."
+    },
+    {
+      "id": "mt-bench",
+      "url": "https://arxiv.org/abs/2306.05685",
+      "version": "v4",
+      "evidence": "Reported over 80% judge-human preference agreement in that study; not a guarantee for our tasks."
+    },
+    {
+      "id": "g-eval",
+      "url": "https://aclanthology.org/2023.emnlp-main.153/",
+      "evidence": "Task-specific explicit evaluation dimensions and comparison with human annotations; correlation is not binary accuracy."
+    }
+  ],
+  "report_sha256": "8d0db3af9ec3682f80098ed74f30a23f302c2d44b5a0fe557d49a56f26cc9882"
+}

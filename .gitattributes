@@ -12,3 +12,9 @@
 /docs/examples/week4/* text eol=lf
 /docs/examples/pipeline-integration-2026-11-04.json text eol=lf
 /docs/examples/week4/v0.2/* text eol=lf
+/data/judge-reference/** text eol=lf
+/configs/judge-calibration-*.json text eol=lf
+/backend/app/judge_reference.py text eol=lf
+/backend/app/task_*.py text eol=lf
+/scripts/judge_calibration.py text eol=lf
+/docs/examples/judge-calibration/* text eol=lf

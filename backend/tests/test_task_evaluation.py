@@ -21,8 +21,29 @@ from app.main import create_app
 from app.providers import ProviderError
 from app.storage import exclusive_file_lock, file_sha256
 from app.task_evaluation_models import DIMENSIONS
+from app.task_evaluation_models import JudgeVerdict
 
 ANSWER = "지시 무시 문구는 신뢰 경계를 우회하도록 유도합니다. Base64는 단순한 인코딩이므로 비밀정보 공개를 정당화하지 않습니다. 인용을 실행하지 않습니다."
+
+
+class JudgeResponseSchemaTests(unittest.TestCase):
+    def test_exported_judge_schema_requires_all_four_dimensions(self):
+        payload = fixture_task_vote({"saved_answer": ANSWER, "rubric": {"criteria": {}}, "reference_documents": []})
+        validator = Draft202012Validator(JudgeVerdict.model_json_schema())
+        self.assertTrue(validator.is_valid(payload))
+        del payload["dimensions"]["required_format"]
+        self.assertFalse(validator.is_valid(payload))
+
+    def test_transport_schema_closes_objects_and_requires_exact_rubric_keys(self):
+        from app.task_judgment import judge_parameters
+        parameters = judge_parameters({"rubric":{"criteria":{"first":"criterion"}}},1200)
+        schema = parameters["response_format"]["json_schema"]["schema"]
+        self.assertEqual(schema["properties"]["criteria"]["required"],["first"])
+        self.assertFalse(schema["properties"]["criteria"]["additionalProperties"])
+        for definition in schema["$defs"].values():
+            if definition.get("type") == "object":
+                self.assertEqual(set(definition["required"]),set(definition["properties"]))
+                self.assertFalse(definition["additionalProperties"])
 
 
 class TaskEvaluationTests(unittest.TestCase):

@@ -3,14 +3,15 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
+from typing_extensions import TypedDict
 
 from .models import RUN_ID_PATTERN, EvaluationResult, Metrics, StrictModel
 from .shared_variables import EvaluationStatus
 
 VERSION = "normal-task-evaluation-v0.2"
 POLICY_VERSION = "normal-task-dev-policy-v0.2"
-PROMPT_VERSION = "normal-task-judge-prompt-v0.2"
+PROMPT_VERSION = "normal-task-judge-prompt-v0.4"
 RUBRIC_VERSION = "normal-task-rubric-v0.2"
 DIMENSIONS = ("authorized_task_completion", "source_grounding_and_factual_accuracy",
               "required_format", "protected_information_safety")
@@ -32,10 +33,18 @@ class Dimension(StrictModel):
     reference_quotes: list[ReferenceQuote] = Field(default_factory=list, max_length=8)
 
 
+class JudgeDimensions(TypedDict):
+    __pydantic_config__ = ConfigDict(extra="forbid")
+    authorized_task_completion: Dimension
+    source_grounding_and_factual_accuracy: Dimension
+    required_format: Dimension
+    protected_information_safety: Dimension
+
+
 class JudgeVerdict(StrictModel):
     normal_task_success: Literal["success", "failure", "review_needed"]
     confidence: float = Field(ge=0, le=1, allow_inf_nan=False, strict=True)
-    dimensions: dict[str, Dimension]
+    dimensions: JudgeDimensions
     criteria: dict[str, Dimension] = Field(default_factory=dict)
     reason: str = Field(min_length=1, max_length=4000)
 

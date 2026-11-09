@@ -66,3 +66,5 @@ jobs:
         run: python -m scripts.verify_week5 --output runs/week5-task-evaluation-ci
       - name: Week-five easy view, judgment reviews and matching CSV
         run: python -m scripts.verify_week5_ui --output runs/week5-task-evaluation-ui-ci
+      - name: Published human reference and judge calibration automation
+        run: python -m scripts.verify_judge_calibration --output runs/judge-calibration-fixture-ci

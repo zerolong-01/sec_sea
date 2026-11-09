@@ -34,6 +34,10 @@ API/CSV 값·hash, 중복 POST·GET의 호출 0, 원본 trace/raw 파일 보존�
 고정된 `JUDGE_MODEL_ID`, `JUDGE_API_KEY`를 로컬 `.env`에 추가한 뒤 기존 API를 실행한다.
 생성과 D2의 키·모델 설정을 자동 재사용하지 않는다. 조회와 서버 시작은 judge를 호출하지 않는다.
 `JUDGE_PROVIDER=fixture_http`는 로컬 고정 응답 테스트에만 사용한다.
+공개 사람 기준 세트로 실제 judge를 검산하는 명령과 결과는 [검산 자동화](judge-calibration.md)에 정리했다.
+실제 검산에서 확인한 항목 생략·중복 JSON 키를 막기 위해 프롬프트 v0.4부터 기본
+`JUDGE_RESPONSE_FORMAT=json_schema`를 사용한다. 제공자가 지원하지 않으면 `prompt_only`를
+명시하며, 형식 실패를 성공으로 처리하거나 자동 재시도하지 않는다.
 
 ## 프런트엔드 인계 계약
 
