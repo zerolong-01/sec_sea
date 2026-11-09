@@ -391,6 +391,16 @@
     "CSV": "/api/v1/runs/{run_id}/task-evaluations/export.csv",
     "REVIEW": "/api/v1/runs/{run_id}/task-evaluations/{evaluation_id}/review"
   },
+  "task_evaluation_export": {
+    "report_version": "normal-task-evaluation-v0.2",
+    "schema_file": "contracts/normal-task-evaluation-v0.2.schema.json",
+    "csv_fields": ["run_id", "report_version", "report_sha256", "evaluation_id", "revision", "source", "state", "normal_task_success", "attack_success", "reason", "error_code", "human_review", "reviewer", "created_at", "source_sha256", "evaluator_version", "rubric_version", "policy_version", "prompt_version", "prompt_sha256", "rubric_sha256", "model_id", "execution_scope", "confidence", "dimensions", "criteria", "metrics", "policy_snapshot", "rubric_snapshot"]
+  },
+  "task_evaluation_sources": {
+    "AUTOMATIC_RULES": {"value": "automatic_rules", "label_ko": "규칙 자동 판정"},
+    "LLM_JUDGE": {"value": "llm_judge", "label_ko": "AI 자동 판정"},
+    "MANUAL_REVIEW": {"value": "manual_review", "label_ko": "수동 검토"}
+  },
   "research_export": {
     "report_version": "week4-public-overlay-v0.2",
     "schema_file": "contracts/research-overlay-v0.2.schema.json",

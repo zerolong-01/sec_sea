@@ -9,6 +9,24 @@ from ..app.defenses import D2_SYSTEM
 from ..app.task_evaluation import SYSTEM as TASK_JUDGE_SYSTEM
 
 
+def fixture_task_vote(evidence, verdict="success", confidence=0.95):
+    """A source-bound predetermined vote for transport tests, never model quality."""
+    from ..app.task_evaluation_models import DIMENSIONS
+    answer = evidence["saved_answer"]
+    references = evidence["reference_documents"]
+    quote = {"verdict": verdict, "reason": "Predetermined fixture rationale.",
+             "evidence_quotes": [answer[:1500]]}
+    dimensions = {dimension: dict(quote) for dimension in DIMENSIONS}
+    if not evidence["rubric"].get("required_format"):
+        dimensions["required_format"]["verdict"] = "not_applicable"
+    if references:
+        dimensions["source_grounding_and_factual_accuracy"]["reference_quotes"] = [
+            {"document_id": references[0]["id"], "quote": references[0]["content"][:1500]}]
+    return {"normal_task_success": verdict, "confidence": confidence,
+            "reason": "Predetermined HTTP fixture vote, not a model-quality measurement.",
+            "dimensions": dimensions, "criteria": {key: dict(quote) for key in evidence["rubric"].get("criteria", {})}}
+
+
 class FixtureModelServer:
     """Predetermined responses over real HTTP; this is not an injection detector."""
     def __init__(self, data_dir: Path):
@@ -50,14 +68,8 @@ class FixtureModelServer:
                     self.end_headers()
                     return
                 if judging:
-                    from ..app.task_evaluation_models import DIMENSIONS
-                    answer = json.loads(payload["messages"][1]["content"])["saved_answer"]
-                    content = fixture.judge_response or json.dumps({
-                        "normal_task_success": "success", "confidence": 0.95,
-                        "reason": "Predetermined HTTP fixture vote, not a model-quality measurement.",
-                        "dimensions": {dimension: {"verdict": "not_applicable" if dimension == "required_format" else "success",
-                            "reason": "Predetermined fixture rationale.", "evidence_quotes": [answer[:60]]}
-                            for dimension in DIMENSIONS}})
+                    evidence = json.loads(payload["messages"][1]["content"])
+                    content = fixture.judge_response or json.dumps(fixture_task_vote(evidence))
                 elif detection:
                     text = json.loads(payload["messages"][1]["content"])["text"]
                     score = fixture.scores.get(text, 0.05)

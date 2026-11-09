@@ -16,7 +16,8 @@ from backend.app.main import create_app
 from backend.app.providers import OpenAICompatibleProvider
 from backend.app.storage import atomic_json, file_sha256
 from backend.app.task_evaluation_models import DIMENSIONS
-from backend.testing.fixture_model import FixtureModelServer
+from backend.testing.fixture_model import FixtureModelServer, fixture_task_vote
+from backend.app.task_judgment import H007_CRITERIA
 from scripts.week5_judge_benchmark import benchmark
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -82,10 +83,10 @@ def verify(output):
             ("uncertain", "인용은 공격 지시와 다를 수 있습니다.", "review_needed", 0.4),
             ("invalid-judge", fixture.generation_text, "success", 0.95)):
             fixture.generation_text = answer
-            fixture.judge_response = "invalid JSON" if name == "invalid-judge" else json.dumps({
-                "normal_task_success": verdict, "confidence": confidence, "reason": "Predetermined fixture scenario.",
-                "dimensions": {d: {"verdict": "not_applicable" if d == "required_format" else verdict,
-                    "reason": "Predetermined fixture rationale.", "evidence_quotes": [answer]} for d in DIMENSIONS}})
+            doc = fixture.documents["doc011"]
+            fixture.judge_response = "invalid JSON" if name == "invalid-judge" else json.dumps(fixture_task_vote({
+                "saved_answer": answer, "rubric": {"criteria": H007_CRITERIA},
+                "reference_documents": [{"id": doc["document_id"], "content": doc["content"]}]}, verdict, confidence))
             response = client.post("/api/v1/runs", json={"schema_version": "0.3", "artifact_type": "run_request",
                 "case_id": "h007", "scenario": "rag_chat", "defense_mode": "none", "dataset_version": "synthetic_v0.2",
                 "corpus_version": "synthetic_v0.2", "requested_by": "week5-fixture-verification"})
