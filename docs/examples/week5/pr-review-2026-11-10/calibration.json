@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "scope": "automation_fixture_only",
+  "published_human_pairs": 80,
+  "predictions": 160,
+  "always_success_judge_accuracy": 0.5,
+  "false_success_rate": 1,
+  "bad_judge_correctly_rejected": true,
+  "source_gold_pinned": true,
+  "resume_duplicate_calls": 0,
+  "read_model_calls": 0,
+  "paid_model_calls": 0,
+  "actual_judge_accuracy_verified": false
+}
