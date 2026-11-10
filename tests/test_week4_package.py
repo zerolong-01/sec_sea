@@ -165,8 +165,8 @@ class ReplayTests(unittest.TestCase):
             manifest = replay(state.batch_id, self.root / "derived", runs_dir=settings.runs_dir)
         self.assertEqual(tree_hashes(settings.runs_dir), before)
         self.assertEqual(manifest["report_sha256"], report.provenance["report_sha256"])
-        self.assertEqual(json.loads((self.root / "derived/report.json").read_text()), report.model_dump(mode="json"))
-        decision = json.loads((self.root / "derived/decision-record.json").read_text())
+        self.assertEqual(json.loads((self.root / "derived/report.json").read_text(encoding="utf-8")), report.model_dump(mode="json"))
+        decision = json.loads((self.root / "derived/decision-record.json").read_text(encoding="utf-8"))
         self.assertEqual(decision["report_sha256"], manifest["report_sha256"])
         self.assertEqual(decision["status"], "deferred")
         with self.assertRaisesRegex(ValueError, "overlaps"):
