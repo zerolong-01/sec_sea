@@ -170,8 +170,10 @@ private 파일이므로 공유에는 마스킹된 API/CSV를 사용한다. 기�
 
 ## 추가 실제 모델 216건 원본 검산
 
-현재 로컬에서 기존 `experiment-4e1e9895fd7f` 원본을 확보해 새 비교 화면을 검산했다.
-별도 PC로의 제한 이관이나 실제 사람 공동 인수를 수행한 기록은 아니다.
+2026-11-09 macOS 작업 환경의 기록에는 기존 `experiment-4e1e9895fd7f` 원본으로 새 비교 화면을 검산한 결과가 있다.
+현재 Windows 환경에서는 해당 원본이 없어 별도 이관이 필요하다. 원본은 Git에서 제외한 `runs/`에 있어 `git pull`로 전달되지 않는다.
+원본 PC의 내보내기와 수신 PC의 검산은 [216건 원본 이관 안내](week5-model-evidence-handoff.md)를 따른다.
+기존 macOS 검증 기록은 별도 PC로의 제한 이관이나 실제 사람 공동 인수를 수행한 기록은 아니다.
 
 ```bash
 MVP_LOAD_DOTENV=0 MODEL_PROVIDER=demo .venv/bin/python -m scripts.verify_week5_saved_models \

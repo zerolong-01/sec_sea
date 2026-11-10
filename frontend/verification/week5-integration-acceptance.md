@@ -83,7 +83,7 @@ http://127.0.0.1:8502 → 왼쪽 메뉴 **한눈에 보기**.
 ## 6. 남은 것 · 미수행
 
 - 실제 judge 모델로 화면 확인 (`JUDGE_API_KEY` 필요, 비용 발생) — 미수행
-- 추가 실제 모델 216건 원본의 새 화면 검산 — 원본을 받은 뒤 진행. 미수행
+- 추가 실제 모델 216건 원본의 새 화면 검산 — 현재 Windows에 원본 없음. [원본 PC 내보내기·수신 검산 안내](../../docs/week5-model-evidence-handoff.md)에 따라 받은 뒤 진행. 미수행
 - 이메일 시나리오 화면 확인 — 미수행 (`verify_week5_ui`는 RAG `h007` 기준)
 - 실제 사람 라벨과 자동 판정 대조, holdout: 팀 결정(#43·#59)에 따라 이번 인수 범위 밖
 
@@ -93,3 +93,9 @@ http://127.0.0.1:8502 → 왼쪽 메뉴 **한눈에 보기**.
 같은 원인으로 CI Windows에서는 `tests/test_judge_calibration.py` 5개도 오류가 난다 (`scripts/judge_calibration.py` 203번째 줄 `read_text()`). dev `fc447d7`의 Windows CI도 이 9개로 실패해 있어 이 브랜치의 변경과는 무관하다. 이 브랜치에서는 고치지 않고 B 담당에게 전달한다.
 
 ② **첫 페이지 상세 trace에서 수동 검토 저장 뒤에도 "판정 CSV 다운로드" 버튼이 보임.** 저장 전에 CSV를 준비해 둔 상태에서 저장했다. 저장 뒤 버튼으로 받은 파일에는 새 검토 근거가 들어 있었다 (`Select-String` 1건). 화면과 다른 예전 CSV를 받은 것은 아니다. 버튼이 남아 보인 이유는 확인하지 못했다. 한눈에 보기 경로는 `verify_week5_ui`의 `csv_invalidated_after_review=true`로 확인됐다.
+
+## 8. 후속 해결 기록 — 2026-11-10
+
+- 인코딩 문제는 PR #64, merge `5fbc9a4`에서 수정했다. 한국어 Windows에서 `python -X utf8=0 -m unittest tests.test_task_evaluation_client -v` 4건 통과를 재확인했다. 7절은 수정 전 관측 기록으로 보존한다.
+- #59의 추가 실제 모델 216건은 Git으로 전달되지 않는 별도 원본이다. 현재 Windows에는 없으며, [이관·검산 도구](../../docs/week5-model-evidence-handoff.md)를 준비했다. manifest와 모든 trace/raw·동결 입력을 원본 PC에서 받아야 실제 216건을 검산할 수 있다.
+- 이관 도구는 12건 fixture의 원본 경로를 없앤 뒤 API/UI/CSV/trace를 재검산했고, 추가 모델 호출 0과 패키지 불변을 확인했다. 실제 216건 검산과 C의 직접 인수는 아직 완료 처리하지 않는다.

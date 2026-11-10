@@ -1,0 +1,31 @@
+{
+  "version": "week5-model-handoff-fixture-v0.1",
+  "status": "passed",
+  "verified_at": "2026-11-10T13:32:27.936364+00:00",
+  "execution_scope": "fixture",
+  "planned_runs": 12,
+  "source_commit": "05fc7139e9e098907d1a230c35d23e049c0e5e28",
+  "code_sha256": {
+    "scripts/week5_model_handoff.py": "173f0e7ca741f5d6bdc508d6e390b37243a9a3ae7e95fc2552e18144a6f46109",
+    "tests/test_week5_model_handoff.py": "1b0684592453792c1f3f823d91a2565f82a58041e21a8a8c86e18370817ce5d6"
+  },
+  "manifest_sha256": "497978e2daa0466883e9b1aee8ff207f0e45731b2bdf01d12ac229f2d4e850ef",
+  "selected_files": 39,
+  "raw_files": 12,
+  "trace_files": 12,
+  "sender_source_unchanged": true,
+  "original_store_unavailable_at_receiver": true,
+  "api_ui_csv_trace_match": true,
+  "handoff_unchanged": true,
+  "read_model_calls": 0,
+  "paid_model_calls": 0,
+  "human_acceptance": false,
+  "holdout_executed": false,
+  "related_tests": {
+    "new_handoff_tests": 7,
+    "task_evaluation_client_tests": 4,
+    "status": "passed",
+    "utf8_mode": 0
+  },
+  "real_216_run_verification": "pending_original_files"
+}
