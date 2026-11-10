@@ -131,7 +131,10 @@ def public_settings(settings):
     from .prompts import D1_VERSION
     excluded = {"project_root", "data_dir", "runs_dir", "model_api_key", "d2_api_key",
                 "pricing_path", "evaluation_rules_path", "common_policy_path"}
-    result = {f.name: getattr(settings, f.name) for f in fields(settings) if f.name not in excluded}
+    # Judge execution belongs to a separate overlay, never the generation batch
+    # snapshot (and in particular never persist its credential).
+    result = {f.name: getattr(settings, f.name) for f in fields(settings)
+              if f.name not in excluded and not f.name.startswith("judge_")}
     result["d1_version"] = D1_VERSION
     from .providers import OpenAICompatibleProvider
     for name in ("model_base_url", "d2_base_url"):

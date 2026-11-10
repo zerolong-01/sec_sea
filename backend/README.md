@@ -1,5 +1,9 @@
 # 백엔드·방어 MVP
 
+5주차 정상 태스크 자동 판정은 [API·설정·이력·프런트엔드 인계 가이드](../docs/week5-backend.md)와
+[검증 기록](../docs/week5-backend-acceptance.md)을 참고한다.
+`python -m scripts.verify_week5 --output runs/week5-handoff`로 키 없이 검증한다.
+
 4주차 #47의 설치·버전 inventory·평가 출처 API·모델 호출 없는 결과 패키지는
 [4주차 백엔드 가이드](../docs/week4-backend.md), 검증 상태는 [기술 인수 기록](../docs/week4-backend-acceptance.md)을 참고한다.
 연구 CSV v0.2는 target gold 건수와 빈 선택 metadata를 포함하며, 전달받은 결과 패키지는 저장소 루트에서

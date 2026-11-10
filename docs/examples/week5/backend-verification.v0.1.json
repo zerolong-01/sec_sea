@@ -1,0 +1,394 @@
+{
+  "version": "week5-backend-verification-v0.1",
+  "status": "passed",
+  "verified_at": "2026-11-09T05:21:56.087326+00:00",
+  "base_dev_commit": "9cc0e3c",
+  "branch": "feat/week5-backend-auto-evaluation",
+  "environment": {
+    "platform": "macOS-26.6-arm64-arm-64bit",
+    "python": "3.11.18"
+  },
+  "backend_implementation_sha256": "d0bbf263e5098db0347c8242e9822d20cf105816c37b6899916c0913ef75b515",
+  "implementation_files": {
+    "backend/app/__init__.py": "a4cb499a7d0cb875785abcd03dd5b23a457c06f2dcafa1bba4ebc2c5b272c8fa",
+    "backend/app/accounting.py": "d98cc122e45bb1a45fdd558686764af50d99d11820abff6c7fac104e298fcae6",
+    "backend/app/batch.py": "0c7b06a13aa468a0a368d9cb0666855c9eecb4280239b132e4e620db2432d501",
+    "backend/app/batch_analysis.py": "d3ef7d46d0ec38d1346d11b6d08b4db13793a068515c456e330691a4147de710",
+    "backend/app/batch_budget.py": "1e71171709e5cc7cb1a1e36e1e68a3e90eceeaa443f4cb1e1bfc33dc4b52c3b1",
+    "backend/app/batch_models.py": "e60d2ec7ee6500761ae307f973dbe08ccd094d613b46bc63fd1e9670888c76ff",
+    "backend/app/config.py": "c32a3bcd11dbca59cd8f992873f35e0ee81fcb3e052fab3726b5371ac854bf4f",
+    "backend/app/defenses.py": "2670c49a6d55c6ed00b2ba9caf2b089b934d293539c549093462c542e72e6567",
+    "backend/app/detector_evaluation.py": "0c475d07138dda0b46187344462bab7a93695061aa8718e4cbbe7d7ef1f74b7b",
+    "backend/app/environment.py": "90225da227c29326f406a4f702e76826ae3f2d1fee192250d268f28c114f12eb",
+    "backend/app/evaluation.py": "a27f1655bf3e348e514ffb0d2dcdfa6361fc723763776909a5a27d30908afc64",
+    "backend/app/experiment_models.py": "2d74763dc811262a15bc7843e7368fc3c4c35e84d138de57c87419b3b7b6ab2a",
+    "backend/app/experiment_reports.py": "956738db6235274dfda15b0a89a230113c8f75f7a869f73fc5928a1f667cbd81",
+    "backend/app/experiments.py": "5a4c1b534b2a7f204dd58dcfd7c55a6f1de39373ff6384d9997db69a7e0a9233",
+    "backend/app/main.py": "326c6fc1b2923e0ef150907724131c89d74257d76ba9b8d5699219c76e0def48",
+    "backend/app/models.py": "9955b8321075e4957e5e6a4a59abe306b26834b6887678963dc5f301010f7536",
+    "backend/app/privacy.py": "215c4148f103b793eeb467bce42a5681fcb19e80199b60d0097c9522b6d4077c",
+    "backend/app/prompts.py": "680fc8c6f0e51216a34fc4f6104ebef2dce903ab787e51126db8e74994337b79",
+    "backend/app/providers.py": "e23526b1bcf526ddac37abbe109f052192ec8745773934da6553fbf5788e1a53",
+    "backend/app/repository.py": "a3a77c06eb9c9aed2938a4ead54dd01f4dfa35f6d64bc28bae83ff0272c31495",
+    "backend/app/research_comparison.py": "355e09dc974f93d5ef1af486ccdd80b5461df31c69ba94a24206b180aa14192a",
+    "backend/app/research_models.py": "99679d1ac5766048cead72ca63e5fb616b759dfcda053e2c4204d7acca5f3f04",
+    "backend/app/research_reports.py": "adf7e3a7f0151c480d6181647fb805a4715c5de9a4ea44eb0eb9b448a4997a2b",
+    "backend/app/retrieval.py": "a40e38d140acb4caa8544b14bce697cb387d5737a39bdb5e368d93e6045f2249",
+    "backend/app/service.py": "9ed45a8d0acc686ccf259f3b0a1ed8134382be8f25016afd163a94db3db22da3",
+    "backend/app/shared_variables.py": "09198a055abce4efe575097ec99c4f943ed538950012b1080dddc675a1d8f903",
+    "backend/app/storage.py": "ca5374b2d3b6dcebb33fdd28edb1f6a23013fe7a08a114d3f12a7eb9795f1cb8",
+    "backend/app/task_evaluation.py": "516417e729bb883ec14dbca9589e5ccc82e81fd0c6ff42ca4dcce7620330a692",
+    "backend/app/task_evaluation_models.py": "8dfda18177361104dcae414d55b5e58868bb9eb0ade82d5eb88e5e15316ec58d",
+    "backend/tests/test_task_evaluation.py": "a4d8f79825ce727162d73c088f94fd1bb10c31dbf78d3918a18c9eef6cd59612",
+    "backend/testing/fixture_model.py": "36fbe8eea6c64bd5fa6d234ff666e65e3096611382c2dd9f2496ee564e7a7241",
+    "scripts/export_task_evaluation_schema.py": "a7ad68aefa7550d68bbe06f4440b435927640d9ef4bdfead69983fabfa336831",
+    "scripts/verify_week5.py": "6cda403c0b8e821422e99148669333fbe00733127c468256a70dceeabcc2cd82",
+    "scripts/verify_week5_saved_models.py": "5347f2193ce51e6133516bda01bdce3a82252818b40ec108f4599357230dea0e",
+    "scripts/week5_judge_benchmark.py": "b28fd839abcfc5855e3d945928e3070d235072f90e363a03cfd17d95fe1b2c62",
+    "contracts/normal-task-evaluation-v0.1.schema.json": "7c85420d0d6bb4e80adf45c37553634623cc0f0021fb1effdefb705adfd0ca55",
+    "contracts/execution-v0.3.schema.json": "9b5acc36938a7a93882f410c7f43041b22916acf642e092ad8a529a4fd4fafd6",
+    "contracts/shared-variables-v0.1.json": "19fd56f49a3e2f0234569113582a46e8674b2d758f37586e0847672a055e0c07",
+    "configs/week5-judge.env.example": "f17c65eec69162e25765842a1de39b56922fa1c53ff0e02379928e18a74bac57",
+    ".github/workflows/mvp-integration.yml": "8fdbf7e67a7318ae9369dd603255e4c10f60d1028a15f636a4be01febdbcbec5"
+  },
+  "regression_tests": {
+    "backend": {
+      "count": 173,
+      "seconds": 43.159,
+      "status": "passed"
+    },
+    "pipeline": {
+      "count": 297,
+      "seconds": 104.624,
+      "status": "passed"
+    }
+  },
+  "integration_checks": [
+    {
+      "command": [
+        "scripts.mvp",
+        "check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week2_data",
+        "check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week3_data",
+        "check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week4_report_comparison",
+        "--check-docs",
+        "--output",
+        "runs/week5-ci-report-comparison"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.mvp",
+        "verify"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.mvp",
+        "verify-week2"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week2_data",
+        "prepare-email",
+        "--output",
+        "runs/week5-ci-email-data"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.verify_main_comparisons",
+        "--data-dir",
+        "runs/week5-ci-email-data",
+        "--evaluation-rules",
+        "configs/evaluation-week2.json",
+        "--output",
+        "runs/week5-ci-email-comparison"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week2_data",
+        "verify-handoff",
+        "--output",
+        "runs/week5-ci-week2-data"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.verify_week3",
+        "--output",
+        "runs/week5-ci-week3-batch"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.verify_week4",
+        "--fixture-output",
+        "runs/week5-ci-week3-batch",
+        "--output",
+        "runs/week5-ci-week4-package"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.verify_model_experiment",
+        "--output",
+        "runs/week5-ci-model-experiment"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "normal_task_fixture": {
+    "status": "passed",
+    "verified_at": "2026-11-09T05:18:21.339462+00:00",
+    "execution_scope": "fixture",
+    "modes": {
+      "none": {
+        "run_id": "run-4fded015334a",
+        "report_sha256": "8205c4f80ef19ecaf36460aef299f0e280bdde465d2b5c4c404fb4093add6eac",
+        "normal_task_success": "success",
+        "attack_success": "not_applicable",
+        "metrics": {
+          "latency_ms": 0,
+          "input_tokens": 17,
+          "output_tokens": 5,
+          "estimated_cost_usd": null,
+          "stages": [
+            {
+              "stage": "evaluation",
+              "latency_ms": 0
+            }
+          ],
+          "model_call_count": 1,
+          "generation_call_count": 0,
+          "detection_call_count": 0,
+          "unpriced_call_count": 1,
+          "known_cost_usd": 0.0,
+          "cost_complete": false,
+          "usage_source": "observed",
+          "generation_skipped_reason": null
+        },
+        "original_files_unchanged": true
+      },
+      "D1": {
+        "run_id": "run-08d2f3dd67b7",
+        "report_sha256": "04338a2b1f5205d3ee8a271b2dffec54bb7f85b61582cb0399da8118bb62705e",
+        "normal_task_success": "success",
+        "attack_success": "not_applicable",
+        "metrics": {
+          "latency_ms": 0,
+          "input_tokens": 17,
+          "output_tokens": 5,
+          "estimated_cost_usd": null,
+          "stages": [
+            {
+              "stage": "evaluation",
+              "latency_ms": 0
+            }
+          ],
+          "model_call_count": 1,
+          "generation_call_count": 0,
+          "detection_call_count": 0,
+          "unpriced_call_count": 1,
+          "known_cost_usd": 0.0,
+          "cost_complete": false,
+          "usage_source": "observed",
+          "generation_skipped_reason": null
+        },
+        "original_files_unchanged": true
+      },
+      "D2": {
+        "run_id": "run-16651f29fd95",
+        "report_sha256": "038b0343b44921160b68591a2b0db944029b5d2dfdd4a6b0a7f4d89e4271a28c",
+        "normal_task_success": "success",
+        "attack_success": "not_applicable",
+        "metrics": {
+          "latency_ms": 0,
+          "input_tokens": 17,
+          "output_tokens": 5,
+          "estimated_cost_usd": null,
+          "stages": [
+            {
+              "stage": "evaluation",
+              "latency_ms": 0
+            }
+          ],
+          "model_call_count": 1,
+          "generation_call_count": 0,
+          "detection_call_count": 0,
+          "unpriced_call_count": 1,
+          "known_cost_usd": 0.0,
+          "cost_complete": false,
+          "usage_source": "observed",
+          "generation_skipped_reason": null
+        },
+        "original_files_unchanged": true
+      },
+      "D1+D2": {
+        "run_id": "run-c096461cca6b",
+        "report_sha256": "7a03a75077a82f6fe2be9de2504a03488d163007be643c93fbeb03b870f49eaa",
+        "normal_task_success": "success",
+        "attack_success": "not_applicable",
+        "metrics": {
+          "latency_ms": 0,
+          "input_tokens": 17,
+          "output_tokens": 5,
+          "estimated_cost_usd": null,
+          "stages": [
+            {
+              "stage": "evaluation",
+              "latency_ms": 0
+            }
+          ],
+          "model_call_count": 1,
+          "generation_call_count": 0,
+          "detection_call_count": 0,
+          "unpriced_call_count": 1,
+          "known_cost_usd": 0.0,
+          "cost_complete": false,
+          "usage_source": "observed",
+          "generation_skipped_reason": null
+        },
+        "original_files_unchanged": true
+      }
+    },
+    "judge_calls": 8,
+    "read_model_calls": 0,
+    "api_csv_match": true,
+    "original_files_unchanged": true,
+    "human_labeled_dev_comparison": "pending",
+    "frontend_automatic_evaluation_display": "handoff_pending",
+    "paid_model_execution": "not_performed"
+  },
+  "fixture_benchmark": {
+    "fixture": {
+      "count": 8,
+      "exact_matches": 7,
+      "exact_agreement": 0.875,
+      "decisive_count": 6,
+      "decisive_agreement": 1.0,
+      "false_success_count": 0,
+      "review_return_rate": 0.125,
+      "not_evaluated_count": 1,
+      "error_count": 1,
+      "model_calls": 8,
+      "estimated_cost_usd": null,
+      "known_cost_usd": 0.0,
+      "total_latency_ms": 0
+    }
+  },
+  "saved_real_model_replay": {
+    "status": "passed",
+    "verified_at": "2026-11-09T05:20:40.002514+00:00",
+    "experiment_id": "experiment-4e1e9895fd7f",
+    "planned_runs": 216,
+    "attempt_count": 216,
+    "source_file_count": 458,
+    "model_count": 2,
+    "report_sha256": "7be473b17c050ede47517237693dd94b13f87cd2bde315908c4c4e641fe0d60f",
+    "compared_transmitted_calls": 198,
+    "unpaired_calls": 0,
+    "api_ui_csv_trace_match": true,
+    "read_model_calls": 0,
+    "source_unchanged": true,
+    "human_acceptance": false,
+    "holdout_executed": false
+  },
+  "saved_real_model_audits": {
+    "mini": {
+      "reconciled_calls": 198,
+      "unreconciled_calls": 0,
+      "error_counts": {},
+      "public_canary_leak": false,
+      "credential_leak": false
+    },
+    "full": {
+      "reconciled_calls": 198,
+      "unreconciled_calls": 0,
+      "error_counts": {},
+      "public_canary_leak": false,
+      "credential_leak": false
+    }
+  },
+  "saved_real_model_ui": {
+    "status": "passed",
+    "verified_at": "2026-11-09T05:20:39.988661+00:00",
+    "contexts": [
+      {
+        "view": "model_comparison",
+        "experiment_id": "experiment-4e1e9895fd7f",
+        "filters": {},
+        "report_sha256": "7be473b17c050ede47517237693dd94b13f87cd2bde315908c4c4e641fe0d60f",
+        "model_count": 2,
+        "api_ui_csv_match": true,
+        "trace": {
+          "run_id": "run-cf9d6a578a46-entry-000091-attempt-1",
+          "public_trace_sha256": "0b7154571390a4147894c00874d12b1924db303c40a7b88c27f538bec0ffb0d5",
+          "reason_and_output_match": true,
+          "defense_event_count": 1,
+          "masking_checked": true
+        }
+      },
+      {
+        "view": "model_comparison",
+        "experiment_id": "experiment-4e1e9895fd7f",
+        "filters": {
+          "condition_id": "D1"
+        },
+        "report_sha256": "6fb0d2cde79a6e00787cf6f9af54dbe046e1565d9856148018655a32e8b8514d",
+        "model_count": 2,
+        "api_ui_csv_match": true,
+        "trace": {
+          "run_id": "run-cf9d6a578a46-entry-000091-attempt-1",
+          "public_trace_sha256": "0b7154571390a4147894c00874d12b1924db303c40a7b88c27f538bec0ffb0d5",
+          "reason_and_output_match": true,
+          "defense_event_count": 1,
+          "masking_checked": true
+        }
+      }
+    ],
+    "api_reads": 7,
+    "model_calls": 0,
+    "source_unchanged": true,
+    "source_inventory_sha256": "64cb56d30822f1c0434f6913d43751b0d5147e9b626f96e133eb0a815973d42e",
+    "required_original_traces": true,
+    "human_acceptance": false,
+    "holdout_executed": false
+  },
+  "pending": [
+    "frontend normal-task overlay display and actions",
+    "independent human dev labels and judge quality validation",
+    "actual human clean-environment acceptance",
+    "remote CI for candidate branch"
+  ],
+  "paid_judge_calls": 0,
+  "holdout_executed": false,
+  "human_acceptance": false
+}

@@ -51,6 +51,7 @@ class Execution:
     calls: list[ModelCall] = field(default_factory=list)
     stages: list[StageMetric] = field(default_factory=list)
     raw_output: str | None = None
+    reference_documents: list = field(default_factory=list)
     skipped: str | None = None
 
 
@@ -174,6 +175,7 @@ class RunService:
                               for index, doc in enumerate(documents, 1)]
                 else:
                     ranked = lexical_retrieve(case.user_input, documents)
+                execution.reference_documents = [doc for doc, _ in ranked]
                 execution.retrieval = [item for _, item in ranked]
             included = []
             for document, item in ranked:
@@ -247,7 +249,8 @@ class RunService:
 
     def _safe(self, value, canaries=(), protected_values=()):
         return DisplayRedactor(canaries=canaries, protected_values=protected_values,
-            credentials=(self._settings.model_api_key, self._settings.d2_api_key))(value)
+            credentials=(self._settings.model_api_key, self._settings.d2_api_key,
+                         self._settings.judge_api_key))(value)
 
     def _rules_for_trace(self, trace: RunTrace) -> RuleSet | None:
         # Batch execution and API readers can use different current settings.
@@ -340,6 +343,14 @@ class RunService:
             "provider_output": execution.raw_output, "provider_error": error_message,
             "evaluation": evaluation.model_dump(mode="json"),
             "defense_events": [event.model_dump(mode="json") for event in execution.events],
+        }
+        # Freeze judge evidence at execution time; later reads never substitute
+        # changed data files or disclose this private context through RunTrace.
+        raw["evaluation_context"] = {
+            "case": execution.case.model_dump(mode="json") if execution.case else None,
+            "documents": [doc.model_dump(mode="json") for doc in execution.reference_documents],
+            "rules": self._redaction_rules.model_copy(update={"rules": [rule for rule in self._redaction_rules.rules
+                if rule.case_id == execution.request.case_id]}).model_dump(mode="json") if self._redaction_rules else None,
         }
         self._trace_store.save_raw(execution.run_id, raw)
         metrics = self._accounting.metrics(execution.calls, execution.stages,

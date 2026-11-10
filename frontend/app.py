@@ -6,6 +6,8 @@ import streamlit as st
 
 import case_browser as cb
 from trace_view import render_result
+from task_evaluation_core import effective_trace
+from task_evaluation_view import render_group, saved_report
 from ui_core import (
     COMPARE_DIFFERENT, COMPARE_UNAVAILABLE, D2_MODES, ROOT, SHARED,
     BOTH, compare_verdict, label_of, load_run, run_case, summary_row,
@@ -41,7 +43,10 @@ def render_comparison(column, results, experiment):
         st.warning(f"{message}. 같은 조건에서 다시 실행한 뒤 비교하세요.")
     else:
         st.success(message)
-    pending = [item["title"] for item in results if item.get("trace") and any(
+    render_group([item.get("trace") for item in results], key=f"{experiment}_tasks")
+    shown = [{**item, "trace": effective_trace(item["trace"], saved_report(item["trace"])) if item.get("trace") else None}
+             for item in results]
+    pending = [item["title"] for item in shown if item.get("trace") and any(
         (item["trace"].get("evaluation") or {}).get(key) in (None, "not_evaluated", "review_needed")
         for key in ("attack_success", "normal_task_success"))]
     if pending:
@@ -49,21 +54,32 @@ def render_comparison(column, results, experiment):
     with st.expander("비교 조건 자세히 보기"):
         st.dataframe(rows, hide_index=True)
 
-    st.dataframe(
-        [summary_row(column, item["title"], item["trace"], item["error"]) for item in results],
-        hide_index=True,
-    )
+    summaries = [summary_row(column, item["title"], item["trace"], item["error"]) for item in shown]
+    reports = [saved_report(item["trace"]) if item.get("trace") else None for item in results]
+    if any(report and report["latest"] for report in reports):
+        signatures = set()
+        for row, item, report in zip(summaries, results, reports):
+            latest = report["latest"] if report else None
+            original = (item.get("trace") or {}).get("evaluation") or {}
+            row["정상 판정 출처"] = label_of("task_evaluation_sources", latest["source"]) if latest else "원래 평가"
+            row["정상 판정 버전"] = latest["evaluator_version"] if latest else original.get("evaluator_version") or "기록 없음"
+            signatures.add((row["정상 판정 출처"], row["정상 판정 버전"],
+                latest.get("model_id") if latest else None, latest.get("rubric_version") if latest else None,
+                latest.get("policy_version") if latest else None))
+        if len(signatures) > 1:
+            st.warning("정상 업무 판정의 출처·모델·버전이 섞여 있습니다. 같은 평가 조건의 성능 비교로 합산하지 않고 각 근거를 확인하세요.")
+    st.dataframe(summaries, hide_index=True)
 
     if not results:
         st.info("비교할 실행 결과가 없습니다.")
         return
     tabs = st.tabs([item["title"] for item in results])
-    for tab, item in zip(tabs, results):
+    for index, (tab, item) in enumerate(zip(tabs, results)):
         with tab:
             if item["error"]:
                 st.error(f"{item['error'].get('code') or '오류'}: {item['error'].get('message') or ''}")
             if item["trace"]:
-                render_result(item["trace"])
+                render_result(item["trace"], key=f"{experiment}_{index}_{item['trace']['run_id']}")
 
 
 def run_many(settings, case_id, scenario, dataset_version, corpus_version):
@@ -98,7 +114,7 @@ case_redaction_error = False
 try:
     case_redactor = cb.load_redactor(
         DATA_DIR, cases, rules_path=os.environ.get("EVALUATION_RULES_FILE"),
-        credentials=[os.environ.get(key) for key in ("MODEL_API_KEY", "D2_API_KEY")],
+        credentials=[os.environ.get(key) for key in ("MODEL_API_KEY", "D2_API_KEY", "JUDGE_API_KEY")],
     ) if cases else None
 except (OSError, ValueError, KeyError, TypeError, AttributeError):
     st.error("케이스 표시용 마스킹 자료를 읽을 수 없습니다. 데이터와 평가 규칙 설정을 확인하세요.")

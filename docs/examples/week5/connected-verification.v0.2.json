@@ -1,0 +1,383 @@
+{
+  "version": "week5-connected-verification-v0.2",
+  "status": "passed",
+  "verified_at": "2026-11-09T05:51:24.958779+00:00",
+  "objective": "백엔드 판정 검증 보완·변경 프런트엔드 연결·중간 커밋",
+  "checkpoints": [
+    "0b3be76",
+    "843baf1"
+  ],
+  "branch": "feat/week5-backend-auto-evaluation",
+  "environment": {
+    "platform": "macOS-26.6-arm64-arm-64bit",
+    "python": "3.11.18"
+  },
+  "backend_implementation_sha256": "bd5b167c1d739c461a8fdef0104c42e7c4ab8a0e4f09f5deba884112978384c1",
+  "implementation_files": {
+    "backend/app/__init__.py": "a4cb499a7d0cb875785abcd03dd5b23a457c06f2dcafa1bba4ebc2c5b272c8fa",
+    "backend/app/accounting.py": "d98cc122e45bb1a45fdd558686764af50d99d11820abff6c7fac104e298fcae6",
+    "backend/app/batch.py": "0c7b06a13aa468a0a368d9cb0666855c9eecb4280239b132e4e620db2432d501",
+    "backend/app/batch_analysis.py": "d3ef7d46d0ec38d1346d11b6d08b4db13793a068515c456e330691a4147de710",
+    "backend/app/batch_budget.py": "1e71171709e5cc7cb1a1e36e1e68a3e90eceeaa443f4cb1e1bfc33dc4b52c3b1",
+    "backend/app/batch_models.py": "e60d2ec7ee6500761ae307f973dbe08ccd094d613b46bc63fd1e9670888c76ff",
+    "backend/app/config.py": "c32a3bcd11dbca59cd8f992873f35e0ee81fcb3e052fab3726b5371ac854bf4f",
+    "backend/app/defenses.py": "2670c49a6d55c6ed00b2ba9caf2b089b934d293539c549093462c542e72e6567",
+    "backend/app/detector_evaluation.py": "0c475d07138dda0b46187344462bab7a93695061aa8718e4cbbe7d7ef1f74b7b",
+    "backend/app/environment.py": "90225da227c29326f406a4f702e76826ae3f2d1fee192250d268f28c114f12eb",
+    "backend/app/evaluation.py": "a27f1655bf3e348e514ffb0d2dcdfa6361fc723763776909a5a27d30908afc64",
+    "backend/app/experiment_models.py": "2d74763dc811262a15bc7843e7368fc3c4c35e84d138de57c87419b3b7b6ab2a",
+    "backend/app/experiment_reports.py": "956738db6235274dfda15b0a89a230113c8f75f7a869f73fc5928a1f667cbd81",
+    "backend/app/experiments.py": "5a4c1b534b2a7f204dd58dcfd7c55a6f1de39373ff6384d9997db69a7e0a9233",
+    "backend/app/main.py": "326c6fc1b2923e0ef150907724131c89d74257d76ba9b8d5699219c76e0def48",
+    "backend/app/models.py": "9955b8321075e4957e5e6a4a59abe306b26834b6887678963dc5f301010f7536",
+    "backend/app/privacy.py": "215c4148f103b793eeb467bce42a5681fcb19e80199b60d0097c9522b6d4077c",
+    "backend/app/prompts.py": "680fc8c6f0e51216a34fc4f6104ebef2dce903ab787e51126db8e74994337b79",
+    "backend/app/providers.py": "e23526b1bcf526ddac37abbe109f052192ec8745773934da6553fbf5788e1a53",
+    "backend/app/repository.py": "a3a77c06eb9c9aed2938a4ead54dd01f4dfa35f6d64bc28bae83ff0272c31495",
+    "backend/app/research_comparison.py": "355e09dc974f93d5ef1af486ccdd80b5461df31c69ba94a24206b180aa14192a",
+    "backend/app/research_models.py": "99679d1ac5766048cead72ca63e5fb616b759dfcda053e2c4204d7acca5f3f04",
+    "backend/app/research_reports.py": "adf7e3a7f0151c480d6181647fb805a4715c5de9a4ea44eb0eb9b448a4997a2b",
+    "backend/app/retrieval.py": "a40e38d140acb4caa8544b14bce697cb387d5737a39bdb5e368d93e6045f2249",
+    "backend/app/service.py": "9ed45a8d0acc686ccf259f3b0a1ed8134382be8f25016afd163a94db3db22da3",
+    "backend/app/shared_variables.py": "45e68cc26d81fbee99c018d7a69f4db5e81dead55359ce732594048099ee2866",
+    "backend/app/storage.py": "ca5374b2d3b6dcebb33fdd28edb1f6a23013fe7a08a114d3f12a7eb9795f1cb8",
+    "backend/app/task_evaluation.py": "e0f580228dcaabfd62ba9ed7de03685842a491e1ffa88f9a3b92e94ae32ab6f8",
+    "backend/app/task_evaluation_models.py": "f3d8149476e2dcca233e6aff4e8625b8bbb6a78f3b51d60ca03980d31a70d107",
+    "backend/app/task_judgment.py": "53774dd495fa391b0e637cc0b1888bca00245f0298c807bc6e926a2730a3a97a",
+    "frontend/app.py": "00725a225490e47c729affb554aba7f7bc5bc16cf80984bd35b7ea6c7e22a366",
+    "frontend/batch_chart.py": "9de9db20757957712191a48566e3f4690f3066085e0aad3ca71992ad89bb8637",
+    "frontend/batch_core.py": "45bf303e9fda801d61e83cee5566d6b9d02c73f91ffddabebd407a4ac06d3639",
+    "frontend/case_browser.py": "ba36bc0af62fb3616a0c19df308eef12b7b5eb498cd5bd011db852915c54e05f",
+    "frontend/comparison_core.py": "d6c57470f69c0d4dbbad0e74da93bdfa3c922322c25873b8b6da42f6630426f8",
+    "frontend/easy_core.py": "770533d1b85231f1f6a53605137c783fb94cf9b3e4fdfacbc6b99fa9e5bedeaa",
+    "frontend/experiment_core.py": "e02142092b50dd1e3e92caabf33e0d4fa8cd5f4635f73421e97533fa44feed1d",
+    "frontend/report_integrity.py": "30aac60bed9bd05d5abe165085a1be7dca7b40f249a0c723fb9ff013acbe2ebd",
+    "frontend/research_core.py": "95662b48e94a4db2a749d0f9dee080639771c3cb1b12384850cac37cf4738181",
+    "frontend/status_style.py": "14c8ccf82e9126e58b71c5cc7f94a5967e9d00b696b1fc2800e18b487391d258",
+    "frontend/task_evaluation_core.py": "ff062a3a98a632e3c46cc196e1002fda673ef16fd2e2c083e77cb9aeded12806",
+    "frontend/task_evaluation_view.py": "4594043fd276d95cf241f609e5b0c9229fca43d5fa20ccf9d92ff65258ec2e00",
+    "frontend/trace_view.py": "ed045f163d9436da1b8fc8a3e63bb0c2fe0cc5531f53dc42fe50819ee3370a26",
+    "frontend/ui_core.py": "0966cd0673872a8b2997efbb816a41115681f9a7c11a299c86c780bb726f4010",
+    "frontend/verify_ui.py": "0b573d46bbe4ef0e7a69a2f6854c598be8c0be7b561b2e2ea1f0b2031cb043b4",
+    "frontend/pages/0_한눈에_보기.py": "c837a44caf1f6df6446251c215508f2dba11c21503f083edcc80fdb0ce75896b",
+    "backend/testing/fixture_model.py": "da71dab1abaca9f6cf2978e331868506fc88d6abb308df74f99433e15d570345",
+    "backend/tests/test_task_evaluation.py": "90a6eb8a7771ddf5a586ca8b15b1472ea552f84f2023a5f5e431a1a385c0a477",
+    "scripts/verify_week2.py": "84690ae7296cad990b89344b0309321cb2eab70ad3475fca2076c0ec4262fa02",
+    "scripts/verify_week5.py": "fcef6affd8c76bb9523af69326fa9e79f64c30d04c6fd64ab7f2b55acc80d794",
+    "scripts/verify_week5_ui.py": "ea49aa015bdb482d79df8ef8e3c25ad6b037a469080044d73be6c9cb0a20b6cd",
+    "scripts/week5_judge_benchmark.py": "b28fd839abcfc5855e3d945928e3070d235072f90e363a03cfd17d95fe1b2c62",
+    "scripts/export_task_evaluation_schema.py": "8f99d85227a2f25829fcacad50f31167e554f01a10c4186bc0cdcdb1be880e2e",
+    "tests/test_task_evaluation_client.py": "e98ce1cc4675106a479c95e96c6286626af82d266dfb808c3686b762fbe547b3",
+    "contracts/normal-task-evaluation-v0.2.schema.json": "45b1f94fcf704d2ae3d016522257d29ee0acb71e3523d48874e8beb574003352",
+    "contracts/shared-variables-v0.1.json": "733f49e288d869fdd2a1a39c45282f9cee4f331b1e889845a3b0fda040c29927",
+    ".github/workflows/mvp-integration.yml": "18623bb88ce64962f641343e69d118957c15df7f3fc7480f7881836e0aefd2b1",
+    "frontend/requirements.txt": "4901eab7f14901c701bf0b718c945bc660fd4b89d50798a35ffb068145803686",
+    "requirements.lock": "7772da3d50ab4a16c2b3b178ef318f4a4d18236a70bc73cd4aeefb2807a723c9"
+  },
+  "regression_tests": {
+    "backend": {
+      "status": "passed",
+      "count": 181,
+      "seconds": 47.653
+    },
+    "pipeline": {
+      "status": "passed",
+      "count": 301,
+      "seconds": 105.215
+    },
+    "frontend_focused": {
+      "status": "passed",
+      "count": 48,
+      "seconds": 1.71
+    },
+    "launcher_focused": {
+      "status": "passed",
+      "count": 12,
+      "seconds": 81.247
+    }
+  },
+  "unique_full_regression_count": 482,
+  "existing_ci_commands": [
+    {
+      "command": [
+        "scripts.mvp",
+        "check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week2_data",
+        "check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week3_data",
+        "check"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week4_report_comparison",
+        "--check-docs",
+        "--output",
+        "runs/week5-connected-ci-report-comparison"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.mvp",
+        "verify"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.mvp",
+        "verify-week2"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week2_data",
+        "prepare-email",
+        "--output",
+        "runs/week5-connected-ci-email-data"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.verify_main_comparisons",
+        "--data-dir",
+        "runs/week5-connected-ci-email-data",
+        "--evaluation-rules",
+        "configs/evaluation-week2.json",
+        "--output",
+        "runs/week5-connected-ci-email-comparison"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.week2_data",
+        "verify-handoff",
+        "--output",
+        "runs/week5-connected-ci-week2-data"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.verify_week3",
+        "--output",
+        "runs/week5-connected-ci-week3-batch"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.verify_week4",
+        "--fixture-output",
+        "runs/week5-connected-ci-week3-batch",
+        "--output",
+        "runs/week5-connected-ci-week4-package"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "scripts.verify_model_experiment",
+        "--output",
+        "runs/week5-connected-ci-model-experiment"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "backend_judge_fixture": {
+    "status": "passed",
+    "verified_at": "2026-11-09T05:40:31.754126+00:00",
+    "execution_scope": "fixture",
+    "modes": {
+      "none": {
+        "run_id": "run-7cdcc3185c0c",
+        "report_sha256": "91fe265c1c1795a6c761c2d3ee181489f0e0086bc3bf49ab03d4d0e64da9c6dd",
+        "normal_task_success": "success",
+        "attack_success": "not_applicable",
+        "metrics": {
+          "latency_ms": 0,
+          "input_tokens": 17,
+          "output_tokens": 5,
+          "estimated_cost_usd": null,
+          "stages": [
+            {
+              "stage": "evaluation",
+              "latency_ms": 0
+            }
+          ],
+          "model_call_count": 1,
+          "generation_call_count": 0,
+          "detection_call_count": 0,
+          "unpriced_call_count": 1,
+          "known_cost_usd": 0.0,
+          "cost_complete": false,
+          "usage_source": "observed",
+          "generation_skipped_reason": null
+        },
+        "original_files_unchanged": true
+      },
+      "D1": {
+        "run_id": "run-97ec6edc5cb7",
+        "report_sha256": "8cdc91ea9b71fc50643390114aeff6f0f3875a6b65f87e00f8243f94dd05221b",
+        "normal_task_success": "success",
+        "attack_success": "not_applicable",
+        "metrics": {
+          "latency_ms": 1,
+          "input_tokens": 17,
+          "output_tokens": 5,
+          "estimated_cost_usd": null,
+          "stages": [
+            {
+              "stage": "evaluation",
+              "latency_ms": 1
+            }
+          ],
+          "model_call_count": 1,
+          "generation_call_count": 0,
+          "detection_call_count": 0,
+          "unpriced_call_count": 1,
+          "known_cost_usd": 0.0,
+          "cost_complete": false,
+          "usage_source": "observed",
+          "generation_skipped_reason": null
+        },
+        "original_files_unchanged": true
+      },
+      "D2": {
+        "run_id": "run-fae89ba5aa63",
+        "report_sha256": "f1398d4af5bfd234d912c1da92c22528638c2ad8abdfdfc08ebae311992acd3f",
+        "normal_task_success": "success",
+        "attack_success": "not_applicable",
+        "metrics": {
+          "latency_ms": 0,
+          "input_tokens": 17,
+          "output_tokens": 5,
+          "estimated_cost_usd": null,
+          "stages": [
+            {
+              "stage": "evaluation",
+              "latency_ms": 0
+            }
+          ],
+          "model_call_count": 1,
+          "generation_call_count": 0,
+          "detection_call_count": 0,
+          "unpriced_call_count": 1,
+          "known_cost_usd": 0.0,
+          "cost_complete": false,
+          "usage_source": "observed",
+          "generation_skipped_reason": null
+        },
+        "original_files_unchanged": true
+      },
+      "D1+D2": {
+        "run_id": "run-da4ba8851fbb",
+        "report_sha256": "165a00f678e9449edd1dfda593f7fab44c8e7038c0295c984771ddbe5f04b71f",
+        "normal_task_success": "success",
+        "attack_success": "not_applicable",
+        "metrics": {
+          "latency_ms": 0,
+          "input_tokens": 17,
+          "output_tokens": 5,
+          "estimated_cost_usd": null,
+          "stages": [
+            {
+              "stage": "evaluation",
+              "latency_ms": 0
+            }
+          ],
+          "model_call_count": 1,
+          "generation_call_count": 0,
+          "detection_call_count": 0,
+          "unpriced_call_count": 1,
+          "known_cost_usd": 0.0,
+          "cost_complete": false,
+          "usage_source": "observed",
+          "generation_skipped_reason": null
+        },
+        "original_files_unchanged": true
+      }
+    },
+    "judge_calls": 8,
+    "read_model_calls": 0,
+    "api_csv_match": true,
+    "original_files_unchanged": true,
+    "human_labeled_dev_comparison": "pending",
+    "frontend_automatic_evaluation_display": "see_separate_verify_week5_ui",
+    "paid_model_execution": "not_performed"
+  },
+  "connected_ui_fixture": {
+    "status": "passed",
+    "verified_at": "2026-11-09T05:48:04.634812+00:00",
+    "execution_scope": "fixture",
+    "easy_four_modes": true,
+    "main_comparison_and_detail": true,
+    "api_ui_csv_match": true,
+    "criterion_and_reference_evidence": true,
+    "lost_response_retry_same_id": true,
+    "manual_review_flow": "synthetic_test_only",
+    "case_switch_hides_old_evaluations": true,
+    "csv_invalidated_after_review": true,
+    "original_trace_raw_unchanged": true,
+    "read_model_calls": 0,
+    "judge_calls": 5,
+    "human_acceptance": false,
+    "paid_model_calls": 0
+  },
+  "real_http_launcher": {
+    "status": "passed",
+    "fixture_judge_wired": true,
+    "real_backend_http": true,
+    "read_model_calls": 0,
+    "paid_model_calls": 0,
+    "servers_stopped": true
+  },
+  "reproduced_before_fix": [
+    "grounding_skipped_despite_documents",
+    "changed_raw_source_invoked_judge_and_appended_history_before_rejection",
+    "valid_json_bypassed_manual_semantic_evaluation"
+  ],
+  "requirement_evidence": {
+    "judgment_and_validation_gaps": [
+      "backend/tests/test_task_evaluation.py",
+      "backend/app/task_judgment.py"
+    ],
+    "changed_frontend_connected": [
+      "scripts/verify_week5_ui.py",
+      "frontend/task_evaluation_core.py",
+      "frontend/task_evaluation_view.py"
+    ],
+    "original_and_paid_call_invariants": [
+      "connected_ui_fixture.original_trace_raw_unchanged",
+      "connected_ui_fixture.lost_response_retry_same_id",
+      "real_http_launcher.read_model_calls"
+    ],
+    "intermediate_commits": [
+      "0b3be76",
+      "843baf1"
+    ]
+  },
+  "limitations": {
+    "human_labeled_judge_quality_validation": "pending",
+    "actual_human_acceptance": false,
+    "paid_judge_quality_test": "not_performed",
+    "remote_branch_ci": "not_run"
+  },
+  "holdout_executed": false,
+  "paid_model_calls": 0
+}

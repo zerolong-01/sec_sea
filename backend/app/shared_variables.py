@@ -29,6 +29,8 @@ CANONICAL_PATHS = MappingProxyType(_shared["canonical_paths"])
 BATCH_VERSION = _shared["batch_contract_version"]
 BATCH_API_PATHS = MappingProxyType(_shared["batch_api_paths"])
 RESEARCH_API_PATHS = MappingProxyType(_shared["research_api_paths"])
+TASK_EVALUATION_API_PATHS = MappingProxyType(_shared["task_evaluation_api_paths"])
+TASK_EVALUATION_EXPORT = MappingProxyType(_shared["task_evaluation_export"])
 RESEARCH_EXPORT = MappingProxyType(_shared["research_export"])
 _stages = {item["value"].upper(): item["value"] for item in _shared["trace_stages"]}
 
@@ -96,6 +98,7 @@ class ExecutionScope(StrEnum):
 class CallPurpose(StrEnum):
     GENERATION = _value("call_purposes", "GENERATION")
     DETECTION = _value("call_purposes", "DETECTION")
+    EVALUATION = _value("call_purposes", "EVALUATION")
 
 
 class ArtifactType(StrEnum):

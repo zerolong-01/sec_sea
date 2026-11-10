@@ -5,6 +5,8 @@ import json
 import streamlit as st
 import status_style as ss
 from ui_core import D2_MODES, NO_VALUE, SHARED, count_decisions, label_of, load_run, text_or_missing
+from task_evaluation_core import effective_trace
+from task_evaluation_view import render_task_evaluation
 
 PREVIEW_LENGTH = 300
 KST = timezone(timedelta(hours=9))
@@ -33,7 +35,7 @@ def render_saved_trace(run_ids, *, key, report_key, expected_cases=None):
             st.error("선택한 보고서와 trace의 케이스가 다릅니다 (SNAPSHOT_MISMATCH).")
             return
         st.caption("아래 trace의 평가는 저장된 원래 자동 평가입니다. AI 연구 판정과 별도로 읽습니다.")
-        render_result(trace)
+        render_result(trace, key=f"{key}_saved_trace")
 
 
 def stage_title(value):
@@ -135,12 +137,15 @@ def render_summary(trace):
             st.caption("출력 미리보기 (전체는 아래 ③의 5. 출력)")
             show_text(output["display_text"][:PREVIEW_LENGTH] + (" …" if len(output["display_text"]) > PREVIEW_LENGTH else ""))
 
-def render_result(trace):
+def render_result(trace, *, key=None):
     """결과 읽는 순서: ① 실행 조건·상태 → ② 출력과 평가 요약 → ③ 단계별 trace·판정 근거"""
     st.markdown("##### ① 실행 조건·상태")
     render_header(trace)
+    report = render_task_evaluation(trace, key=key or trace["run_id"])
     st.markdown("##### ② 출력과 평가 요약")
-    render_summary(trace)
+    render_summary(effective_trace(trace, report))
+    if report and report["latest"]:
+        st.caption("정상 업무 요약에는 위에서 선택한 별도 판정을 사용합니다. 아래 원래 평가·생성 지연·비용은 저장 trace 값입니다.")
     st.markdown("##### ③ 단계별 trace·판정 근거")
     left, right = st.columns([2, 1])
     with left:

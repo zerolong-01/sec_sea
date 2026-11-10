@@ -44,6 +44,14 @@ class Settings:
     pricing_path: Path | None = None
     evaluation_rules_path: Path | None = None
     common_policy_path: Path | None = None
+    judge_base_url: str | None = None
+    judge_provider: str = "openai_compatible"
+    judge_response_format: str = "json_schema"
+    judge_model_id: str | None = None
+    judge_api_key: str | None = None
+    judge_timeout_seconds: float = 20.0
+    judge_max_tokens: int = 1200
+    judge_max_calls_per_run: int = 4
 
     def __post_init__(self):
         def finite_number(value):
@@ -64,6 +72,14 @@ class Settings:
         DetectorConsistencyPolicy(self.d2_consistency_policy)
         DetectorResponseFormat(self.d2_response_format)
         DetectorErrorPolicy(self.d2_error_policy)
+        if self.judge_provider not in ("openai_compatible", "fixture_http"):
+            raise ValueError("JUDGE_PROVIDER must be openai_compatible or fixture_http")
+        if self.judge_response_format not in ("json_schema", "prompt_only"):
+            raise ValueError("JUDGE_RESPONSE_FORMAT must be json_schema or prompt_only")
+        if (not finite_number(self.judge_timeout_seconds) or self.judge_timeout_seconds <= 0 or
+                type(self.judge_max_tokens) is not int or not 1 <= self.judge_max_tokens <= 4096 or
+                type(self.judge_max_calls_per_run) is not int or not 1 <= self.judge_max_calls_per_run <= 20):
+            raise ValueError("Judge timeout, token limit (1..4096) and call limit (1..20) must be positive")
 
     @classmethod
     def from_environment(cls, project_root: Path | None = None) -> "Settings":
@@ -103,4 +119,12 @@ class Settings:
             pricing_path=resolve_project_path(os.environ["PRICING_FILE"], project_root) if os.getenv("PRICING_FILE") else None,
             evaluation_rules_path=resolve_project_path(os.environ["EVALUATION_RULES_FILE"], project_root) if os.getenv("EVALUATION_RULES_FILE") else None,
             common_policy_path=resolve_project_path(os.environ["COMMON_POLICY_FILE"], project_root) if os.getenv("COMMON_POLICY_FILE") else None,
+            judge_base_url=os.getenv("JUDGE_BASE_URL"),
+            judge_provider=os.getenv("JUDGE_PROVIDER", "openai_compatible"),
+            judge_response_format=os.getenv("JUDGE_RESPONSE_FORMAT", "json_schema"),
+            judge_model_id=os.getenv("JUDGE_MODEL_ID"),
+            judge_api_key=os.getenv("JUDGE_API_KEY"),
+            judge_timeout_seconds=float(os.getenv("JUDGE_TIMEOUT_SECONDS", "20")),
+            judge_max_tokens=int(os.getenv("JUDGE_MAX_TOKENS", "1200")),
+            judge_max_calls_per_run=int(os.getenv("JUDGE_MAX_CALLS_PER_RUN", "4")),
         )

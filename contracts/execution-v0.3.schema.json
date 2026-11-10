@@ -3,7 +3,8 @@
     "CallPurpose": {
       "enum": [
         "generation",
-        "detection"
+        "detection",
+        "evaluation"
       ],
       "title": "CallPurpose",
       "type": "string"
