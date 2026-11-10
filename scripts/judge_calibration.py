@@ -75,7 +75,7 @@ def prepare(output, reference=None, split="validation"):
     if target.is_symlink():
         raise ValueError("Plan cannot be a symlink")
     if target.exists():
-        if json.loads(target.read_text()) != plan:
+        if json.loads(target.read_text(encoding="utf-8")) != plan:
             raise ValueError("Calibration plan changed; use a new directory")
     else:
         if any(output.iterdir()):
@@ -88,7 +88,7 @@ def prepare(output, reference=None, split="validation"):
     expected_labels = [{"unit_id": u["unit_id"], "pair_id": u["pair_id"], "expected": u["expected"],
         "source_row_sha256": u["source_row_sha256"], "source_label": u["source_label"], "side": u["side"],
         "label_source": "published_human_gold_adapter", "upstream_commit": plan["source_commit"]} for u in units]
-    if json.loads((output / "human-reference-labels.json").read_text()) != expected_labels:
+    if json.loads((output / "human-reference-labels.json").read_text(encoding="utf-8")) != expected_labels:
         raise ValueError("Frozen human labels changed")
     return reference, units, plan
 
@@ -136,7 +136,7 @@ def run(output, settings, *, max_items=None, reference=None, max_usd=None):
         if target.is_symlink():
             raise ValueError("Ledger cannot be a symlink")
         if target.exists():
-            state = CalibrationState.model_validate_json(target.read_text())
+            state = CalibrationState.model_validate_json(target.read_text(encoding="utf-8"))
             if state.identity != identity or state.spec.budget.model_dump(mode="json") != budget_values:
                 raise ValueError("Calibration model/prompt/policy/price changed; create a new run")
         else:
@@ -200,7 +200,7 @@ def report(output, *, reference=None):
     target = output / "ledger.json"
     if target.is_symlink():
         raise ValueError("Ledger cannot be a symlink")
-    state = CalibrationState.model_validate_json(target.read_text())
+    state = CalibrationState.model_validate_json(target.read_text(encoding="utf-8"))
     if state.identity["plan_sha256"] != digest(plan):
         raise ValueError("Reference plan binding changed")
     unit_ids = {unit["unit_id"] for unit in units}

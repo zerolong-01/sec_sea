@@ -42,9 +42,9 @@ class HumanReferenceTests(unittest.TestCase):
             folder = Path(temporary) / "reference"
             shutil.copytree(REFERENCE, folder)
             path = folder / "source/Natural.json"
-            content = json.loads(path.read_text())
+            content = json.loads(path.read_text(encoding="utf-8"))
             content[0]["label"] = 3-content[0]["label"]
-            path.write_text(json.dumps(content))
+            path.write_text(json.dumps(content), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_reference(folder)
 
@@ -97,9 +97,9 @@ class CalibrationExecutionTests(unittest.TestCase):
     def test_unresolved_reservation_is_not_retried(self):
         run(self.output, self.settings, max_items=1)
         path = self.output / "ledger.json"
-        state = json.loads(path.read_text())
+        state = json.loads(path.read_text(encoding="utf-8"))
         state["predictions"] = {}
-        path.write_text(json.dumps(state))
+        path.write_text(json.dumps(state), encoding="utf-8")
         result = run(self.output, self.settings, max_items=1)
         self.assertEqual(result["stopped_reason"], "UNRESOLVED_PAID_CALL_NO_AUTOMATIC_RETRY")
         self.assertEqual(len(self.fixture.requests), 1)
@@ -107,9 +107,9 @@ class CalibrationExecutionTests(unittest.TestCase):
     def test_gold_file_cannot_be_replaced_after_preparation(self):
         prepare(self.output)
         path = self.output / "human-reference-labels.json"
-        labels = json.loads(path.read_text())
+        labels = json.loads(path.read_text(encoding="utf-8"))
         labels[0]["expected"] = "failure" if labels[0]["expected"] == "success" else "success"
-        path.write_text(json.dumps(labels))
+        path.write_text(json.dumps(labels), encoding="utf-8")
         with self.assertRaises(ValueError):
             run(self.output, self.settings, max_items=1)
         self.assertEqual(len(self.fixture.requests), 0)
