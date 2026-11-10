@@ -77,7 +77,7 @@ if st.button("실행", type="primary", key="easy_run"):
 saved = st.session_state.get("easy_results")
 if saved and saved["case_id"] == case_id and saved.get("scope") == scope:
     st.subheader("3. 결과")
-    render_group([r["trace"] for r in saved["results"]], key="easy_tasks")
+    render_group([r["trace"] for r in saved["results"]], key="easy_tasks", simple=True)
     judged = [(r["mode"], *ez.verdict(saved["label"], effective_trace(r["trace"], saved_report(r["trace"])) if r["trace"] else None,
                                     r["error"])) for r in saved["results"]]
     with st.container(border=True):
@@ -93,7 +93,7 @@ if saved and saved["case_id"] == case_id and saved.get("scope") == scope:
             st.text(ez.answer_excerpt(item["trace"], redactor=redactor))
             st.caption(f"걸린 시간 {ez.seconds_text(item['trace'])}")
             if item["trace"]:
-                render_task_evaluation(item["trace"], key=f"easy_task_{mode}_{item['trace']['run_id']}")
+                render_task_evaluation(item["trace"], key=f"easy_task_{mode}_{item['trace']['run_id']}", simple=True)
     scopes = {((r["trace"] or {}).get("manifest") or {}).get("execution_scope") for r in saved["results"]}
     if scopes & {"fixture", "demo"}:
         st.caption("지금은 연습용 고정 응답으로 실행했습니다. 실제 AI 모델 결과와 다를 수 있습니다.")
