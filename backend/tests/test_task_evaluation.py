@@ -86,7 +86,7 @@ class TaskEvaluationTests(unittest.TestCase):
         return {**result, **changes}
 
     def test_h007_four_modes_preserve_original_and_reuse_saved_results(self):
-        schema = json.loads((ROOT / "contracts/normal-task-evaluation-v0.2.schema.json").read_text())
+        schema = json.loads((ROOT / "contracts/normal-task-evaluation-v0.2.schema.json").read_text(encoding="utf-8"))
         for mode in ("none", "D1", "D2", "D1+D2"):
             with self.subTest(mode=mode):
                 run_id, trace = self.run_case(mode)
@@ -193,9 +193,9 @@ class TaskEvaluationTests(unittest.TestCase):
         self.assertEqual(self.judge(run_id, client=client).status_code, 200)
         other, _ = self.run_case()
         path = self.settings.runs_dir / f"{other}.raw.json"
-        raw = json.loads(path.read_text())
+        raw = json.loads(path.read_text(encoding="utf-8"))
         raw["provider_output"] = "altered output"
-        path.write_text(json.dumps(raw))
+        path.write_text(json.dumps(raw), encoding="utf-8")
         self.assertEqual(self.judge(other).status_code, 422)
         self.assertFalse((self.settings.runs_dir / f"{other}.task-evaluations.json").exists())
 
@@ -218,15 +218,15 @@ class TaskEvaluationTests(unittest.TestCase):
     def test_legacy_sources_and_stored_binding_are_checked(self):
         run_id, _ = self.run_case()
         path = self.settings.runs_dir / f"{run_id}.raw.json"
-        raw = json.loads(path.read_text())
+        raw = json.loads(path.read_text(encoding="utf-8"))
         del raw["evaluation_context"]
-        path.write_text(json.dumps(raw))
+        path.write_text(json.dumps(raw), encoding="utf-8")
         response = self.judge(run_id)
         self.assertEqual(response.status_code, 200, response.text)
         self.assertEqual(response.json()["latest"]["policy_snapshot"]["evidence_provenance"],
                          "legacy_matched_inputs_current_rubric")
         raw["provider_output"] = "changed after judging"
-        path.write_text(json.dumps(raw))
+        path.write_text(json.dumps(raw), encoding="utf-8")
         self.assertEqual(self.client.get(self.url(run_id)).status_code, 500)
 
     def test_benchmark_uses_automatic_votes_and_keeps_fixture_labels_separate(self):
@@ -250,9 +250,9 @@ class TaskEvaluationTests(unittest.TestCase):
     def test_holdout_and_detector_only_do_not_reach_judge(self):
         run_id, _ = self.run_case()
         path = self.settings.runs_dir / f"{run_id}.raw.json"
-        raw = json.loads(path.read_text())
+        raw = json.loads(path.read_text(encoding="utf-8"))
         raw["evaluation_context"]["case"]["split"] = "holdout"
-        path.write_text(json.dumps(raw))
+        path.write_text(json.dumps(raw), encoding="utf-8")
         count = len(self.fixture.requests)
         self.assertEqual(self.judge(run_id).status_code, 422)
         run_id, _ = self.run_case("D2", execution_kind="detector_only")
@@ -275,9 +275,9 @@ class TaskEvaluationTests(unittest.TestCase):
         history = self.settings.runs_dir / f"{run_id}.task-evaluations.json"
         before = file_sha256(history)
         path = self.settings.runs_dir / f"{run_id}.raw.json"
-        raw = json.loads(path.read_text())
+        raw = json.loads(path.read_text(encoding="utf-8"))
         raw["provider_error"] = "changed source evidence"
-        path.write_text(json.dumps(raw))
+        path.write_text(json.dumps(raw), encoding="utf-8")
         count = len(self.fixture.requests)
         self.assertEqual(self.judge(run_id, "judge-new").status_code, 500)
         self.assertEqual(file_sha256(history), before)
@@ -288,11 +288,11 @@ class TaskEvaluationTests(unittest.TestCase):
         self.assertEqual(file_sha256(history), before)
 
     def test_valid_json_does_not_skip_semantic_judgment(self):
-        rules = json.loads((ROOT / "configs/evaluation-week2.json").read_text())
+        rules = json.loads((ROOT / "configs/evaluation-week2.json").read_text(encoding="utf-8"))
         rule = next(r for r in rules["rules"] if r["case_id"] == "h007")
         rule.update(output_format="json_object", required_json_keys=["summary"], normal_task_mode="manual")
         path = self.folder / "format-rules.json"
-        path.write_text(json.dumps(rules))
+        path.write_text(json.dumps(rules), encoding="utf-8")
         self.settings = replace(self.settings, evaluation_rules_path=path)
         self.client = TestClient(create_app(self.settings))
         self.fixture.generation_text = '{"summary":"unrelated answer"}'
@@ -327,11 +327,11 @@ class TaskEvaluationTests(unittest.TestCase):
 
     def test_encoded_sentence_cannot_be_approved_by_a_successful_judge(self):
         import base64
-        rules = json.loads((ROOT / "configs/evaluation-week2.json").read_text())
+        rules = json.loads((ROOT / "configs/evaluation-week2.json").read_text(encoding="utf-8"))
         rule = next(r for r in rules["rules"] if r["case_id"] == "h007")
         rule["protected_values"] = ["SYNTH-PRIVATE-42"]
         path = self.folder / "protected-rules.json"
-        path.write_text(json.dumps(rules))
+        path.write_text(json.dumps(rules), encoding="utf-8")
         self.settings = replace(self.settings, evaluation_rules_path=path)
         self.client = TestClient(create_app(self.settings))
         encoded = base64.b64encode(b"Prefix: SYNTH-PRIVATE-42; suffix").decode()
@@ -358,12 +358,12 @@ class TaskEvaluationTests(unittest.TestCase):
         for mutation in ("missing", "changed"):
             run_id, _ = self.run_case()
             path = self.settings.runs_dir / f"{run_id}.raw.json"
-            raw = json.loads(path.read_text())
+            raw = json.loads(path.read_text(encoding="utf-8"))
             if mutation == "missing":
                 raw["evaluation_context"]["documents"] = []
             else:
                 raw["evaluation_context"]["documents"][0]["content"] = "changed document"
-            path.write_text(json.dumps(raw))
+            path.write_text(json.dumps(raw), encoding="utf-8")
             count = len(self.fixture.requests)
             self.assertEqual(self.judge(run_id).status_code, 422)
             self.assertEqual(len(self.fixture.requests), count)
@@ -372,7 +372,7 @@ class TaskEvaluationTests(unittest.TestCase):
         price = self.folder / "fixture-pricing.json"
         price.write_text(json.dumps({"version": "fixture-prices", "models": [{"model_id": "fixture-judge",
             "input_usd_per_million": 1, "output_usd_per_million": 2, "verified": True,
-            "source_url": "https://fixture.invalid/prices", "effective_date": "2026-11-09"}]}))
+            "source_url": "https://fixture.invalid/prices", "effective_date": "2026-11-09"}]}), encoding="utf-8")
         self.settings = replace(self.settings, pricing_path=price)
         self.client = TestClient(create_app(self.settings))
         for missing in (False, True):
