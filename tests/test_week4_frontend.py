@@ -138,7 +138,7 @@ class ResearchViewTest(unittest.TestCase):
     def test_published_metric_vocabulary_is_labelled(self):
         # 공개된 전체 연구판의 coverage/inference/gold 코드까지 확인
         rows = [json.loads(line) for line in
-                (ROOT / "docs/examples/week3-completion/ai-dev-review.metrics.v0.1.jsonl").read_text().splitlines()]
+                (ROOT / "docs/examples/week3-completion/ai-dev-review.metrics.v0.1.jsonl").read_text(encoding="utf-8").splitlines()]
         for row in rows:
             for metric in (row.get("metrics") or {}).values():
                 self.assertIn(metric["coverage_status"], rc.COVERAGE_LABELS)
