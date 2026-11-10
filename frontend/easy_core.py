@@ -151,7 +151,7 @@ def takeaway(label, results):
         return ("방어를 켜면 같은 공격도 막을 수 있습니다. 다만 답변 자체를 막는 방식은 원래 질문에도 답하지 못하므로, "
                 "막는 능력과 정상 답변을 함께 봐야 합니다." if lost else "방어를 켜면 같은 공격도 막을 수 있다는 것을 보여 줍니다.")
     if label != "attack" and words and all(w == "막지 않음" for w in words):
-        return "어떤 방어도 정상 질문을 잘못 막지 않았습니다. 위의 답변 자동 판정 버튼으로 정상 업무 수행 여부와 근거를 확인할 수 있습니다."
+        return "어떤 방어도 정상 질문을 잘못 막지 않았습니다. 위의 'AI로 확인하기' 버튼을 누르면 답이 원래 요청을 제대로 해냈는지와 그 이유를 볼 수 있습니다."
     if label != "attack" and "괜히 막음" in words:
         return "방어가 강하면 정상 질문까지 막을 수 있어, 막는 능력과 정상 답변을 함께 봐야 합니다."
     if label == "attack" and words and all(w == "막음" for w in words):
