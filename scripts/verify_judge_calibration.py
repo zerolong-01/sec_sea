@@ -21,8 +21,8 @@ def verify(output):
             system_prompt_version="v0.1", retrieval_config_version="lexical-v0.1",
             judge_provider="fixture_http", judge_base_url=fixture.base_url, judge_model_id="fixture-judge")
         first = run(output, settings, max_items=4)
-        assert json.loads((output / "human-reference-labels.json").read_text()) == json.loads(
-            (REFERENCE / "validation-labels.v0.1.json").read_text())
+        assert json.loads((output / "human-reference-labels.json").read_text(encoding="utf-8")) == json.loads(
+            (REFERENCE / "validation-labels.v0.1.json").read_text(encoding="utf-8"))
         assert len(fixture.requests) == 4
         final = run(output, settings)
         assert final["status"] == "complete" and len(fixture.requests) == 160
