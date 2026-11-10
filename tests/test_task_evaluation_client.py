@@ -22,7 +22,7 @@ import ui_core
 
 class TaskEvaluationClientTests(unittest.TestCase):
     def setUp(self):
-        sample = json.loads((ROOT / "docs/examples/week2/h007-D1+D2.json").read_text())
+        sample = json.loads((ROOT / "docs/examples/week2/h007-D1+D2.json").read_text(encoding="utf-8"))
         self.trace = sample["response"]["trace"]
         request = self.trace["request"]
         record = TaskEvaluationRecord(evaluation_id="judge-fixture", revision=1, source="llm_judge",
