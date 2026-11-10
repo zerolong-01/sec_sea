@@ -1,0 +1,149 @@
+{
+  "version": "week5-real-model-reexecution-v0.1",
+  "status": "passed",
+  "verified_at": "2026-11-10T13:51:34.544780+00:00",
+  "execution_scope": "real",
+  "previous_experiment_id": "experiment-4e1e9895fd7f",
+  "previous_originals_recovered": false,
+  "experiment_id": "experiment-bd514d347cf4",
+  "generation_code_commit": "eb585502ae36aeea0843c8e3ce839bd1e09b62c7",
+  "planned_runs": 216,
+  "attempt_count": 216,
+  "model_count": 2,
+  "sources": [
+    {
+      "source_id": "rag",
+      "split": "dev",
+      "case_ids": [
+        "a006",
+        "b006",
+        "h007"
+      ]
+    },
+    {
+      "source_id": "email",
+      "split": "dev",
+      "case_ids": [
+        "email-attack-001",
+        "email-benign-001",
+        "email-hard-negative-001"
+      ]
+    }
+  ],
+  "conditions": [
+    "none",
+    "D1",
+    "D2-both",
+    "D1-D2",
+    "D2-input",
+    "D2-retrieval"
+  ],
+  "repeats": 3,
+  "models": [
+    {
+      "model_key": "mini",
+      "model_id": "gpt-4.1-mini-2025-04-14",
+      "provider": "openai_compatible",
+      "batch_id": "batch-b520d3098afb",
+      "status": "completed",
+      "reason": null,
+      "planned_count": 108,
+      "attempt_count": 108,
+      "status_counts": {
+        "completed": 90,
+        "blocked": 18
+      },
+      "budget": {
+        "admitted_calls": 198,
+        "reserved_tokens": 1695744,
+        "observed_input_tokens": 50739,
+        "observed_output_tokens": 13354,
+        "known_cost_usd": 0.041662,
+        "total_cost_usd": 0.041662,
+        "committed_usd": 0.041662,
+        "unresolved_calls": 0,
+        "elapsed_seconds": 245.28100000019185,
+        "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+      },
+      "execution_scope": "real"
+    },
+    {
+      "model_key": "full",
+      "model_id": "gpt-4.1-2025-04-14",
+      "provider": "openai_compatible",
+      "batch_id": "batch-5b122a2e384a",
+      "status": "completed",
+      "reason": null,
+      "planned_count": 108,
+      "attempt_count": 108,
+      "status_counts": {
+        "completed": 90,
+        "blocked": 18
+      },
+      "budget": {
+        "admitted_calls": 198,
+        "reserved_tokens": 1695744,
+        "observed_input_tokens": 50739,
+        "observed_output_tokens": 13525,
+        "known_cost_usd": 0.14837720000000007,
+        "total_cost_usd": 0.14837720000000007,
+        "committed_usd": 0.14837720000000007,
+        "unresolved_calls": 0,
+        "elapsed_seconds": 265.905999999959,
+        "input_bound_method": "utf8_byte_admission_estimate_with_operator_ceiling_not_tokenizer_guarantee"
+      },
+      "execution_scope": "real"
+    }
+  ],
+  "budget_ceiling_usd": 1.0,
+  "budget_usage": {
+    "admitted_calls": 396,
+    "reserved_tokens": 3391488,
+    "known_cost_usd": 0.19003920000000007,
+    "total_cost_usd": 0.19003920000000007,
+    "committed_usd": 0.19003920000000007,
+    "unresolved_calls": 0,
+    "elapsed_seconds": 511.1870000001509
+  },
+  "observed_api_calls": 396,
+  "unreconciled_calls": 0,
+  "error_counts": {
+    "mini": {},
+    "full": {}
+  },
+  "compared_transmitted_calls": 198,
+  "unpaired_calls_due_to_execution_outcomes": 0,
+  "raw_files": 216,
+  "trace_files": 216,
+  "source_file_count": 458,
+  "transfer_file_count": 455,
+  "report_sha256": "207a066438f471b1eaad9f5051ac83b3a2ac79b5e9ee1c69719385a18b30fa44",
+  "source_inventory_sha256": "e11015189af71934dbc66cd9ef65a7c6f5d1d1329648b1bc21ca8c638bd46d72",
+  "handoff_manifest_sha256": "13f4c010d57bad4feaa8a838ae533ce3f4132372a505aac303db61f2cda560c7",
+  "archive_sha256": "852285e56494f08f9b4ce20742ae413e9363f90216a607b89ecf61a3bd97bd0d",
+  "archive_bytes": 1493337,
+  "api_ui_csv_trace_match": true,
+  "read_model_calls": 0,
+  "source_unchanged": true,
+  "handoff_unchanged": true,
+  "human_acceptance": false,
+  "holdout_executed": false,
+  "normal_task_semantic_evaluation": "original_saved_rules_and_manual_pending_policy_preserved",
+  "pricing_file": "configs/pricing-openai-2026-11-10.json",
+  "cost_basis": "observed tokens times frozen standard uncached rates; estimate, not invoice",
+  "paths": {
+    "original_runs": "runs/week5-model-experiment-20261110/main/runs",
+    "frozen_spec": "runs/week5-model-experiment-20261110/spec.real.json",
+    "original_verification": "runs/week5-model-experiment-20261110/main/verification-report.json",
+    "handoff_package": "runs/week5-model216-handoff-20261110",
+    "receiver_verification": "runs/week5-model216-received-check-20261110/handoff-verification.json",
+    "archive": "runs/week5-model216-handoff-20261110.zip"
+  },
+  "archive_integrity_verified": true,
+  "archive_env_files": false,
+  "archive_credential_values": false,
+  "public_spec": "configs/model-experiment.week5-2026-11-10.json",
+  "public_spec_design_sha256": "09d766bbbb06f5137629985d3b10caa9e1fef6c6b342bf91d3d8c6ce617feb7d",
+  "public_spec_selection_sha256": "2f745b57536003801e318d995783d7c3fa05a870f35b2ca05c64d7a0f106829a",
+  "public_spec_matches_frozen_design_and_selection": true
+}
