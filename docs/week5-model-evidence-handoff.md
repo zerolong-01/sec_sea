@@ -4,8 +4,9 @@
 
 - 한국어 Windows의 `tests/test_task_evaluation_client.py` 인코딩 오류는 [PR #64](https://github.com/zerolong-01/sec_sea/pull/64), merge `5fbc9a4`에 반영됐다. 최신 dev에서 `python -X utf8=0 -m unittest tests.test_task_evaluation_client -v` 4건이 통과했다.
 - 이전 macOS 작업 환경의 [216건 검산 기록](week5-backend-acceptance.md)은 있지만, 현재 Windows 작업 폴더·다른 worktree·확인한 다운로드 파일과 GitHub 릴리스/Actions에는 그 원본이 없다. `git pull`은 Git에서 제외한 `runs/`를 가져오지 않는다.
+- 이후 사용자 요청에 따라 **새 실제 실험 216건을 실행하고 raw·trace·manifest와 전달 ZIP을 생성했다.** 현재 사용할 새 실험 `experiment-bd514d347cf4`의 결과·해시·수신 명령은 [새 실험 및 원본 검산 기록](week5-model-reexecution-2026-11-10.md)을 따른다. 아래의 과거 실험 ID·원본 PC 내보내기 예시는 이전 원본을 이관할 때 사용한다.
 - 원본 PC에서 필요한 증거만 내보내고, 수신 PC에서 manifest·모든 파일 hash·API/UI/CSV/trace를 검증하는 `scripts.week5_model_handoff`를 추가했다.
-- [이관 검증 JSON](examples/week5/model-handoff-fixture.v0.1.json)은 **12건의 로컬 fixture**다. 원본 위치를 없앤 뒤에도 수신본 검산이 통과했고, 추가 모델 호출은 0이었다. 실제 216건의 원본 확보·다른 PC 검산은 아직 pending이다.
+- 초기 [이관 검증 JSON](examples/week5/model-handoff-fixture.v0.1.json)은 **12건의 로컬 fixture**다. 이후 새 실제 216건도 별도 수신 패키지에서 검산했고 모델 호출 0을 확인했다. 과거 원본 복구와 다른 담당자의 실제 직접 인수는 pending이다.
 
 ## 필요한 원본
 

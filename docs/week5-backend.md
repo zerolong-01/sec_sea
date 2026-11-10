@@ -175,6 +175,8 @@ private 파일이므로 공유에는 마스킹된 API/CSV를 사용한다. 기�
 원본 PC의 내보내기와 수신 PC의 검산은 [216건 원본 이관 안내](week5-model-evidence-handoff.md)를 따른다.
 기존 macOS 검증 기록은 별도 PC로의 제한 이관이나 실제 사람 공동 인수를 수행한 기록은 아니다.
 
+2026-11-10에는 사용자 요청에 따라 Windows에서 **새 실제 216건**을 생성했다. 실험 `experiment-bd514d347cf4`의 raw·trace·manifest·전달 ZIP과 API/UI/CSV 검산을 확보했으며, [새 실험 결과와 수신 검산 안내](week5-model-reexecution-2026-11-10.md)에 기록했다. 아래 명령의 과거 실험 경로와 구분한다.
+
 ```bash
 MVP_LOAD_DOTENV=0 MODEL_PROVIDER=demo .venv/bin/python -m scripts.verify_week5_saved_models \
   --runs-dir runs/real-model-experiment-20261025/main/runs \
