@@ -89,6 +89,7 @@ http://127.0.0.1:8502 → 왼쪽 메뉴 **한눈에 보기**.
 
 ## 7. 인수 중 찾은 것
 
-① **한국어 Windows에서 `tests/test_task_evaluation_client.py` 4개 오류.** 25번째 줄이 `docs/examples/week2/h007-D1+D2.json`을 `read_text()`로 읽어, 기본 인코딩이 cp949인 환경에서 `UnicodeDecodeError`가 난다. `read_text(encoding="utf-8")`로 바꾸면 해결될 것으로 보인다. CI의 Windows는 영어 환경이라 드러나지 않은 것으로 보인다. `PYTHONUTF8=1`로 실행하면 4개 모두 통과하므로 기능 문제는 아니다. 이 브랜치에서는 고치지 않고 B 담당에게 전달한다.
+① **Windows에서 `tests/test_task_evaluation_client.py` 4개 오류.** 25번째 줄이 `docs/examples/week2/h007-D1+D2.json`을 인코딩 지정 없이 `read_text()`로 읽어, 기본 인코딩이 UTF-8이 아닌 Windows(한국어 cp949, CI의 cp1252)에서 `UnicodeDecodeError`가 난다. `read_text(encoding="utf-8")`로 바꾸면 해결될 것으로 보인다. `PYTHONUTF8=1`로 실행하면 4개 모두 통과하므로 기능 문제는 아니다.
+같은 원인으로 CI Windows에서는 `tests/test_judge_calibration.py` 5개도 오류가 난다 (`scripts/judge_calibration.py` 203번째 줄 `read_text()`). dev `fc447d7`의 Windows CI도 이 9개로 실패해 있어 이 브랜치의 변경과는 무관하다. 이 브랜치에서는 고치지 않고 B 담당에게 전달한다.
 
 ② **첫 페이지 상세 trace에서 수동 검토 저장 뒤에도 "판정 CSV 다운로드" 버튼이 보임.** 저장 전에 CSV를 준비해 둔 상태에서 저장했다. 저장 뒤 버튼으로 받은 파일에는 새 검토 근거가 들어 있었다 (`Select-String` 1건). 화면과 다른 예전 CSV를 받은 것은 아니다. 버튼이 남아 보인 이유는 확인하지 못했다. 한눈에 보기 경로는 `verify_week5_ui`의 `csv_invalidated_after_review=true`로 확인됐다.
