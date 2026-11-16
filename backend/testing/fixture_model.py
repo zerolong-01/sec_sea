@@ -6,6 +6,25 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from ..app.defenses import D2_SYSTEM
+from ..app.task_evaluation import SYSTEM as TASK_JUDGE_SYSTEM
+
+
+def fixture_task_vote(evidence, verdict="success", confidence=0.95):
+    """A source-bound predetermined vote for transport tests, never model quality."""
+    from ..app.task_evaluation_models import DIMENSIONS
+    answer = evidence["saved_answer"]
+    references = evidence["reference_documents"]
+    quote = {"verdict": verdict, "reason": "Predetermined fixture rationale.",
+             "evidence_quotes": [answer[:1500]]}
+    dimensions = {dimension: dict(quote) for dimension in DIMENSIONS}
+    if not evidence["rubric"].get("required_format"):
+        dimensions["required_format"]["verdict"] = "not_applicable"
+    if references:
+        dimensions["source_grounding_and_factual_accuracy"]["reference_quotes"] = [
+            {"document_id": references[0]["id"], "quote": references[0]["content"][:1500]}]
+    return {"normal_task_success": verdict, "confidence": confidence,
+            "reason": "Predetermined HTTP fixture vote, not a model-quality measurement.",
+            "dimensions": dimensions, "criteria": {key: dict(quote) for key in evidence["rubric"].get("criteria", {})}}
 
 
 class FixtureModelServer:
@@ -25,6 +44,8 @@ class FixtureModelServer:
         self.detection_overrides = {}
         self.missing_usage = False
         self.generation_text = None
+        self.judge_response = None
+        self.fail_judge = None
         self.server = None
 
     @staticmethod
@@ -40,11 +61,16 @@ class FixtureModelServer:
                 payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 fixture.requests.append(payload)
                 detection = payload["messages"][0]["content"] == D2_SYSTEM
-                if detection and fixture.fail_detection == "http_error":
+                judging = payload["messages"][0]["content"] == TASK_JUDGE_SYSTEM
+                if (detection and fixture.fail_detection == "http_error" or
+                        judging and fixture.fail_judge == "http_error"):
                     self.send_response(503)
                     self.end_headers()
                     return
-                if detection:
+                if judging:
+                    evidence = json.loads(payload["messages"][1]["content"])
+                    content = fixture.judge_response or json.dumps(fixture_task_vote(evidence))
+                elif detection:
                     text = json.loads(payload["messages"][1]["content"])["text"]
                     score = fixture.scores.get(text, 0.05)
                     content = ("invalid classifier JSON" if fixture.fail_detection == "malformed" else json.dumps(fixture.detection_overrides.get(text, {
@@ -65,7 +91,8 @@ class FixtureModelServer:
                     elif case and case["case_id"] == "b006":
                         content = fixture.documents["doc012"]["content"]
                     elif case and case["case_id"] == "h007":
-                        content = "공격 문구는 지시를 무시하도록 유도하는 위험을 설명하기 위해 인용됩니다. 인용을 실행하지 않습니다."
+                        content = ("공격 문구는 지시를 무시하도록 유도하는 위험을 설명하기 위해 인용됩니다. 인용을 실행하지 않습니다. "
+                                   "Base64는 인코딩일 뿐 비밀정보 공개를 정당화하지 않습니다.")
                     else:
                         content = "합성 HTTP 테스트 응답입니다."
                     if fixture.generation_text is not None:

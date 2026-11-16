@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import json
+import http.client
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
+from app.repository import RunTraceStore
 
 
 class ApiTests(unittest.TestCase):
@@ -149,6 +152,93 @@ class ApiTests(unittest.TestCase):
         )
         self.assertIn("CANARY_REQUEST", raw_log["input"]["user_input"])
         self.assertIn("CANARY_DOCUMENT", raw_log["provider_output"])
+
+
+    def test_run_id_in_file_must_match_requested_artifact(self):
+        trace = self.client.post("/api/v1/runs", json=self.request_body()).json()["trace"]
+        path = self.settings.runs_dir / "run-swapped.trace.json"
+        path.write_text(json.dumps(trace), encoding="utf-8")
+        response = self.client.get("/api/v1/runs/run-swapped")
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json()["detail"]["code"], "INVALID_TRACE")
+
+    def test_invalid_run_paths_are_rejected_before_file_access(self):
+        for run_id in ("..%5Coutside", "run-test%0A", "x"):
+            with self.subTest(run_id=run_id):
+                response = self.client.get("/api/v1/runs/" + run_id)
+                self.assertEqual(response.status_code, 422)
+
+    def test_private_raw_filename_is_rejected_before_reading_trace_or_private_file(self):
+        trace = self.client.post("/api/v1/runs", json=self.request_body()).json()["trace"]
+        path = self.settings.runs_dir / f"{trace['run_id']}.raw.json"
+        original = path.read_bytes()
+        with patch("app.service.RunService.get_trace", side_effect=AssertionError("Invalid ID reached storage")):
+            response = self.client.get(f"/api/v1/runs/{trace['run_id']}.raw.json")
+        self.assertEqual(response.status_code, 422)
+        self.assertNotIn("provider_output", response.text)
+        self.assertNotIn("user_input", response.text)
+        self.assertEqual(path.read_bytes(), original)
+
+    def test_corrupt_trace_returns_controlled_errors_on_reads_and_reviews(self):
+        result = self.client.post("/api/v1/runs", json=self.request_body()).json()
+        run_id = result["run_id"]
+        path = self.settings.runs_dir / f"{run_id}.trace.json"
+        path.write_bytes(b"\xff")
+        evaluation = dict(result["trace"]["evaluation"], reviewer="test", reason="review")
+        for method, url, body in (
+            ("get", f"/api/v1/runs/{run_id}", None),
+            ("put", f"/api/v1/runs/{run_id}/evaluation", evaluation),
+            ("put", f"/api/v1/runs/{run_id}/detector-gold", {
+                "stage": "input", "gold_label": "benign", "gold_version": "test", "reviewer": "test", "reason": "review"}),
+            ("post", "/api/v1/detector-report", {"run_ids": [run_id]}),
+        ):
+            with self.subTest(method=method, url=url):
+                kwargs = {"json": body} if body is not None else {}
+                response = getattr(self.client, method)(url, **kwargs)
+                self.assertEqual(response.status_code, 500)
+                self.assertEqual(response.json()["detail"]["code"], "INVALID_TRACE")
+        self.assertEqual(path.read_bytes(), b"\xff")
+
+    @patch("app.providers.MODEL_HTTP.open")
+    def test_truncated_provider_response_persists_retrievable_failed_trace(self, mocked_urlopen):
+        from dataclasses import replace
+        from unittest.mock import MagicMock
+        response = MagicMock()
+        response.__enter__.return_value = response
+        response.status = 200
+        response.read.side_effect = http.client.IncompleteRead(b"partial", 20)
+        mocked_urlopen.return_value = response
+        settings = replace(self.settings, model_provider="openai_compatible", model_id="test-model",
+                           model_base_url="https://model.example/v1")
+        client = TestClient(create_app(settings))
+        result = client.post("/api/v1/runs", json=self.request_body())
+        self.assertEqual(result.status_code, 201)  # A failed run artifact was created.
+        created = result.json()
+        self.assertEqual(created["trace"]["error"]["code"], "MODEL_PROVIDER_ERROR")
+        trace = client.get("/api/v1/runs/" + created["run_id"]).json()
+        self.assertEqual(trace["status"], "failed")
+        self.assertEqual(trace["metrics"]["model_call_count"], 1)
+        self.assertIsNone(trace["metrics"]["estimated_cost_usd"])
+        self.assertEqual(mocked_urlopen.call_count, 1)
+
+    def test_independent_app_cannot_overwrite_a_review_in_progress_and_can_retry(self):
+        trace = self.client.post("/api/v1/runs", json=self.request_body()).json()["trace"]
+        run_id = trace["run_id"]
+        other = TestClient(create_app(self.settings))
+        path = self.settings.runs_dir / f"{run_id}.trace.json"
+        before = path.read_bytes()
+        update = {**trace["evaluation"], "reviewer": "second-worker", "reason": "independent review"}
+        url = f"/api/v1/runs/{run_id}/evaluation"
+        with RunTraceStore(self.settings.runs_dir).review_lock(run_id):
+            result = other.put(url, json=update)
+            self.assertEqual(result.status_code, 409, result.text)
+            self.assertEqual(result.json(), {"detail": {"code": "CONCURRENT_WRITE"}})
+            self.assertEqual(other.get(f"/api/v1/runs/{run_id}").status_code, 200)
+        self.assertEqual(path.read_bytes(), before)
+        self.assertFalse((self.settings.runs_dir / f"{run_id}.evaluation.json").exists())
+        self.assertEqual(other.put(url, json=update).status_code, 200)
+        self.assertEqual(self.client.get(f"/api/v1/runs/{run_id}").json()["evaluation"]["reviewer"],
+                         "second-worker")
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ sys.path.append(str(ROOT))
 from backend.testing.fixture_model import FixtureModelServer
 from app.config import Settings
 from app.main import create_app
+from app.repository import RunTraceStore
 
 
 class DetectorSecurityTests(unittest.TestCase):
@@ -225,6 +226,27 @@ class DetectorSecurityTests(unittest.TestCase):
         self.assertEqual([item["gold_label"] for item in got["detector_evaluation"]], ["benign", "malicious"])
         history = json.loads((self.folder / f"{trace['run_id']}.detector-gold.json").read_text(encoding="utf-8"))
         self.assertEqual(len(history), 2)
+
+    def test_independent_app_gold_conflicts_do_not_overwrite_output_evaluation(self):
+        trace = self.run_case("b006", kind="full_pipeline")
+        run_id = trace["run_id"]
+        other = TestClient(create_app(self.settings))
+        update = {"stage": "input", "gold_label": "benign", "gold_version": "fixture-v1",
+                  "reviewer": "independent-worker", "reason": "controlled review"}
+        url = f"/api/v1/runs/{run_id}/detector-gold"
+        with RunTraceStore(self.folder).review_lock(run_id):
+            response = other.put(url, json=update)
+            self.assertEqual(response.status_code, 409, response.text)
+            self.assertFalse((self.folder / f"{run_id}.detector-gold.json").exists())
+        evaluation = {**trace["evaluation"], "reviewer": "output-reviewer", "reason": "output review"}
+        self.assertEqual(self.client.put(f"/api/v1/runs/{run_id}/evaluation", json=evaluation).status_code, 200)
+        self.assertEqual(other.put(url, json=update).status_code, 200)
+        result = self.client.get(f"/api/v1/runs/{run_id}").json()
+        self.assertEqual(result["evaluation"]["reviewer"], "output-reviewer")
+        self.assertEqual(result["detector_evaluation"][0]["gold_label"], "benign")
+        evaluation["reason"] = "second output review"
+        self.assertEqual(other.put(f"/api/v1/runs/{run_id}/evaluation", json=evaluation).status_code, 200)
+        self.assertEqual(self.client.get(f"/api/v1/runs/{run_id}").json()["detector_evaluation"][0]["gold_label"], "benign")
 
 
 if __name__ == "__main__":

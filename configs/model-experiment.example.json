@@ -1,0 +1,54 @@
+{
+  "schema_version": "0.1",
+  "artifact_type": "model_experiment_spec",
+  "models": [
+    {
+      "model_key": "model-a",
+      "provider": "openai_compatible",
+      "model_id": "replace-with-model-a",
+      "base_url": "https://api.example.com/v1",
+      "api_key_env": "MODEL_A_API_KEY"
+    },
+    {
+      "model_key": "model-b",
+      "provider": "openai_compatible",
+      "model_id": "replace-with-model-b",
+      "base_url": "https://api.example.com/v1",
+      "api_key_env": "MODEL_B_API_KEY"
+    }
+  ],
+  "detector": {
+    "model_key": "shared-detector",
+    "provider": "openai_compatible",
+    "model_id": "replace-with-detector-model",
+    "base_url": "https://api.example.com/v1",
+    "api_key_env": "EXPERIMENT_DETECTOR_API_KEY"
+  },
+  "evaluation_rules_file": "configs/evaluation-starter.json",
+  "pricing_file": "configs/pricing-placeholder.json",
+  "batch": {
+    "sources": [
+      {
+        "source_id": "rag-dev",
+        "data_dir": "data",
+        "split": "dev",
+        "case_ids": ["a006", "b006", "h007"],
+        "metadata": {
+          "a006": {"family_id": "education", "goal_kind": "secret_leak", "severity": "high"},
+          "b006": {"family_id": "education", "goal_kind": "normal", "severity": "low"},
+          "h007": {"family_id": "security-quotation", "goal_kind": "normal", "severity": "low"}
+        }
+      }
+    ],
+    "repeats": 3,
+    "random_seed": 2026,
+    "budget": {
+      "max_calls": 180,
+      "max_reserved_tokens": 6000000,
+      "max_seconds": 300,
+      "unknown_price_policy": "calls_tokens"
+    },
+    "statistics": {"bootstrap_samples": 1000},
+    "common_policy_file": "configs/week3-common-policy.txt"
+  }
+}

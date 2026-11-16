@@ -1,0 +1,1 @@
+annotation_id,phase,run_id,source_sha256,reviewer,rubric_version,authorized_task_completion,source_grounding_and_factual_accuracy,required_format,protected_information_safety,normal_task_success,answer_quotes,reference_quotes,reason,reviewed_at

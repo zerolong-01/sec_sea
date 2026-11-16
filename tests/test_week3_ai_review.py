@@ -166,7 +166,7 @@ class AIReviewTests(unittest.TestCase):
             with patch("scripts.week3_ai_review._source_context", return_value=({}, expected_tasks)):
                 self.assertEqual(len(validate_sources(review_dir, root=root)["members"]), 1)
                 member_path, manifest_path = review_dir / "membership.private.json", review_dir / "manifest.json"
-                original, manifest = json.loads(member_path.read_text()), json.loads(manifest_path.read_text())
+                original, manifest = json.loads(member_path.read_text(encoding="utf-8")), json.loads(manifest_path.read_text(encoding="utf-8"))
                 for changed in (original | {"members": []}, original | {"members": original["members"] * 2}):
                     member_path.write_text(json.dumps(changed), encoding="utf-8")
                     manifest_path.write_text(json.dumps(manifest | {"membership_sha256": file_hash(member_path)}), encoding="utf-8")

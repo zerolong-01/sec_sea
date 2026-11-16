@@ -1,0 +1,48 @@
+name: Judge calibration against published human gold
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      MVP_LOAD_DOTENV: "0"
+      MODEL_PROVIDER: demo
+      JUDGE_PROVIDER: openai_compatible
+      JUDGE_BASE_URL: https://api.openai.com/v1
+      JUDGE_MODEL_ID: gpt-4.1-mini-2025-04-14
+      JUDGE_API_KEY: ${{ secrets.JUDGE_API_KEY }}
+      PRICING_FILE: configs/pricing-openai-2026-10-20.json
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install locked dependencies
+        run: python -m pip install --require-hashes -r requirements.lock
+      - name: Validate published labels and disjoint selection
+        run: python -m scripts.judge_calibration prepare --output runs/judge-calibration
+      - name: Require an explicitly configured judge credential
+        run: python -c "import os; assert os.getenv('JUDGE_API_KEY'), 'Configure repository secret JUDGE_API_KEY'"
+      - name: Explicit paid judge run within frozen call, token and estimated USD caps
+        run: python -m scripts.judge_calibration run --execute --output runs/judge-calibration
+      - name: Check the adopted external-reference accuracy gates
+        run: python -m scripts.judge_calibration check --output runs/judge-calibration
+      - name: Preserve report and source-bound evidence even if the quality gate fails
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: judge-calibration
+          path: |
+            runs/judge-calibration/plan.json
+            runs/judge-calibration/human-reference-labels.json
+            runs/judge-calibration/report.json
+            runs/judge-calibration/report.csv
+            runs/judge-calibration/ledger.json

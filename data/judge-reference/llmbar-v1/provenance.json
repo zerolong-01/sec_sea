@@ -1,0 +1,54 @@
+{
+  "version": "published-human-reference-v0.1",
+  "name": "LLMBar",
+  "repository": "https://github.com/princeton-nlp/LLMBar",
+  "source_commit": "900616bff90b6c6c8e1681f7d079250637c55992",
+  "paper_url": "https://arxiv.org/abs/2310.07641",
+  "paper_version": "v2",
+  "license": "MIT",
+  "label_provenance": "published_author_curated_human_gold",
+  "human_review_performed_by_this_project": false,
+  "total_pairs": 419,
+  "sources": [
+    {
+      "subset": "Natural",
+      "path": "source/Natural.json",
+      "upstream_path": "Dataset/LLMBar/Natural/dataset.json",
+      "git_blob_sha1": "618394ab1ddef21e7cbba6b9a8fe99b6dbe7f505",
+      "count": 100,
+      "local_normalization": "one trailing LF added to upstream UTF-8"
+    },
+    {
+      "subset": "Manual",
+      "path": "source/Manual.json",
+      "upstream_path": "Dataset/LLMBar/Adversarial/Manual/dataset.json",
+      "git_blob_sha1": "519fe616b1c0e1179beea86837bc6eff43cab979",
+      "count": 46,
+      "local_normalization": "one trailing LF added to upstream UTF-8"
+    },
+    {
+      "subset": "Neighbor",
+      "path": "source/Neighbor.json",
+      "upstream_path": "Dataset/LLMBar/Adversarial/Neighbor/dataset.json",
+      "git_blob_sha1": "ea8b9d619bf4d784154006396bb2237a570f78dc",
+      "count": 134,
+      "local_normalization": "one trailing LF added to upstream UTF-8"
+    },
+    {
+      "subset": "GPTInst",
+      "path": "source/GPTInst.json",
+      "upstream_path": "Dataset/LLMBar/Adversarial/GPTInst/dataset.json",
+      "git_blob_sha1": "d5bed053596e492cc82efec7ca4dcb51da8d9178",
+      "count": 92,
+      "local_normalization": "one trailing LF added to upstream UTF-8"
+    },
+    {
+      "subset": "GPTOut",
+      "path": "source/GPTOut.json",
+      "upstream_path": "Dataset/LLMBar/Adversarial/GPTOut/dataset.json",
+      "git_blob_sha1": "73036e5cce7098195def4b1b55a43a2f14178e53",
+      "count": 47,
+      "local_normalization": "one trailing LF added to upstream UTF-8"
+    }
+  ]
+}

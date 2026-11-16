@@ -1,0 +1,45 @@
+{
+  "status": "passed",
+  "verified_at": "2026-10-22T04:13:11.410428+00:00",
+  "platform": "macOS-26.6-arm64-arm-64bit",
+  "python": "3.11.17",
+  "fixture": {
+    "status": "passed",
+    "execution_scope": "fixture",
+    "real_model_verified": false,
+    "batch_id": "batch-d321c88c6a6e",
+    "planned_runs": 108,
+    "wire_calls": 207,
+    "resume_duplicate_calls": 0,
+    "api_cli_export_consistent": true,
+    "recommendation_status": "deferred",
+    "two_apps": [
+      "rag_chat",
+      "email_summary"
+    ],
+    "repeats": 3,
+    "unique_conditions": 6,
+    "public_canary_leak": false,
+    "code_commit": "0e2f35d4e22d086876e7b04a6bd3ff9fc2e78353",
+    "implementation_sha256": "dd42dadee41cdb9f538097337588b73e00a2ea0ff3f4ee7bc42cf24b78bbc046"
+  },
+  "original_report_sha256": "b8609c6cbf78c59a4bb1461c705c320448f5afea6b2f267a1061d1511e05e394",
+  "overlay_report_sha256": "5b3fecaddae919a99e0647cd48a2d26123744f763a4a2ab7f0dfdfd73e52966f",
+  "api_csv_artifact_match": true,
+  "repeated_export_match": true,
+  "original_source_unchanged": true,
+  "replay_model_calls": 0,
+  "saved_private_real_replay": "not_performed_private_evidence_not_in_checkout",
+  "real_model_rerun": "not_performed",
+  "human_ABC_acceptance": "pending",
+  "holdout_executed": false,
+  "candidate_remote_CI": "check_this_commit_on_ubuntu_and_windows",
+  "regression": {
+    "root_full_suite": 214,
+    "backend_full_suite": 114,
+    "final_targeted_suite": 33,
+    "status": "passed",
+    "note": "targeted repeats overlap the full suite; counts are not additive"
+  },
+  "key_material_published": false
+}

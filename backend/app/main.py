@@ -1,13 +1,25 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, status, Response
+from typing import Annotated
+
+from fastapi import FastAPI, HTTPException, Path, status, Request, Response
+from fastapi.responses import JSONResponse
 
 from .batch import BatchRunner
 from .batch_analysis import aggregate, report_csv
 from .batch_models import BatchFilters, BatchReport, BatchReview, BatchSummary
+from .research_models import ResearchComparisonReport, ResearchFilters, ResearchReport
+from .research_comparison import comparison_csv, original_attack_comparison
+from .research_reports import available_sources, research_report, research_csv
 
 from .config import Settings
-from .models import (DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
+from .storage import ConcurrentWriterError
+from .task_evaluation import EvaluationConflict, EvaluationRejected, TaskEvaluationService, task_evaluation_csv
+from .task_evaluation_models import (TaskEvaluationReport, TaskEvaluationRequest, TaskReviewRequest)
+from .experiment_models import EXPERIMENT_ID_PATTERN, ExperimentReport, ExperimentSummary
+from .experiment_reports import experiment_csv, experiment_report
+from .experiments import ExperimentRunner
+from .models import (RUN_ID_PATTERN, DetectorGoldUpdate, DetectorReport, DetectorReportRequest,
                      EvaluationUpdate, RunRequest, RunResponse, RunTrace)
 from .repository import (
     ArtifactNotFound,
@@ -22,7 +34,10 @@ from .service import (
     UnsupportedDefenseMode,
     build_provider,
 )
-from .shared_variables import BATCH_API_PATHS, KEYS, SchemaVersion
+from .shared_variables import BATCH_API_PATHS, RESEARCH_API_PATHS, TASK_EVALUATION_API_PATHS, KEYS, SchemaVersion
+
+RunId = Annotated[str, Path(pattern=RUN_ID_PATTERN)]
+ExperimentId = Annotated[str, Path(pattern=EXPERIMENT_ID_PATTERN)]
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -30,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     repository = ExperimentRepository(settings.data_dir)
     trace_store = RunTraceStore(settings.runs_dir)
     service = RunService(settings, repository, trace_store, build_provider(settings))
+    task_evaluations = TaskEvaluationService(settings, service, trace_store)
 
     app = FastAPI(
         title="LLM Defense Trade-off Lab API",
@@ -40,10 +56,138 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Batch execution stays in the local CLI. These read/review endpoints never
     # cause a paid model invocation, including report/export refreshes.
     batch_runner = BatchRunner(settings)
+    experiment_runner = ExperimentRunner(settings.project_root, settings.runs_dir)
+
+    @app.exception_handler(ConcurrentWriterError)
+    async def concurrent_writer(_request, _exc):
+        return JSONResponse(status_code=409, content={"detail": {"code": "CONCURRENT_WRITE"}})
+
+    @app.exception_handler(ArtifactValidationError)
+    async def invalid_trace(_request, _exc):
+        # Never include raw validation input, private evidence or file contents
+        # in an error response. The same rule applies to review/report routes.
+        return JSONResponse(status_code=500, content={"detail": {"code": "INVALID_TRACE"}})
+
+    def task_evaluation_action(action):
+        try:
+            return action()
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "RUN_OR_EVIDENCE_NOT_FOUND"}) from exc
+        except ConcurrentWriterError:
+            raise
+        except ArtifactValidationError:
+            raise
+        except EvaluationConflict as exc:
+            raise HTTPException(409, detail={"code": str(exc)}) from exc
+        except EvaluationRejected as exc:
+            raise HTTPException(422, detail={"code": str(exc)}) from exc
+        except (ValueError, KeyError, TypeError, OSError) as exc:
+            # Never echo validation input, provider payloads or private evidence.
+            raise HTTPException(422, detail={"code": "INVALID_TASK_EVALUATION"}) from exc
+
+    @app.get(TASK_EVALUATION_API_PATHS["RUN"], response_model=TaskEvaluationReport)
+    def get_task_evaluations(run_id: RunId):
+        return task_evaluation_action(lambda: task_evaluations.report(run_id))
+
+    @app.post(TASK_EVALUATION_API_PATHS["RUN"], response_model=TaskEvaluationReport)
+    def execute_task_evaluation(run_id: RunId, request: TaskEvaluationRequest):
+        return task_evaluation_action(lambda: task_evaluations.execute(run_id, request))
+
+    @app.put(TASK_EVALUATION_API_PATHS["REVIEW"], response_model=TaskEvaluationReport)
+    def review_task_evaluation(run_id: RunId, evaluation_id: RunId, request: TaskReviewRequest):
+        return task_evaluation_action(lambda: task_evaluations.review(run_id, evaluation_id, request))
+
+    @app.get(TASK_EVALUATION_API_PATHS["CSV"])
+    def export_task_evaluations(run_id: RunId):
+        report = get_task_evaluations(run_id)
+        return Response(task_evaluation_csv(report), media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="normal-task-evaluations.csv"',
+                     "X-Report-SHA256": report.report_sha256,
+                     "X-Report-Version": report.report_version,
+                     "X-Evaluation-Source": report.evaluation_source})
+
+    def read_experiment(action):
+        try:
+            return action()
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "MODEL_EXPERIMENT_NOT_FOUND"}) from exc
+        except (RepositoryError, ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_MODEL_EXPERIMENT"}) from exc
+
+    @app.get("/api/v1/model-experiments", response_model=list[ExperimentSummary])
+    def list_model_experiments():
+        return read_experiment(experiment_runner.list)
+
+    @app.get("/api/v1/model-experiments/{experiment_id}", response_model=ExperimentSummary)
+    def get_model_experiment(experiment_id: ExperimentId):
+        return read_experiment(lambda: experiment_runner.summary(experiment_id))
+
+    @app.post("/api/v1/model-experiments/{experiment_id}/report", response_model=ExperimentReport)
+    def get_model_experiment_report(experiment_id: ExperimentId, filters: BatchFilters):
+        return read_experiment(lambda: experiment_report(settings.project_root, settings.runs_dir,
+                                                        experiment_id, filters))
+
+    @app.post("/api/v1/model-experiments/{experiment_id}/export.csv")
+    def get_model_experiment_csv(experiment_id: ExperimentId, filters: BatchFilters):
+        report = get_model_experiment_report(experiment_id, filters)
+        return Response(experiment_csv(report), media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="model-comparison.csv"',
+                     "X-Report-SHA256": report.report_sha256, "X-Report-Version": report.report_version})
+
+    @app.get(RESEARCH_API_PATHS["SOURCES"])
+    def evaluation_sources(batch_id: str):
+        try:
+            result = available_sources(batch_id)
+            if not result["research"]["available"]:
+                batch_runner.store.get(batch_id)
+            return result
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
+        except (ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_RESEARCH_EVIDENCE"}) from exc
+
+    @app.get(RESEARCH_API_PATHS["ORIGINAL_ATTACKS"], response_model=ResearchComparisonReport)
+    def get_original_attack_comparison(request: Request):
+        if request.query_params:
+            raise HTTPException(422, detail={"code": "UNSUPPORTED_COMPARISON_FILTER"})
+        try:
+            return original_attack_comparison()
+        except (ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_RESEARCH_EVIDENCE"}) from exc
+
+    @app.get(RESEARCH_API_PATHS["ORIGINAL_ATTACKS_CSV"])
+    def get_original_attack_comparison_csv(request: Request):
+        report = get_original_attack_comparison(request)
+        return Response(comparison_csv(report), media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": 'attachment; filename="week4-original-attacks.csv"',
+                                 "X-Report-SHA256": report.report_sha256,
+                                 "X-Report-Version": report.report_version,
+                                 "X-Evaluation-Source": report.evaluation_source})
+
+    @app.post(RESEARCH_API_PATHS["REPORT"], response_model=ResearchReport)
+    def get_research_report(batch_id: str, filters: ResearchFilters):
+        try:
+            return research_report(batch_id, filters)
+        except ArtifactNotFound as exc:
+            raise HTTPException(404, detail={"code": "RESEARCH_OVERLAY_NOT_FOUND"}) from exc
+        except (ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_RESEARCH_EVIDENCE"}) from exc
+
+    @app.post(RESEARCH_API_PATHS["CSV"])
+    def get_research_csv(batch_id: str, filters: ResearchFilters):
+        report = get_research_report(batch_id, filters)
+        return Response(research_csv(report), media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": 'attachment; filename="research-metrics.csv"',
+                                 "X-Report-SHA256": report.report_sha256,
+                                 "X-Report-Version": report.report_version,
+                                 "X-Evaluation-Source": report.evaluation_source})
 
     @app.get(BATCH_API_PATHS["LIST"], response_model=list[BatchSummary])
     def list_batches():
-        return batch_runner.store.list()
+        try:
+            return batch_runner.store.list()
+        except (ValueError, OSError, KeyError) as exc:
+            raise HTTPException(422, detail={"code": "INVALID_BATCH_LIST"}) from exc
 
     @app.get(BATCH_API_PATHS["GET"], response_model=BatchSummary)
     def get_batch(batch_id: str):
@@ -51,7 +195,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return batch_runner.store.summary(batch_runner.store.get(batch_id))
         except ArtifactNotFound as exc:
             raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
-        except ValueError as exc:
+        except (ValueError, OSError, KeyError) as exc:
             raise HTTPException(422, detail={"code": "INVALID_BATCH"}) from exc
 
     @app.post(BATCH_API_PATHS["REPORT"], response_model=BatchReport)
@@ -60,20 +204,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return aggregate(settings.runs_dir, batch_id, filters)
         except ArtifactNotFound as exc:
             raise HTTPException(404, detail={"code": "BATCH_NOT_FOUND"}) from exc
-        except (ValueError, OSError) as exc:
+        except (ValueError, OSError, ArtifactValidationError) as exc:
             raise HTTPException(422, detail={"code": "INVALID_BATCH_REPORT"}) from exc
 
     @app.post(BATCH_API_PATHS["CSV"])
     def batch_csv(batch_id: str, filters: BatchFilters):
-        return Response(report_csv(batch_report(batch_id, filters)), media_type="text/csv; charset=utf-8",
-                        headers={"Content-Disposition": 'attachment; filename="batch-metrics.csv"'})
+        report = batch_report(batch_id, filters)
+        return Response(report_csv(report), media_type="text/csv; charset=utf-8",
+                        headers={"Content-Disposition": 'attachment; filename="batch-metrics.csv"',
+                                 "X-Report-SHA256": report.provenance["report_sha256"],
+                                 "X-Report-Version": report.report_version,
+                                 "X-Evaluation-Source": report.provenance["evaluation_source"]})
 
     @app.put(BATCH_API_PATHS["REVIEW"])
-    def batch_review(batch_id: str, run_id: str, review: BatchReview):
+    def batch_review(batch_id: str, run_id: RunId, review: BatchReview):
         try:
             return batch_runner.review(batch_id, run_id, review)
         except ArtifactNotFound as exc:
             raise HTTPException(404, detail={"code": "BATCH_OR_RUN_NOT_FOUND"}) from exc
+        except ConcurrentWriterError:
+            raise
         except ValueError as exc:
             raise HTTPException(422, detail={"code": "INVALID_BATCH_REVIEW"}) from exc
 
@@ -86,11 +236,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         }
 
     @app.put("/api/v1/runs/{run_id}/detector-gold", response_model=RunTrace)
-    def put_detector_gold(run_id: str, update: DetectorGoldUpdate) -> RunTrace:
+    def put_detector_gold(run_id: RunId, update: DetectorGoldUpdate) -> RunTrace:
         try:
             return service.update_detector_gold(run_id, update)
         except ArtifactNotFound as exc:
             raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
+        except ConcurrentWriterError:
+            raise
         except ValueError as exc:
             raise HTTPException(status_code=422, detail={"code": "INVALID_DETECTOR_GOLD", "message": str(exc)}) from exc
 
@@ -102,11 +254,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
 
     @app.put("/api/v1/runs/{run_id}/evaluation", response_model=RunTrace)
-    def put_evaluation(run_id: str, update: EvaluationUpdate) -> RunTrace:
+    def put_evaluation(run_id: RunId, update: EvaluationUpdate) -> RunTrace:
         try:
             return service.update_evaluation(run_id, update)
         except ArtifactNotFound as exc:
             raise HTTPException(status_code=404, detail={"code": "RUN_NOT_FOUND", "message": str(exc)}) from exc
+        except ConcurrentWriterError:
+            raise
         except ValueError as exc:
             raise HTTPException(status_code=422, detail={"code": "INVALID_EVALUATION", "message": str(exc)}) from exc
 
@@ -150,7 +304,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     @app.get("/api/v1/runs/{run_id}", response_model=RunTrace)
-    def get_run(run_id: str) -> RunTrace:
+    def get_run(run_id: RunId) -> RunTrace:
         try:
             return service.get_trace(run_id)
         except ArtifactNotFound as exc:

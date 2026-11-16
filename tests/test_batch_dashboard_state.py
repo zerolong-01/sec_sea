@@ -64,6 +64,9 @@ class SavedBatchServer:
         for batch_id in self.summaries:
             if method == "GET" and url.endswith(f"/api/v1/batches/{batch_id}"):
                 return Response(self.summaries[batch_id])
+            if method == "GET" and url.endswith(f"/api/v1/batches/{batch_id}/evaluation-sources"):  # #48
+                return Response({"batch_id": batch_id, "default": "original_saved_evaluation",
+                                 "research": {"available": False}})
             if method == "POST" and url.endswith(f"/api/v1/batches/{batch_id}/report"):
                 report = copy.deepcopy(self.reports[batch_id])
                 report["filters"] = json or {}

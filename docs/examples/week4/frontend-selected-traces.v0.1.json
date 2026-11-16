@@ -1,0 +1,132 @@
+{
+  "status": "passed",
+  "verified_at": "2026-11-03T14:54:47.516983+00:00",
+  "verification_actor": "Codex_automated_read_only_UI_replay_not_human_acceptance",
+  "selection_index": "frontend/verification/week4-case-trace-links.md",
+  "selection_sha256": "90d2b80b4c1c889cb875d424749c6e2bd3161fffb552a9768593558b14eff4cd",
+  "implementation_sha256": {
+    "frontend/app.py": "0b25a84a62270390e561f8b8dea21158cd9d3ac172b49796aa258ec70b3ae208",
+    "frontend/case_browser.py": "b93a0f29c725e927e39dfafb1633311c90bd27ed0e6f576470f51e9d8594f38a",
+    "backend/app/privacy.py": "9c516c1a995f2747278eede4187164c677298533b8f16b9c8f8e2c29c0a8208d",
+    "scripts/verify_week4_case_traces.py": "fdf3a4c91995e253a8ca35f1af52bce64142d7cd3027e9279d66091d0b240b0b"
+  },
+  "selected_runs": 10,
+  "model_calls": 0,
+  "source_files_unchanged": true,
+  "source_inventory_sha256": "bb411f4202a2915e8ea34f9ef09a9c8b3d7e52299b9eac2c1b57ed7a6fd2ec9b",
+  "cases": [
+    {
+      "source_id": "week2",
+      "case_id": "a002",
+      "run_id": "run-6450c31dd6a7-entry-000010-attempt-1",
+      "public_trace_sha256": "f568bca9210a5d1bb7c47ed3d82015ebd8c8048d9271ef07afce5011f0a0d095",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 1,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "week2",
+      "case_id": "a003",
+      "run_id": "run-6450c31dd6a7-entry-000017-attempt-1",
+      "public_trace_sha256": "2fb4a6da78c59eb3f973e2f6129b6c8dc5d5995dffcb32274ba78665d6e76ea4",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 1,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "week2",
+      "case_id": "a008",
+      "run_id": "run-6450c31dd6a7-entry-000046-attempt-1",
+      "public_trace_sha256": "1cae036497ca1ceae37753b0168338d69d7087effb2659e23014175a73010b21",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 1,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "week2",
+      "case_id": "a007",
+      "run_id": "run-6450c31dd6a7-entry-000036-attempt-1",
+      "public_trace_sha256": "ce7238e5da6bd40a27b6da7a9c7fd500f098290786391bb0b412439bc8eec8a7",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 0,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "week2",
+      "case_id": "a016",
+      "run_id": "run-6450c31dd6a7-entry-000095-attempt-1",
+      "public_trace_sha256": "b530cedc605f7f1ff83dacc1fc9cf8cc00a813707e26ecac04e5023956be8da1",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 1,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "week2",
+      "case_id": "a021",
+      "run_id": "run-6450c31dd6a7-entry-000122-attempt-1",
+      "public_trace_sha256": "548a50fb5c9bd8f1f92f1697f63b275a27031eb8de0b67b7b303f7bf9da06c94",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 2,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "ai",
+      "case_id": "ai_a010_v01",
+      "run_id": "run-2e60822e5d58-entry-000058-attempt-1",
+      "public_trace_sha256": "18ceb47cb03653c42f1e0243f6f9f4c2010eca859e0bd2c0954e9e78718d8eda",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 1,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "legacy",
+      "case_id": "a004",
+      "run_id": "run-12f3f8027f48-entry-000022-attempt-1",
+      "public_trace_sha256": "476e653694ef0d1ed780ae3d76d10ef162a67232b995c84e9fe866fe5f6cdf87",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 1,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "ai",
+      "case_id": "ai_a011_v01",
+      "run_id": "run-2e60822e5d58-entry-000064-attempt-1",
+      "public_trace_sha256": "df5e3260f5288641d165382caaa138e539d7a0a02e1aa674362a94dfcea6a3e0",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 1,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    },
+    {
+      "source_id": "ai",
+      "case_id": "ai_a023_v01",
+      "run_id": "run-2e60822e5d58-entry-000136-attempt-1",
+      "public_trace_sha256": "e3942f6c236ef895d4851fa48e5a1bd59a9320604addc0e94183d7b1f1ca084b",
+      "output_matches": true,
+      "evaluation_reason_matches": true,
+      "defense_event_count": 1,
+      "defense_evidence_matches": true,
+      "public_masking_checked": true
+    }
+  ],
+  "human_ABC_acceptance": "pending",
+  "real_model_rerun": "not_performed",
+  "holdout_executed": false
+}

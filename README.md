@@ -2,6 +2,25 @@
 
 > 프롬프트 인젝션 방어의 효과와 부작용을 한 화면에서 비교하는 LLM 보안 백테스팅 플랫폼
 
+5주차 백엔드·화면 연결: [정상 태스크 자동 판정·재평가 이력·비용 계측](docs/week5-backend.md) ·
+[검증과 A/C 인계](docs/week5-backend-acceptance.md).
+`python -m scripts.verify_week5 --output runs/week5-handoff`로 외부 모델 없이 검증합니다.
+화면 버튼부터 저장·재전송·수동 수정·CSV까지는 `python -m scripts.verify_week5_ui --output runs/week5-ui-handoff`로 검증합니다.
+
+[공개 사람 기준 세트와 judge 검산 자동화](docs/judge-calibration.md)는 LLMBar의 419개 검수 응답 쌍을
+출처·해시로 고정하고, 80쌍/160응답에 실제 서비스 judge를 대조합니다. 정확도·오판·보류·비용과
+기준 미달을 자동 기록하며, [실제 실행 결과](docs/judge-calibration-acceptance.md)를 별도로 제공합니다.
+우리 한국어 RAG·이메일의 독립 사람 평가에는 [연구 근거를 정리한 검산 지침과 작업지](docs/judge-human-review-protocol.md)를 사용합니다.
+
+4주차 백엔드: [고정 의존성 설치·재현 패키지·평가 버전별 API](docs/week4-backend.md) ·
+[검증/남은 인계](docs/week4-backend-acceptance.md).
+연구 CSV v0.2는 출력 지표·target gold·빈 결과 식별 정보를 보존하며, 전달 패키지는
+`python -m scripts.week4_package verify PATH`로 키 없이 검사할 수 있습니다.
+
+[여러 모델 일괄 실험](docs/multi-model-experiments.md)은 같은 데이터·방어 조건을 여러 모델에 실행하고
+보안성·정상 기능·비용을 비교합니다. `python -m scripts.verify_model_experiment --output runs/model-comparison-demo`로
+실제 API 키 없이 전체 흐름을 검증할 수 있습니다.
+
 2026년도 2학기 캡스톤디자인(산학형) 프로젝트입니다.
 
 ## MVP 바로 실행하기
@@ -399,3 +418,19 @@ holdout은 보존했으며, AI 검토를 사람의 독립 검토로 표시하지
 실제 사람 검토 기록이 별도로 없다는 사용자 답변에 따라 [새 AI 두 검토·제3 조정과 dev 기술 인수](docs/week3-ai-dev-acceptance.md)도 완료했습니다.
 출력648건·탐지대상621건을 고유283종에 연결해 두 AI가 각각 검토하고 불일치65종을 모두 조정했습니다.
 [판정·소속·근거·해시](docs/examples/week3-completion/ai-dev-review.v0.1.json)는 별도 버전이며, 사람의 독립 검토·실제 팀 서명이나 최종 안전 구성 추천으로 표시하지 않습니다.
+
+### 전체 파이프라인 연결 확인 (2026-11-04)
+
+최신 dev에서는 실행·저장·집계·연구 판정·화면·다운로드를 연결합니다.
+왼쪽 메뉴에서 **배치 대시보드**(원래 평가), **연구 판정 보기**(별도 AI 판정),
+**보고서 원본 공격 비교**(최종 보고서 4.2절), **모델 비교**를 구분해 볼 수 있습니다.
+각 결과의 실행 번호에서 입력·출력·방어 로그·원래 판정 근거로 이동합니다.
+
+```text
+python -m scripts.verify_week4 --output runs/week4-current
+python -m scripts.verify_model_experiment --output runs/model-current
+```
+
+첫 명령은 두 앱의 배치·재개·저장 재생과 공개 보고서 UI/CSV를, 두 번째는 두 로컬 모델의
+실행·동일 조건 비교·모델별 UI/CSV/trace를 검증합니다. 실제 모델 성능 측정과 구분합니다.
+[연결 점검·보완·남은 작업](docs/pipeline-integration-2026-11-04.md)에 검증 범위와 재현 명령을 정리했습니다.

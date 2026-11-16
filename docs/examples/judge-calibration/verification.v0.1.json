@@ -1,0 +1,197 @@
+{
+  "version": "published-human-reference-verification-v0.1",
+  "automation_status": "passed",
+  "actual_quality_gate": "failed",
+  "verified_at": "2026-11-09T06:52:24.837070+00:00",
+  "environment": {
+    "platform": "macOS-26.6-arm64-arm-64bit",
+    "python": "3.11.18"
+  },
+  "reference_commit": "900616bff90b6c6c8e1681f7d079250637c55992",
+  "reference_sha256": "c6b9cd3510885d9b02e2719679a7c58ace846b763e3febc508fc9a4fc636d6a6",
+  "published_pairs": 419,
+  "development_pairs": 20,
+  "validation_pairs": 80,
+  "predictions": 160,
+  "regression_tests": {
+    "pipeline": {
+      "count": 310,
+      "seconds": 110.243,
+      "status": "passed"
+    },
+    "backend": {
+      "count": 183,
+      "seconds": 47.61,
+      "status": "passed"
+    }
+  },
+  "total_regression_tests": 493,
+  "fixture_automation": {
+    "status": "passed",
+    "scope": "automation_fixture_only",
+    "published_human_pairs": 80,
+    "predictions": 160,
+    "always_success_judge_accuracy": 0.5,
+    "false_success_rate": 1,
+    "bad_judge_correctly_rejected": true,
+    "source_gold_pinned": true,
+    "resume_duplicate_calls": 0,
+    "read_model_calls": 0,
+    "paid_model_calls": 0,
+    "actual_judge_accuracy_verified": false
+  },
+  "ui_regression": {
+    "status": "passed",
+    "verified_at": "2026-11-09T06:41:48.269436+00:00",
+    "execution_scope": "fixture",
+    "easy_four_modes": true,
+    "main_comparison_and_detail": true,
+    "api_ui_csv_match": true,
+    "criterion_and_reference_evidence": true,
+    "lost_response_retry_same_id": true,
+    "manual_review_flow": "synthetic_test_only",
+    "case_switch_hides_old_evaluations": true,
+    "csv_invalidated_after_review": true,
+    "original_trace_raw_unchanged": true,
+    "read_model_calls": 0,
+    "judge_calls": 5,
+    "human_acceptance": false,
+    "paid_model_calls": 0
+  },
+  "live_report_sha256": "8d0db3af9ec3682f80098ed74f30a23f302c2d44b5a0fe557d49a56f26cc9882",
+  "live_gate_exit_code": 2,
+  "observed_actual_quality": {
+    "count": 160,
+    "correct": 52,
+    "accuracy": 0.325,
+    "decisive_count": 76,
+    "decisive_accuracy": 0.6842105263157895,
+    "false_success_count": 9,
+    "failure_gold_count": 80,
+    "false_success_rate": 0.1125,
+    "review_return_rate": 0.51875,
+    "not_evaluated_count": 1,
+    "confusion_matrix": {
+      "success": {
+        "success": 21,
+        "failure": 15,
+        "review_needed": 43,
+        "not_evaluated": 1
+      },
+      "failure": {
+        "success": 9,
+        "failure": 31,
+        "review_needed": 40,
+        "not_evaluated": 0
+      }
+    },
+    "accuracy_ci95": [
+      0.25625,
+      0.39375
+    ],
+    "ci_method": "exact_instruction_group_bootstrap",
+    "distinct_instruction_groups": 80,
+    "strict_pair_accuracy": 0.1
+  },
+  "attempts": [
+    {
+      "run": "judge-calibration-live-20261109",
+      "prompt_version": "normal-task-judge-prompt-v0.2",
+      "calls": 31,
+      "predictions": 30,
+      "known_cost_usd": 0.04029519999999999,
+      "committed_usd": 0.055015199999999986,
+      "prediction_errors": 30
+    },
+    {
+      "run": "judge-calibration-live-v3-20261109",
+      "prompt_version": "normal-task-judge-prompt-v0.3",
+      "calls": 6,
+      "predictions": 6,
+      "known_cost_usd": 0.006686000000000001,
+      "committed_usd": 0.006686000000000001,
+      "prediction_errors": 3
+    },
+    {
+      "run": "judge-calibration-live-v4-20261109",
+      "prompt_version": "normal-task-judge-prompt-v0.4",
+      "calls": 160,
+      "predictions": 160,
+      "known_cost_usd": 0.1936936,
+      "committed_usd": 0.1936936,
+      "prediction_errors": 1
+    }
+  ],
+  "total_calls_including_aborted_attempts": 197,
+  "total_known_cost_usd": 0.24067479999999997,
+  "total_committed_usd": 0.2553948,
+  "effective_final_budget": {
+    "max_calls": 200,
+    "max_reserved_tokens": 8000000,
+    "max_seconds": 1800.0,
+    "max_usd": 0.9,
+    "unknown_price_policy": "stop",
+    "per_call_input_token_ceiling": 32000
+  },
+  "read_model_calls": 0,
+  "actual_duplicate_call_ids": 0,
+  "gold_prompt_leakage": false,
+  "new_project_human_review_performed": false,
+  "project_domain_human_validation": "pending",
+  "holdout_executed": false,
+  "remote_workflow_run": "not_performed",
+  "implementation_files": {
+    "backend/app/__init__.py": "a4cb499a7d0cb875785abcd03dd5b23a457c06f2dcafa1bba4ebc2c5b272c8fa",
+    "backend/app/accounting.py": "d98cc122e45bb1a45fdd558686764af50d99d11820abff6c7fac104e298fcae6",
+    "backend/app/batch.py": "0c7b06a13aa468a0a368d9cb0666855c9eecb4280239b132e4e620db2432d501",
+    "backend/app/batch_analysis.py": "d3ef7d46d0ec38d1346d11b6d08b4db13793a068515c456e330691a4147de710",
+    "backend/app/batch_budget.py": "1e71171709e5cc7cb1a1e36e1e68a3e90eceeaa443f4cb1e1bfc33dc4b52c3b1",
+    "backend/app/batch_models.py": "e60d2ec7ee6500761ae307f973dbe08ccd094d613b46bc63fd1e9670888c76ff",
+    "backend/app/config.py": "4e05ec207943ebccc0fd026c7fcdd7d391caafdaf159d38fcf83bcde2396e494",
+    "backend/app/defenses.py": "2670c49a6d55c6ed00b2ba9caf2b089b934d293539c549093462c542e72e6567",
+    "backend/app/detector_evaluation.py": "0c475d07138dda0b46187344462bab7a93695061aa8718e4cbbe7d7ef1f74b7b",
+    "backend/app/environment.py": "90225da227c29326f406a4f702e76826ae3f2d1fee192250d268f28c114f12eb",
+    "backend/app/evaluation.py": "a27f1655bf3e348e514ffb0d2dcdfa6361fc723763776909a5a27d30908afc64",
+    "backend/app/experiment_models.py": "2d74763dc811262a15bc7843e7368fc3c4c35e84d138de57c87419b3b7b6ab2a",
+    "backend/app/experiment_reports.py": "956738db6235274dfda15b0a89a230113c8f75f7a869f73fc5928a1f667cbd81",
+    "backend/app/experiments.py": "5a4c1b534b2a7f204dd58dcfd7c55a6f1de39373ff6384d9997db69a7e0a9233",
+    "backend/app/judge_reference.py": "afee64fdb554f9cc1b6cf26851100b2c119045e54632f531034cce654a388a05",
+    "backend/app/main.py": "326c6fc1b2923e0ef150907724131c89d74257d76ba9b8d5699219c76e0def48",
+    "backend/app/models.py": "9955b8321075e4957e5e6a4a59abe306b26834b6887678963dc5f301010f7536",
+    "backend/app/privacy.py": "215c4148f103b793eeb467bce42a5681fcb19e80199b60d0097c9522b6d4077c",
+    "backend/app/prompts.py": "680fc8c6f0e51216a34fc4f6104ebef2dce903ab787e51126db8e74994337b79",
+    "backend/app/providers.py": "e23526b1bcf526ddac37abbe109f052192ec8745773934da6553fbf5788e1a53",
+    "backend/app/repository.py": "a3a77c06eb9c9aed2938a4ead54dd01f4dfa35f6d64bc28bae83ff0272c31495",
+    "backend/app/research_comparison.py": "355e09dc974f93d5ef1af486ccdd80b5461df31c69ba94a24206b180aa14192a",
+    "backend/app/research_models.py": "99679d1ac5766048cead72ca63e5fb616b759dfcda053e2c4204d7acca5f3f04",
+    "backend/app/research_reports.py": "adf7e3a7f0151c480d6181647fb805a4715c5de9a4ea44eb0eb9b448a4997a2b",
+    "backend/app/retrieval.py": "a40e38d140acb4caa8544b14bce697cb387d5737a39bdb5e368d93e6045f2249",
+    "backend/app/service.py": "9ed45a8d0acc686ccf259f3b0a1ed8134382be8f25016afd163a94db3db22da3",
+    "backend/app/shared_variables.py": "45e68cc26d81fbee99c018d7a69f4db5e81dead55359ce732594048099ee2866",
+    "backend/app/storage.py": "ca5374b2d3b6dcebb33fdd28edb1f6a23013fe7a08a114d3f12a7eb9795f1cb8",
+    "backend/app/task_evaluation.py": "e8d75f04804c1f56db682e42ab14c2260986784bd7dc07dfbf4b1696040ada51",
+    "backend/app/task_evaluation_models.py": "12b751b38ddc0eda66046cdab613e45a3ba1cabb5e23228b4f9c6a2a1b622010",
+    "backend/app/task_judgment.py": "ffa2d4151d49a6e355207eb4a6b4774d7650eddc93680b2f8c6939f2a660b18b",
+    ".gitattributes": "55cddb63b643fad1646bfa5c9aa4e63ad2aeb29ec725750dfbf13765db525bf8",
+    ".github/workflows/mvp-integration.yml": "d31e750bb55a5e9218adba35eb738a074a38310347b0f23d56994e2477b3636f",
+    ".github/workflows/judge-calibration.yml": "008080860df6159f724742882dd56d7d5ad250581f7151043a26d7a9f9ed8855",
+    "scripts/judge_calibration.py": "688203e93be723e077291046740bfc3eda6a5bfea621753d95c6b451ce10db7d",
+    "scripts/verify_judge_calibration.py": "0354321644e15eb61b31457917cbaf732f571ad25f9a23125d3711c1b73b5b8a",
+    "tests/test_judge_calibration.py": "2eb9d9a56177f343a026f30027176213e7adfe3858cfce3911906239b50811b8",
+    "backend/tests/test_task_evaluation.py": "2e0d4d7dfc41c1de0bfeb7c11feda40558a0b0056d780aa8a1b1f5d4f8bb1086",
+    "configs/judge-calibration-policy.v0.1.json": "7877b51fc53465abf480ae3b3939640b82b3159fa1d1b11e006f556ec4bee891"
+  },
+  "published_reference_artifacts": {
+    "data/judge-reference/llmbar-v1/LICENSE": "8872dbf8660b00890b5e07ce1ea1f7a44fa7ae4e1857da56caba172b51dab3cb",
+    "data/judge-reference/llmbar-v1/README.md": "f8e599698a81c23d902af426c98d9b0ee5fc100f1182ba6021085f40e1de790b",
+    "data/judge-reference/llmbar-v1/provenance.json": "dc1d79c6bc5727304b8ecd5f86729a69249039cc33f2ecfcb7279adabd94350b",
+    "data/judge-reference/llmbar-v1/selection.v0.1.json": "d08157d0ce56640b0c3925fabefd12359659637dedaf3f34d6e8130c3c473973",
+    "data/judge-reference/llmbar-v1/source/GPTInst.json": "4e340da6342bc226e65d624dfbfc14fe8f10db79fc14ec53baf21e79bc2ec0c2",
+    "data/judge-reference/llmbar-v1/source/GPTOut.json": "9eab45559b1375aa38d3285f26d10f488d3a688a11828e0594d24224de497ff4",
+    "data/judge-reference/llmbar-v1/source/Manual.json": "b974d3cdfc7d104fb9acd25711c48743d138ff8db996c1ae409e12973b682050",
+    "data/judge-reference/llmbar-v1/source/Natural.json": "23d09df79527138c854dc1dd581fac6216ca8351febcf1d06f0ae45db7af93d8",
+    "data/judge-reference/llmbar-v1/source/Neighbor.json": "d45c8d4a97c15af30fa2d55e462bb6d98088a79401def9a56e9ecc011182e45d",
+    "data/judge-reference/llmbar-v1/validation-labels.v0.1.json": "019e2018285f360bd94d805e1a8694056e04b538140e86d6b3406e717f0b69d4"
+  },
+  "published_label_file_matches_generated_labels": true
+}

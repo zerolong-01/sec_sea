@@ -206,7 +206,7 @@ class WeekTwoTests(unittest.TestCase):
         self.assertEqual(client.put("/api/v1/runs/"+failed["run_id"]+"/evaluation", json=review).status_code, 422)
 
     def test_detector_timeout_retains_attempt_and_skips_generation(self):
-        with patch("app.providers.urllib.request.urlopen", side_effect=TimeoutError()):
+        with patch("app.providers.MODEL_HTTP.open", side_effect=TimeoutError()):
             trace = self.service().execute(self.request())
         self.assertEqual(trace.status, "failed")
         self.assertEqual(trace.error.code, "MODEL_TIMEOUT")

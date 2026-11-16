@@ -1,0 +1,42 @@
+{
+  "status": "passed",
+  "verified_at": "2026-10-22T04:22:01.649562+00:00",
+  "platform": "macOS-26.6-arm64-arm-64bit",
+  "python": "3.11.17",
+  "fixture": {
+    "status": "passed",
+    "execution_scope": "fixture",
+    "real_model_verified": false,
+    "batch_id": "batch-f63fa70e72e7",
+    "planned_runs": 108,
+    "wire_calls": 207,
+    "resume_duplicate_calls": 0,
+    "api_cli_export_consistent": true,
+    "recommendation_status": "deferred",
+    "two_apps": [
+      "rag_chat",
+      "email_summary"
+    ],
+    "repeats": 3,
+    "unique_conditions": 6,
+    "public_canary_leak": false,
+    "code_commit": "188a9f542e4670ff1e7c6877e9df9bb76fbb1810",
+    "implementation_sha256": "8082f7d8a80a22cff695e04469c6fe867c624675d1587ca726de25929f067ec8"
+  },
+  "original_report_sha256": "b3bd1c6d4bc40ad4bd420ef2b7ebb5acf4e17a91c299f1094ebbd5a7f3d4d0b2",
+  "overlay_report_sha256": "5b3fecaddae919a99e0647cd48a2d26123744f763a4a2ab7f0dfdfd73e52966f",
+  "api_csv_artifact_match": true,
+  "repeated_export_match": true,
+  "original_source_unchanged": true,
+  "replay_model_calls": 0,
+  "saved_private_real_replay": "not_performed_private_evidence_not_in_checkout",
+  "real_model_rerun": "not_performed",
+  "human_ABC_acceptance": "pending",
+  "holdout_executed": false,
+  "candidate_remote_CI": "check_this_commit_on_ubuntu_and_windows",
+  "candidate_commit": "188a9f542e4670ff1e7c6877e9df9bb76fbb1810",
+  "clean_checkout": true,
+  "credentials_present_in_checkout": false,
+  "installation": "separate Python 3.11 venv installed with requirements.lock and --require-hashes",
+  "backend_regression_count": 114
+}

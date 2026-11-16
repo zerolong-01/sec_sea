@@ -19,6 +19,7 @@ from backend.app.models import ModelCall
 from backend.app.repository import ArtifactNotFound
 from backend.app.storage import atomic_json
 from scripts.data_contract import CANARY_PATTERN, ROOT, load_bundle, require
+from scripts.pipeline_state import locked_output, record_verification_failure
 from scripts.week2_data import gold_plan, prepare
 
 VERSION = "real-detector-dev-v0.1"
@@ -83,6 +84,9 @@ def _summarize(output: Path, runner: BatchRunner, state) -> dict:
     validator = Draft202012Validator(schema)
     traces, rows, calls = [], [], []
     http_statuses = Counter()
+    calls_by_attempt = {}
+    for call in state.calls:
+        calls_by_attempt.setdefault(call["attempt_id"], []).append(call)
     accounting = Accounting(runner.store.folder(state.batch_id) / "pricing.snapshot")
     expected_targets = sum(1 + len(bundle.cases[cid].source_document_ids)
                            for source in state.spec.sources
@@ -91,7 +95,7 @@ def _summarize(output: Path, runner: BatchRunner, state) -> dict:
     for entry in state.plan:
         require(entry["split"] == "dev", "Holdout is excluded from this diagnostic")
         for attempt in entry["attempts"]:
-            ledger = [call for call in state.calls if call["attempt_id"] == attempt["attempt_id"]]
+            ledger = calls_by_attempt.get(attempt["attempt_id"], [])
             if attempt["status"] == "cancelled_before_transport":
                 require(not ledger, "A cancelled-before-transport attempt contains reserved model calls")
                 continue
@@ -194,9 +198,15 @@ def _summarize(output: Path, runner: BatchRunner, state) -> dict:
 def verify(output: Path, *, settings: Settings | None = None, max_items: int | None = None,
            allow_fixture: bool = False) -> dict:
     """Run/resume a paid dev diagnostic. Tests must explicitly enable fixture settings."""
-    require(max_items is None or max_items > 0, "max_items must be positive")
+    require(max_items is None or type(max_items) is int and max_items > 0, "max_items must be positive")
     output = output.resolve()
     settings = _settings(output, settings, allow_fixture)
+    with locked_output(output, "checkpoint.json"), \
+         record_verification_failure(output, VERSION, marker="checkpoint.json", version_key="diagnostic_version"):
+        return _verify(output, settings, max_items)
+
+
+def _verify(output, settings, max_items):
     output.mkdir(parents=True, exist_ok=True)
     checkpoint = output / "checkpoint.json"
     runner = BatchRunner(settings)
@@ -211,17 +221,10 @@ def verify(output: Path, *, settings: Settings | None = None, max_items: int | N
         email = prepare(ROOT / "data/week2", output / "email-data", "email")
         state = runner.create(_spec(email))
         atomic_json(checkpoint, _public({"diagnostic_version": VERSION, "batch_id": state.batch_id}, settings))
-    processed = 0
-    while state.status != "completed" and (max_items is None or processed < max_items):
-        if any(entry["status"] in ("failed", "uncertain") for entry in state.plan):
-            break
-        previous = sum(len(entry["attempts"]) for entry in state.plan)
-        state = runner.execute(state.batch_id, max_items=1)
-        processed += 1
+    if state.status != "completed":
+        state = runner.execute(state.batch_id, max_items=max_items, stop_on_error=True)
         atomic_json(checkpoint, _public({"diagnostic_version": VERSION, "batch_id": state.batch_id,
                                         "batch_status": state.status, "saved_attempts": sum(len(e["attempts"]) for e in state.plan)}, settings))
-        if state.reason != "operator_item_limit" or sum(len(e["attempts"]) for e in state.plan) == previous:
-            break
     # Revalidate immutable snapshots even if a completed checkpoint avoids execute().
     runner._verify_inputs(state, executing=False)
     require(state.execution_settings == public_settings(settings),

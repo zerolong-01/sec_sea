@@ -30,6 +30,9 @@ from .shared_variables import (
 )
 
 
+RUN_ID_PATTERN = r"^[a-z][a-z0-9_-]{2,63}$"
+
+
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -325,7 +328,7 @@ class Manifest(StrictModel):
 class RunTrace(StrictModel):
     schema_version: Literal[SchemaVersion.CURRENT, SchemaVersion.PREVIOUS_EXECUTION, SchemaVersion.EXECUTION] = SchemaVersion.EXECUTION
     artifact_type: Literal[ArtifactType.RUN_TRACE] = ArtifactType.RUN_TRACE
-    run_id: str = Field(pattern=r"^[a-z][a-z0-9_-]{2,63}$")
+    run_id: str = Field(pattern=RUN_ID_PATTERN)
     status: RunStatus
     created_at: str
     request: RunRequest

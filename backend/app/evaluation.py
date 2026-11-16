@@ -65,7 +65,16 @@ class RuleEvaluator:
     engine_version = "rules-v0.2"
 
     def __init__(self, path: Path):
-        self.rules = RuleSet.model_validate_json(path.read_text(encoding="utf-8"))
+        self._configure(RuleSet.model_validate_json(path.read_text(encoding="utf-8")))
+
+    @classmethod
+    def from_rules(cls, rules: RuleSet):
+        evaluator = cls.__new__(cls)
+        evaluator._configure(rules)
+        return evaluator
+
+    def _configure(self, rules: RuleSet):
+        self.rules = rules
         self.version = f"{self.rules.version}@{self.engine_version}"
         if len({r.case_id for r in self.rules.rules}) != len(self.rules.rules):
             raise ValueError("Evaluator case IDs must be unique")

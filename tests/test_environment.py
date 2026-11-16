@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -25,6 +26,23 @@ class EnvironmentTests(unittest.TestCase):
     def write_env(self, text):
         # Windows editors may produce a UTF-8 BOM.
         self.env_file.write_text(text, encoding="utf-8-sig")
+
+    def test_direct_settings_reject_invalid_numeric_limits_and_error_policies(self):
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings.from_environment(self.root)
+        for name, values in {
+            "max_tokens": (True, 0, -1, 1.5, float("nan")),
+            "max_model_calls": (False, 0, 2.5, float("inf")),
+            "model_timeout_seconds": (True, "30", 0, float("nan"), float("inf")),
+            "temperature": (True, "0", -1, 3, float("nan")),
+            "d2_threshold": (True, "0.5", -1, 2, float("inf")),
+            "d2_error_policy": ("invalid",),
+            "model_provider": ("typo",),
+        }.items():
+            for value in values:
+                with self.subTest(name=name, value=value), self.assertRaises(ValueError):
+                    replace(settings, **{name: value})
+        self.assertEqual(replace(settings, d2_error_policy="fail_open").d2_error_policy, "fail_open")
 
     def test_backend_loads_root_file_from_another_working_directory_and_resolves_paths(self):
         self.write_env("MODEL_PROVIDER=openai_compatible\nMODEL_ID=fixture-model\n"

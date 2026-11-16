@@ -19,6 +19,7 @@ from backend.app.config import Settings
 from backend.app.providers import OpenAICompatibleProvider
 from backend.app.storage import atomic_json
 from scripts.data_contract import ROOT
+from scripts.pipeline_state import locked_output, record_verification_failure
 from scripts.verify_real_api import (_execute, _settings, assert_safe, require, verify_saved, VerificationError)
 from scripts.week3_prepare import VERSION, prepare, validate
 
@@ -143,13 +144,20 @@ def _replay_saved(output, ownership, implementation):
 
 def verify(output: Path, *, settings=None, max_items=None, allow_fixture=False, report_only=False):
     require(max_items is None or type(max_items) is int and max_items > 0, "MAX_ITEMS_MUST_BE_POSITIVE")
-    output = output.resolve()
+    output = Path(output).resolve()
+    with locked_output(output, "pipeline.json", read_only=report_only), \
+         record_verification_failure(output, VERSION, marker="pipeline.json"):
+        return _verify(output, settings=settings, max_items=max_items,
+                       allow_fixture=allow_fixture, report_only=report_only)
+
+
+def _verify(output, *, settings, max_items, allow_fixture, report_only):
     marker = output / "pipeline.json"
     implementation = digest({name: file_hash(ROOT / "scripts" / name) for name in
-                             ("week3_prepare.py", "week3_pipeline.py", "verify_real_api.py")})
+                             ("week3_prepare.py", "week3_pipeline.py", "verify_real_api.py", "pipeline_state.py")})
     if not marker.exists():
         require(not report_only, "PIPELINE_NOT_CREATED")
-        require(not output.exists() or not any(output.iterdir()), "OUTPUT_DIRECTORY_NOT_OWNED")
+        require(not output.exists() or not any(p.name != ".pipeline.lock" for p in output.iterdir()), "OUTPUT_DIRECTORY_NOT_OWNED")
         output.mkdir(parents=True, exist_ok=True)
         atomic_json(marker, {"version": VERSION, "implementation_sha256": implementation})
     ownership = json.loads(marker.read_text(encoding="utf-8"))

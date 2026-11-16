@@ -108,6 +108,10 @@ class DetectorGoldRegistrationTests(unittest.TestCase):
     def test_apply_and_reapply_preserve_raw_sources_manifest_and_audit_without_duplicate_appends(self):
         applied = self.run_registration(apply=True)
         self.assertEqual(len(applied["applied_ids"]), 4)
+        self.assertTrue(applied["immutable_artifacts_unchanged"])
+        for run_id in {row["run_id"] for row in applied["updates"]}:
+            self.assertTrue((self.runs / f"{run_id}.review.lock").is_file())
+            self.assertTrue((self.runs / f"{run_id}.detector-gold.lock").is_file())
         after = self.hashes()
         for path, sha in self.before.items():
             if not path.endswith(".trace.json"):
@@ -173,6 +177,23 @@ class DetectorGoldRegistrationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "conflicting"):
             self.run_registration(apply=True)
         self.assertEqual(before, self.hashes())
+
+    def test_apply_still_detects_changes_to_unrelated_lock_files(self):
+        unrelated = self.runs / "unrelated.lock"
+        unrelated.write_bytes(b"unchanged")
+        original = RunService.update_detector_gold
+
+        def mutate_unrelated(service, run_id, body):
+            result = original(service, run_id, body)
+            unrelated.write_bytes(b"changed")
+            return result
+
+        with patch.object(RunService, "update_detector_gold", new=mutate_unrelated):
+            result = self.run_registration(apply=True)
+        self.assertEqual(result["status"], "partial_failure")
+        self.assertFalse(result["immutable_artifacts_unchanged"])
+        self.assertEqual(result["error_type"], "ImmutableArtifactChanged")
+        self.assertEqual(len(result["applied_ids"]), 1)
 
     def test_cli_defaults_to_plan_and_prints_only_status_counts_and_hash(self):
         stdout = io.StringIO()

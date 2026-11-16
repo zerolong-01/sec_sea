@@ -1,0 +1,36 @@
+{
+  "version": "judge-calibration-policy-v0.1",
+  "status": "project_adopted_external_reference_target",
+  "reference_dataset": "LLMBar",
+  "reference_commit": "900616bff90b6c6c8e1681f7d079250637c55992",
+  "selection_seed": "sec-sea-judge-calibration-2026-11-09-v1",
+  "development_pairs_per_subset": 4,
+  "validation_pairs_per_subset": 16,
+  "gates": {
+    "minimum_validation_pairs": 80,
+    "minimum_pointwise_accuracy": 0.94,
+    "maximum_false_success_rate": 0.05,
+    "require_complete_predictions": true
+  },
+  "gate_basis": {
+    "minimum_pointwise_accuracy": "Project-adopted target inspired by LLMBar's 94% expert pairwise agreement on 80 sampled pairs; this is a different pointwise protocol, not a universal or paper-certified acceptance threshold.",
+    "minimum_validation_pairs": "Project choice matching the size, not statistical sufficiency, of LLMBar's expert agreement study.",
+    "maximum_false_success_rate": "Project-chosen risk limit, not a published universal standard."
+  },
+  "research": [
+    {"id": "llmbar", "url": "https://arxiv.org/abs/2310.07641", "version": "v2", "evidence": "419 author-curated instruction-following pairs; 94% expert pairwise agreement on a separate 80-instance annotation exercise."},
+    {"id": "mt-bench", "url": "https://arxiv.org/abs/2306.05685", "version": "v4", "evidence": "Reported over 80% judge-human preference agreement in that study; not a guarantee for our tasks."},
+    {"id": "g-eval", "url": "https://aclanthology.org/2023.emnlp-main.153/", "evidence": "Task-specific explicit evaluation dimensions and comparison with human annotations; correlation is not binary accuracy."}
+  ],
+  "budget": {
+    "max_calls": 200,
+    "max_reserved_tokens": 8000000,
+    "max_seconds": 1800,
+    "max_usd": 1.0,
+    "per_call_input_token_ceiling": 32000,
+    "unknown_price_policy": "stop"
+  },
+  "bootstrap_samples": 2000,
+  "new_project_human_review_performed": false,
+  "project_security_or_korean_quality_certified": false
+}

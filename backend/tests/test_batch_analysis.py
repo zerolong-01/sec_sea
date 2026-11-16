@@ -16,7 +16,8 @@ sys.path.insert(0, str(ROOT))
 
 from fastapi.testclient import TestClient
 from app.batch import BatchRunner, digest, selection_hash, verify_frozen_artifacts
-from app.batch_analysis import aggregate, decisions, detector_diagnostics, payload_results, report_csv, statistic
+from app.batch_analysis import (aggregate, decisions, detector_diagnostics, export_report,
+                                payload_results, report_csv, statistic, validate_report_export)
 from app.batch_models import BatchFilters, BatchReview, BatchSpec, StatisticsPolicy
 from app.config import Settings
 from app.main import create_app
@@ -78,6 +79,64 @@ class AnalysisTests(unittest.TestCase):
                                     policy_version="golden-policy-v1", excessive_transformation=False))
         self.state.status = "completed"
         self.runner.store.save(self.state)
+
+    def test_empty_csv_keeps_report_identity_filters_and_unknown_metric_values(self):
+        for selected in ({"condition_id": "missing"}, {"condition_id": ""}):
+            with self.subTest(selected=selected):
+                report = aggregate(self.settings.runs_dir, self.state.batch_id, BatchFilters(**selected))
+                self.assertEqual(report.groups, [])
+                rows = list(csv.DictReader(io.StringIO(report_csv(report))))
+                self.assertEqual(len(rows), 1)
+                row = rows[0]
+                self.assertEqual(row["metric"], "report_metadata")
+                self.assertEqual(row["report_sha256"], report.provenance["report_sha256"])
+                self.assertEqual(json.loads(row["filters"]), selected)
+                self.assertEqual((row["value"], row["numerator"], row["denominator"]), ("", "", ""))
+                client = TestClient(create_app(self.settings))
+                response = client.post(f"/api/v1/batches/{self.state.batch_id}/export.csv", json=selected)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.headers["X-Report-SHA256"], report.provenance["report_sha256"])
+                self.assertEqual(response.text, report_csv(report))
+
+    def test_archived_v05_empty_csv_rendering_remains_unchanged(self):
+        report = aggregate(self.settings.runs_dir, self.state.batch_id, BatchFilters(condition_id="missing"))
+        report.report_version = "batch-cluster-summary-v0.5"
+        self.assertEqual(list(csv.DictReader(io.StringIO(report_csv(report)))), [])
+
+    def test_reused_exports_require_matching_json_csv_and_decisions(self):
+        report = aggregate(self.settings.runs_dir, self.state.batch_id)
+        for name in ("report.json", "metrics.csv", "decision-record.json"):
+            output = self.folder / ("export-" + name)
+            export_report(report, output)
+            validate_report_export(report, output)
+            path = output / name
+            path.write_text("{}" if name.endswith(".json") else "changed\n", encoding="utf-8")
+            corrupted = path.read_bytes()
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                validate_report_export(report, output)
+            self.assertEqual(path.read_bytes(), corrupted)
+
+    def test_mismatched_artifact_identity_rejects_reports_and_batch_summaries(self):
+        entry = self.state.plan[0]
+        run_id = entry["attempts"][0]["run_id"]
+        path = self.settings.runs_dir / f"{run_id}.trace.json"
+        trace = json.loads(path.read_text(encoding="utf-8"))
+        trace["run_id"] = "run-another"
+        path.write_text(json.dumps(trace), encoding="utf-8")
+        client = TestClient(create_app(self.settings))
+        base = f"/api/v1/batches/{self.state.batch_id}"
+        for route in ("/report", "/export.csv"):
+            response = client.post(base + route, json={})
+            self.assertEqual(response.status_code, 422)
+            self.assertEqual(response.json()["detail"]["code"], "INVALID_BATCH_REPORT")
+        manifest = self.runner.store.folder(self.state.batch_id) / "manifest.json"
+        state = self.state.model_dump(mode="json")
+        state["batch_id"] = "batch-000000000000"
+        manifest.write_text(json.dumps(state), encoding="utf-8")
+        for route, code in ((base, "INVALID_BATCH"), ("/api/v1/batches", "INVALID_BATCH_LIST")):
+            response = client.get(route)
+            self.assertEqual(response.status_code, 422)
+            self.assertEqual(response.json()["detail"]["code"], code)
 
     def test_golden_denominators_paired_changes_and_family_clusters(self):
         report = aggregate(self.settings.runs_dir, self.state.batch_id)

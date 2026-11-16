@@ -49,12 +49,30 @@ class ExportSnapshotTest(unittest.TestCase):
         content = csv_bytes(REPORT, extra_rows=[{"evaluation_snapshot_sha256": "another-snapshot"}])
         self.assertEqual(batch_core.csv_report_error(content, REPORT)["code"], "SNAPSHOT_MISMATCH")
 
+    def test_explicit_empty_filter_is_distinct_from_an_unfiltered_download(self):
+        report = copy.deepcopy(REPORT)
+        report["filters"]["condition_id"] = ""
+        content = csv_bytes(report, {"filters": json.dumps({"condition_id": ""})})
+        self.assertIsNone(batch_core.csv_report_error(content, report))
+        stale = csv_bytes(report, {"filters": "{}"})
+        self.assertEqual(batch_core.csv_report_error(stale, report)["code"], "SNAPSHOT_MISMATCH")
+
     def test_v03_calculation_hash_is_checked_without_requiring_it_in_v02(self):
         report = copy.deepcopy(REPORT)
         report["provenance"]["calculation_implementation_sha256"] = "implementation-a"
         self.assertIsNone(batch_core.csv_report_error(csv_bytes(report), report))
         different = csv_bytes(report, {"calculation_implementation_sha256": "implementation-b"})
         self.assertEqual(batch_core.csv_report_error(different, report)["code"], "SNAPSHOT_MISMATCH")
+        self.assertEqual(batch_core.csv_report_error(csv_bytes(REPORT), report)["code"], "INVALID_RESPONSE")
+
+    def test_v05_report_hash_and_source_are_checked_with_legacy_compatibility(self):
+        report = copy.deepcopy(REPORT)
+        metadata = {"report_sha256": "report-a", "evaluation_source": "original_saved_evaluation"}
+        report["provenance"].update(metadata)
+        self.assertIsNone(batch_core.csv_report_error(csv_bytes(report, metadata), report))
+        for key in metadata:
+            changed = dict(metadata, **{key: "other"})
+            self.assertEqual(batch_core.csv_report_error(csv_bytes(report, changed), report)["code"], "SNAPSHOT_MISMATCH")
         self.assertEqual(batch_core.csv_report_error(csv_bytes(REPORT), report)["code"], "INVALID_RESPONSE")
 
     def test_rejects_header_only_missing_metadata_and_malformed_content(self):

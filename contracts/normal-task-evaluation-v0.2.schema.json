@@ -1,0 +1,735 @@
+{
+  "$defs": {
+    "Dimension": {
+      "additionalProperties": false,
+      "properties": {
+        "verdict": {
+          "enum": [
+            "success",
+            "failure",
+            "review_needed",
+            "not_applicable"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "evidence_quotes": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "title": "Evidence Quotes",
+          "type": "array"
+        },
+        "reference_quotes": {
+          "items": {
+            "$ref": "#/$defs/ReferenceQuote"
+          },
+          "maxItems": 8,
+          "title": "Reference Quotes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "verdict",
+        "reason",
+        "evidence_quotes"
+      ],
+      "title": "Dimension",
+      "type": "object"
+    },
+    "EvaluationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "attack_success": {
+          "$ref": "#/$defs/EvaluationStatus"
+        },
+        "normal_task_success": {
+          "enum": [
+            "success",
+            "failure",
+            "not_evaluated",
+            "review_needed"
+          ],
+          "title": "Normal Task Success",
+          "type": "string"
+        },
+        "evaluator_version": {
+          "minLength": 1,
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        },
+        "evaluated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluated At"
+        },
+        "policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Policy Version"
+        }
+      },
+      "required": [
+        "attack_success",
+        "normal_task_success",
+        "evaluator_version",
+        "reason"
+      ],
+      "title": "EvaluationResult",
+      "type": "object"
+    },
+    "EvaluationStatus": {
+      "enum": [
+        "success",
+        "failure",
+        "not_applicable",
+        "not_evaluated",
+        "review_needed"
+      ],
+      "title": "EvaluationStatus",
+      "type": "string"
+    },
+    "Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "latency_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latency Ms"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Tokens"
+        },
+        "estimated_cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Estimated Cost Usd"
+        },
+        "stages": {
+          "items": {
+            "$ref": "#/$defs/StageMetric"
+          },
+          "title": "Stages",
+          "type": "array"
+        },
+        "model_call_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Model Call Count",
+          "type": "integer"
+        },
+        "generation_call_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Generation Call Count",
+          "type": "integer"
+        },
+        "detection_call_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Detection Call Count",
+          "type": "integer"
+        },
+        "unpriced_call_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Unpriced Call Count",
+          "type": "integer"
+        },
+        "known_cost_usd": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Known Cost Usd",
+          "type": "number"
+        },
+        "cost_complete": {
+          "default": false,
+          "title": "Cost Complete",
+          "type": "boolean"
+        },
+        "usage_source": {
+          "$ref": "#/$defs/UsageSource",
+          "default": "unknown"
+        },
+        "generation_skipped_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Generation Skipped Reason"
+        }
+      },
+      "title": "Metrics",
+      "type": "object"
+    },
+    "ReferenceQuote": {
+      "additionalProperties": false,
+      "properties": {
+        "document_id": {
+          "minLength": 1,
+          "title": "Document Id",
+          "type": "string"
+        },
+        "quote": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_id",
+        "quote"
+      ],
+      "title": "ReferenceQuote",
+      "type": "object"
+    },
+    "StageMetric": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/TraceStage"
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "title": "Latency Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "stage",
+        "latency_ms"
+      ],
+      "title": "StageMetric",
+      "type": "object"
+    },
+    "TaskEvaluationRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluation_id": {
+          "pattern": "^[a-z][a-z0-9_-]{2,63}$",
+          "title": "Evaluation Id",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "source": {
+          "enum": [
+            "llm_judge",
+            "automatic_rules",
+            "manual_review"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "completed",
+            "error"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "normal_task_success": {
+          "default": "not_evaluated",
+          "enum": [
+            "success",
+            "failure",
+            "review_needed",
+            "not_evaluated"
+          ],
+          "title": "Normal Task Success",
+          "type": "string"
+        },
+        "attack_success": {
+          "$ref": "#/$defs/EvaluationStatus"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "requested_by": {
+          "title": "Requested By",
+          "type": "string"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        },
+        "human_review": {
+          "default": false,
+          "title": "Human Review",
+          "type": "boolean"
+        },
+        "parent_evaluation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Evaluation Id"
+        },
+        "source_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        },
+        "evaluator_version": {
+          "default": "normal-task-evaluation-v0.2",
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "rubric_version": {
+          "default": "normal-task-rubric-v0.2",
+          "title": "Rubric Version",
+          "type": "string"
+        },
+        "policy_version": {
+          "default": "normal-task-dev-policy-v0.2",
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "default": "normal-task-judge-prompt-v0.2",
+          "title": "Prompt Version",
+          "type": "string"
+        },
+        "prompt_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Sha256"
+        },
+        "rubric_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rubric Sha256"
+        },
+        "policy_snapshot": {
+          "additionalProperties": true,
+          "title": "Policy Snapshot",
+          "type": "object"
+        },
+        "rubric_snapshot": {
+          "additionalProperties": true,
+          "title": "Rubric Snapshot",
+          "type": "object"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "endpoint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Endpoint"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "title": "Parameters",
+          "type": "object"
+        },
+        "execution_scope": {
+          "title": "Execution Scope",
+          "type": "string"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "dimensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Dimension"
+          },
+          "title": "Dimensions",
+          "type": "object"
+        },
+        "criteria": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Dimension"
+          },
+          "title": "Criteria",
+          "type": "object"
+        },
+        "metrics": {
+          "$ref": "#/$defs/Metrics"
+        }
+      },
+      "required": [
+        "evaluation_id",
+        "revision",
+        "source",
+        "state",
+        "attack_success",
+        "reason",
+        "created_at",
+        "requested_by",
+        "source_sha256",
+        "execution_scope"
+      ],
+      "title": "TaskEvaluationRecord",
+      "type": "object"
+    },
+    "TaskEvaluationReport": {
+      "additionalProperties": false,
+      "properties": {
+        "report_version": {
+          "default": "normal-task-evaluation-v0.2",
+          "title": "Report Version",
+          "type": "string"
+        },
+        "evaluation_source": {
+          "const": "normal_task_overlay",
+          "default": "normal_task_overlay",
+          "title": "Evaluation Source",
+          "type": "string"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "case_id": {
+          "title": "Case Id",
+          "type": "string"
+        },
+        "dataset_version": {
+          "title": "Dataset Version",
+          "type": "string"
+        },
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "trace_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Trace Sha256",
+          "type": "string"
+        },
+        "judge_configured": {
+          "title": "Judge Configured",
+          "type": "boolean"
+        },
+        "max_model_calls": {
+          "minimum": 1,
+          "title": "Max Model Calls",
+          "type": "integer"
+        },
+        "original_evaluation": {
+          "$ref": "#/$defs/EvaluationResult"
+        },
+        "current_trace_evaluation": {
+          "$ref": "#/$defs/EvaluationResult"
+        },
+        "records": {
+          "items": {
+            "$ref": "#/$defs/TaskEvaluationRecord"
+          },
+          "title": "Records",
+          "type": "array"
+        },
+        "latest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TaskEvaluationRecord"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "integer"
+        },
+        "reserved_model_calls": {
+          "title": "Reserved Model Calls",
+          "type": "integer"
+        },
+        "report_sha256": {
+          "default": "",
+          "title": "Report Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "case_id",
+        "dataset_version",
+        "corpus_version",
+        "trace_sha256",
+        "judge_configured",
+        "max_model_calls",
+        "original_evaluation",
+        "current_trace_evaluation",
+        "records",
+        "revision",
+        "reserved_model_calls"
+      ],
+      "title": "TaskEvaluationReport",
+      "type": "object"
+    },
+    "TaskEvaluationRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "pattern": "^[a-z][a-z0-9_-]{2,63}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "requested_by": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Requested By",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "requested_by"
+      ],
+      "title": "TaskEvaluationRequest",
+      "type": "object"
+    },
+    "TaskReviewRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "pattern": "^[a-z][a-z0-9_-]{2,63}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "expected_revision": {
+          "minimum": 1,
+          "title": "Expected Revision",
+          "type": "integer"
+        },
+        "normal_task_success": {
+          "enum": [
+            "success",
+            "failure",
+            "review_needed",
+            "not_evaluated"
+          ],
+          "title": "Normal Task Success",
+          "type": "string"
+        },
+        "reviewer": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "expected_revision",
+        "normal_task_success",
+        "reviewer",
+        "reason"
+      ],
+      "title": "TaskReviewRequest",
+      "type": "object"
+    },
+    "TraceStage": {
+      "enum": [
+        "input",
+        "retrieval",
+        "prompt_assembly",
+        "defense_events",
+        "output",
+        "evaluation",
+        "metrics"
+      ],
+      "title": "TraceStage",
+      "type": "string"
+    },
+    "UsageSource": {
+      "enum": [
+        "observed",
+        "estimated",
+        "unknown",
+        "not_called"
+      ],
+      "title": "UsageSource",
+      "type": "string"
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/TaskEvaluationReport"
+    },
+    {
+      "$ref": "#/$defs/TaskEvaluationRequest"
+    },
+    {
+      "$ref": "#/$defs/TaskReviewRequest"
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normal task automatic evaluation and manual history v0.2"
+}

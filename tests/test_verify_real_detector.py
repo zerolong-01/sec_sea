@@ -144,6 +144,9 @@ class RealDetectorDiagnosticTests(unittest.TestCase):
         self.assertEqual(len(self.fixture.requests), before)
         state = BatchRunner(replace(self.settings, runs_dir=self.output / "runs")).store.get(complete["batch_id"])
         self.assertEqual(state.status, "completed")
+        record = json.loads((self.output / "verification-report.json").read_text(encoding="utf-8"))
+        self.assertEqual(record["status"], "failed")
+        self.assertNotIn(self.settings.model_api_key, json.dumps(record))
 
 
 if __name__ == "__main__":

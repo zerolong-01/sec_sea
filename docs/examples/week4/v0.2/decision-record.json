@@ -1,0 +1,82 @@
+{
+  "batch_id": "batch-8fb19849d67c",
+  "report_version": "week4-public-overlay-v0.2",
+  "report_sha256": "9ac8645368a8552498231b46cf4aaa70cef132ccdb71b24e8107c461e2802a59",
+  "evaluation_snapshot_sha256": "96e456c140edcc302caf4712a5d401aeb94174405f81ba662af6a93715610cf6",
+  "filters": {
+    "evaluation_version": "week3-two-ai-review-v0.1",
+    "source_id": null,
+    "scenario": null,
+    "language": null,
+    "split": null,
+    "condition_id": "D2-input",
+    "goal_kind": null,
+    "ablation_variant": null,
+    "severity": null,
+    "attack_type": null,
+    "execution_kind": null,
+    "model_id": null,
+    "evaluator_version": null,
+    "evaluation_policy_version": null,
+    "pricing_version": null
+  },
+  "provenance": {
+    "source_files": {
+      "docs/examples/week3-completion/ai-dev-review.v0.1.json": "3f104509fe5261daefc5320cc2df64c794d79b0f02fcac42bc79ba5ce101e15d",
+      "docs/examples/week3-completion/ai-dev-review.members.v0.1.jsonl": "b3982199afa806f8695cf746339114b3951df4e4302da7c6afc2c2feeb1c54e4",
+      "docs/examples/week3-completion/ai-dev-review.metrics.v0.1.jsonl": "14372362064aaf7a817fcace06f47c9d4b8ab9e4bbf7f68b055f565f2c7684d6",
+      "docs/examples/week3-completion/ai-dev-review.units.v0.1.jsonl": "6a99da7bc679184ab9f969f5f7e17dcb72404d71ef99400fccaf97d3abca1727",
+      "configs/week3-ai-dev-review-policy.v0.1.json": "288e79739505ae4addd34cca3c254900cd6bf551bb46977ccdb3d9017bfc79a3"
+    },
+    "source_summary_sha256": "3f104509fe5261daefc5320cc2df64c794d79b0f02fcac42bc79ba5ce101e15d",
+    "calculation_implementation_sha256": "adf7e3a7f0151c480d6181647fb805a4715c5de9a4ea44eb0eb9b448a4997a2b",
+    "human_review": "not_performed",
+    "review_route": "two_separate_AI_reviewers_same_model_family_not_human",
+    "review_status": "complete",
+    "decision_status": "partially_unresolved",
+    "research_decision": {
+      "authority": {
+        "authorization": "사용자가 공신력 있는 논문·기업 자료를 참고해 데이터·gold·정상 작업 판정·서비스 기준·통계 정책을 결정하도록 명시적으로 위임했다.",
+        "decided_by": "Codex",
+        "human_reviewers": [],
+        "independent_human_review": "pending",
+        "kind": "user_delegated_research_decision",
+        "scope": "synthetic dev RAG and email benchmark"
+      },
+      "holdout_authorized": false,
+      "rubric_version": "week3-research-rubric-v0.4",
+      "service_version": "week3-service-policy-v0.2-research",
+      "statistics_version": "family-cluster-percentile-bootstrap-v0.2-research",
+      "status": "adopted_for_dev"
+    },
+    "statistics": {
+      "bootstrap_samples": 10000,
+      "minimum_evaluated_runs": 60,
+      "minimum_families": 20,
+      "reviewed_by": [],
+      "seed": 2026,
+      "status": "draft",
+      "version": "family-cluster-percentile-bootstrap-v0.2-research"
+    },
+    "applied_to_original_store": false,
+    "model_calls": 0,
+    "metric_sources": {
+      "original_asr": "original_saved_evaluation",
+      "fresh_ai_attack_success": "ai_research_overlay",
+      "fresh_ai_normal_task_success": "ai_research_overlay",
+      "fresh_ai_attack_task_utility": "ai_research_overlay",
+      "benign_fpr": "original_structural_actions_then_ai_excessive_transformation",
+      "hard_negative_fpr": "original_structural_actions_then_ai_excessive_transformation"
+    }
+  },
+  "status": "deferred",
+  "no_candidate": true,
+  "holdout_authorized": false,
+  "reasons": [
+    "research_overlay_is_descriptive",
+    "independent_human_review_pending",
+    "family_independence_not_validated_small_strata"
+  ],
+  "records": [],
+  "evaluation_version": "week3-two-ai-review-v0.1"
+}

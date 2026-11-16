@@ -1,0 +1,308 @@
+{
+  "$defs": {
+    "ResearchFilters": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluation_version": {
+          "const": "week3-two-ai-review-v0.1",
+          "default": "week3-two-ai-review-v0.1",
+          "title": "Evaluation Version",
+          "type": "string"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Id"
+        },
+        "scenario": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scenario"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "split": {
+          "anyOf": [
+            {
+              "const": "dev",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Split"
+        },
+        "condition_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition Id"
+        },
+        "goal_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Goal Kind"
+        },
+        "ablation_variant": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ablation Variant"
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Severity"
+        },
+        "attack_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attack Type"
+        },
+        "execution_kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Execution Kind"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "evaluator_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluator Version"
+        },
+        "evaluation_policy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evaluation Policy Version"
+        },
+        "pricing_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pricing Version"
+        }
+      },
+      "title": "ResearchFilters",
+      "type": "object"
+    },
+    "ResearchReport": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "0.1",
+          "default": "0.1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "const": "research_overlay_report",
+          "default": "research_overlay_report",
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "report_version": {
+          "default": "week4-public-overlay-v0.2",
+          "enum": [
+            "week4-public-overlay-v0.1",
+            "week4-public-overlay-v0.2"
+          ],
+          "title": "Report Version",
+          "type": "string"
+        },
+        "batch_id": {
+          "title": "Batch Id",
+          "type": "string"
+        },
+        "evaluation_version": {
+          "const": "week3-two-ai-review-v0.1",
+          "default": "week3-two-ai-review-v0.1",
+          "title": "Evaluation Version",
+          "type": "string"
+        },
+        "evaluation_source": {
+          "const": "ai_research_overlay",
+          "default": "ai_research_overlay",
+          "title": "Evaluation Source",
+          "type": "string"
+        },
+        "report_sha256": {
+          "title": "Report Sha256",
+          "type": "string"
+        },
+        "evaluation_snapshot_sha256": {
+          "title": "Evaluation Snapshot Sha256",
+          "type": "string"
+        },
+        "filters": {
+          "$ref": "#/$defs/ResearchFilters"
+        },
+        "provenance": {
+          "additionalProperties": true,
+          "title": "Provenance",
+          "type": "object"
+        },
+        "counts": {
+          "additionalProperties": true,
+          "title": "Counts",
+          "type": "object"
+        },
+        "groups": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Groups",
+          "type": "array"
+        },
+        "target_gold_groups": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Target Gold Groups",
+          "type": "array"
+        },
+        "members": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Members",
+          "type": "array"
+        },
+        "capabilities": {
+          "additionalProperties": true,
+          "title": "Capabilities",
+          "type": "object"
+        },
+        "decisions": {
+          "additionalProperties": true,
+          "title": "Decisions",
+          "type": "object"
+        }
+      },
+      "required": [
+        "batch_id",
+        "report_sha256",
+        "evaluation_snapshot_sha256",
+        "filters",
+        "provenance",
+        "counts",
+        "groups",
+        "target_gold_groups",
+        "members",
+        "capabilities",
+        "decisions"
+      ],
+      "title": "ResearchReport",
+      "type": "object"
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/ResearchFilters"
+    },
+    {
+      "$ref": "#/$defs/ResearchReport"
+    }
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit public AI research overlay v0.2 (reads archived v0.1 reports)"
+}

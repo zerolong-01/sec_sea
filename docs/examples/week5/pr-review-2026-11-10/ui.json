@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "verified_at": "2026-11-10T12:28:26.363371+00:00",
+  "execution_scope": "fixture",
+  "easy_four_modes": true,
+  "main_comparison_and_detail": true,
+  "api_ui_csv_match": true,
+  "criterion_and_reference_evidence": true,
+  "lost_response_retry_same_id": true,
+  "manual_review_flow": "synthetic_test_only",
+  "case_switch_hides_old_evaluations": true,
+  "csv_invalidated_after_review": true,
+  "original_trace_raw_unchanged": true,
+  "read_model_calls": 0,
+  "judge_calls": 5,
+  "human_acceptance": false,
+  "paid_model_calls": 0
+}

@@ -1,0 +1,122 @@
+{
+  "status": "passed",
+  "verified_at": "2026-11-10T12:28:19.301150+00:00",
+  "execution_scope": "fixture",
+  "modes": {
+    "none": {
+      "run_id": "run-df4d6d658ba3",
+      "report_sha256": "6a4931b8ca35517b27521c8f4063ebb65bb5ed69acad736a2d583059cc4413b0",
+      "normal_task_success": "success",
+      "attack_success": "not_applicable",
+      "metrics": {
+        "latency_ms": 3,
+        "input_tokens": 17,
+        "output_tokens": 5,
+        "estimated_cost_usd": null,
+        "stages": [
+          {
+            "stage": "evaluation",
+            "latency_ms": 3
+          }
+        ],
+        "model_call_count": 1,
+        "generation_call_count": 0,
+        "detection_call_count": 0,
+        "unpriced_call_count": 1,
+        "known_cost_usd": 0.0,
+        "cost_complete": false,
+        "usage_source": "observed",
+        "generation_skipped_reason": null
+      },
+      "original_files_unchanged": true
+    },
+    "D1": {
+      "run_id": "run-d8e4dc61a0b5",
+      "report_sha256": "6d489db16ca7908415667accf6e63e3a986b400cd5d9b3df73599165719f6720",
+      "normal_task_success": "success",
+      "attack_success": "not_applicable",
+      "metrics": {
+        "latency_ms": 2,
+        "input_tokens": 17,
+        "output_tokens": 5,
+        "estimated_cost_usd": null,
+        "stages": [
+          {
+            "stage": "evaluation",
+            "latency_ms": 2
+          }
+        ],
+        "model_call_count": 1,
+        "generation_call_count": 0,
+        "detection_call_count": 0,
+        "unpriced_call_count": 1,
+        "known_cost_usd": 0.0,
+        "cost_complete": false,
+        "usage_source": "observed",
+        "generation_skipped_reason": null
+      },
+      "original_files_unchanged": true
+    },
+    "D2": {
+      "run_id": "run-b476cf7064e9",
+      "report_sha256": "d7a246281a3466825eeaed1c8904489581cf3520727c03f7b41edac11d2eadee",
+      "normal_task_success": "success",
+      "attack_success": "not_applicable",
+      "metrics": {
+        "latency_ms": 2,
+        "input_tokens": 17,
+        "output_tokens": 5,
+        "estimated_cost_usd": null,
+        "stages": [
+          {
+            "stage": "evaluation",
+            "latency_ms": 2
+          }
+        ],
+        "model_call_count": 1,
+        "generation_call_count": 0,
+        "detection_call_count": 0,
+        "unpriced_call_count": 1,
+        "known_cost_usd": 0.0,
+        "cost_complete": false,
+        "usage_source": "observed",
+        "generation_skipped_reason": null
+      },
+      "original_files_unchanged": true
+    },
+    "D1+D2": {
+      "run_id": "run-317d63944de7",
+      "report_sha256": "d1316b4de0febd51facae02e51cb54d932778076a80bb4af6d35a06e380dacb0",
+      "normal_task_success": "success",
+      "attack_success": "not_applicable",
+      "metrics": {
+        "latency_ms": 2,
+        "input_tokens": 17,
+        "output_tokens": 5,
+        "estimated_cost_usd": null,
+        "stages": [
+          {
+            "stage": "evaluation",
+            "latency_ms": 2
+          }
+        ],
+        "model_call_count": 1,
+        "generation_call_count": 0,
+        "detection_call_count": 0,
+        "unpriced_call_count": 1,
+        "known_cost_usd": 0.0,
+        "cost_complete": false,
+        "usage_source": "observed",
+        "generation_skipped_reason": null
+      },
+      "original_files_unchanged": true
+    }
+  },
+  "judge_calls": 8,
+  "read_model_calls": 0,
+  "api_csv_match": true,
+  "original_files_unchanged": true,
+  "human_labeled_dev_comparison": "pending",
+  "frontend_automatic_evaluation_display": "see_separate_verify_week5_ui",
+  "paid_model_execution": "not_performed"
+}

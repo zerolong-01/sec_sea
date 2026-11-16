@@ -1,0 +1,159 @@
+{
+  "version": "paid-model-experiment-evidence-v0.1",
+  "verified_date": "2026-10-25",
+  "status": "passed",
+  "execution_scope": "real",
+  "destination": "https://api.openai.com/v1/chat/completions",
+  "source_scope": "public synthetic development RAG and email only",
+  "experiment_id": "experiment-4e1e9895fd7f",
+  "planned_runs": 216,
+  "apps": [
+    "rag_chat",
+    "email_summary"
+  ],
+  "conditions": [
+    "none",
+    "D1",
+    "D2-both",
+    "D1-D2",
+    "D2-input",
+    "D2-retrieval"
+  ],
+  "repeats": 3,
+  "models": [
+    {
+      "model_key": "mini",
+      "model_id": "gpt-4.1-mini-2025-04-14",
+      "batch_id": "batch-cf9d6a578a46",
+      "planned_runs": 108,
+      "status_counts": {
+        "completed": 90,
+        "blocked": 18
+      },
+      "observed_input_tokens": 50739,
+      "observed_output_tokens": 13277,
+      "observed_api_calls": 198,
+      "http_status_counts": {
+        "200": 198
+      },
+      "error_counts": {},
+      "estimated_cost_usd": 0.04153879999999999,
+      "usage_scope": "all target-generation and shared-detector calls in this model batch",
+      "call_breakdown": [
+        {
+          "model_id": "gpt-4.1-mini-2025-04-14",
+          "purpose": "detection",
+          "calls": 108,
+          "input_tokens": 21429,
+          "output_tokens": 4240,
+          "estimated_cost_usd": 0.015355599999999994
+        },
+        {
+          "model_id": "gpt-4.1-mini-2025-04-14",
+          "purpose": "generation",
+          "calls": 90,
+          "input_tokens": 29310,
+          "output_tokens": 9037,
+          "estimated_cost_usd": 0.026183199999999997
+        }
+      ]
+    },
+    {
+      "model_key": "full",
+      "model_id": "gpt-4.1-2025-04-14",
+      "batch_id": "batch-f77b580973b9",
+      "planned_runs": 108,
+      "status_counts": {
+        "completed": 90,
+        "blocked": 18
+      },
+      "observed_input_tokens": 50739,
+      "observed_output_tokens": 13542,
+      "observed_api_calls": 198,
+      "http_status_counts": {
+        "200": 198
+      },
+      "error_counts": {},
+      "estimated_cost_usd": 0.14838519999999994,
+      "usage_scope": "all target-generation and shared-detector calls in this model batch",
+      "call_breakdown": [
+        {
+          "model_id": "gpt-4.1-2025-04-14",
+          "purpose": "generation",
+          "calls": 90,
+          "input_tokens": 29310,
+          "output_tokens": 9301,
+          "estimated_cost_usd": 0.13302799999999992
+        },
+        {
+          "model_id": "gpt-4.1-mini-2025-04-14",
+          "purpose": "detection",
+          "calls": 108,
+          "input_tokens": 21429,
+          "output_tokens": 4241,
+          "estimated_cost_usd": 0.015357199999999993
+        }
+      ]
+    }
+  ],
+  "main_api_calls": 396,
+  "all_validation_api_calls": 400,
+  "main_estimated_cost_usd": 0.18992399999999993,
+  "all_validation_estimated_cost_usd": 0.19185839999999993,
+  "budget_ceiling_usd": 1.0,
+  "cost_basis": "observed tokens times frozen standard uncached rates; estimate, not invoice",
+  "unknown_or_unreconciled_calls": 0,
+  "resumed_after_planned_item_limit": 4,
+  "duplicate_run_attempts": 0,
+  "compared_transmitted_calls": 198,
+  "unpaired_calls": 0,
+  "api_csv_export_consistent": true,
+  "read_model_calls": 0,
+  "source_unchanged": true,
+  "report_sha256": "7be473b17c050ede47517237693dd94b13f87cd2bde315908c4c4e641fe0d60f",
+  "source_inventory_sha256": "ad2711e07831ab449fc0e75384fec1796b6cddd3afc5c488ba3a7db027424684",
+  "pipeline_unchanged_since_execution": true,
+  "pipeline_file_sha256": {
+    "providers.py": "e23526b1bcf526ddac37abbe109f052192ec8745773934da6553fbf5788e1a53",
+    "service.py": "03b6604a1b76e0ece9dddbc7c749c4f5a8e135841014ef6696b4c7714a8eee51",
+    "prompts.py": "680fc8c6f0e51216a34fc4f6104ebef2dce903ab787e51126db8e74994337b79",
+    "defenses.py": "2670c49a6d55c6ed00b2ba9caf2b089b934d293539c549093462c542e72e6567",
+    "accounting.py": "d98cc122e45bb1a45fdd558686764af50d99d11820abff6c7fac104e298fcae6",
+    "batch.py": "08ff21905ebec9a543ec8764a180905a43af619db488b6ced60a0ce8571601f9",
+    "batch_budget.py": "1e71171709e5cc7cb1a1e36e1e68a3e90eceeaa443f4cb1e1bfc33dc4b52c3b1",
+    "evaluation.py": "d6dbf891d8d54bca86fd48f5bf57228015741df488e8ce7228fd80f3960e7dbc",
+    "retrieval.py": "a40e38d140acb4caa8544b14bce697cb387d5737a39bdb5e368d93e6045f2249"
+  },
+  "reader_implementation_sha256": "426586531e2923677f8b6241c1bd334058a3439cfd49360bccc56e803dc12055",
+  "live_progress_status_verification": [
+    {
+      "model_id": "gpt-4.1-mini-2025-04-14",
+      "provider_http_status": 200,
+      "provider_request_id_sha256": "f44698efad60bf149bb265901a7fd5f0fb0e011ca482271bd044e0a8b5c5c4c6",
+      "summary_status": "running",
+      "api_http_status": 200,
+      "api_status": "running"
+    },
+    {
+      "model_id": "gpt-4.1-2025-04-14",
+      "provider_http_status": 200,
+      "provider_request_id_sha256": "8c080d1abb34dbfd6a78766f05fdaa2412a9883279aa339ac235e352ef41dbd1",
+      "summary_status": "running",
+      "api_http_status": 200,
+      "api_status": "running"
+    }
+  ],
+  "human_independent_review": "not_performed",
+  "normal_task_semantic_evaluation": "existing_manual_review_pending_policy_preserved",
+  "model_ranking": "not_performed",
+  "holdout_executed": false,
+  "private_artifacts_committed": false,
+  "completed_resume_model_calls": 0,
+  "source_unchanged_after_completed_resume": true,
+  "local_tests": {
+    "backend": 163,
+    "project": 243,
+    "total": 406,
+    "status": "passed"
+  }
+}
