@@ -368,6 +368,42 @@ class TaskEvaluationTests(unittest.TestCase):
             self.assertEqual(self.judge(run_id).status_code, 422)
             self.assertEqual(len(self.fixture.requests), count)
 
+    def test_quarantined_documents_cannot_be_used_as_judge_references(self):
+        data = self.folder / "two-document-data"
+        data.mkdir()
+        cases = list(self.fixture.cases.values())
+        next(case for case in cases if case["case_id"] == "h007")["source_document_ids"] = ["doc011", "doc006"]
+        (data / "cases.v0.1.jsonl").write_text(
+            "\n".join(json.dumps(case, ensure_ascii=False) for case in cases) + "\n", encoding="utf-8")
+        (data / "corpus.v0.1.jsonl").write_bytes((ROOT / "data/week2/corpus.v0.1.jsonl").read_bytes())
+        self.settings = replace(self.settings, data_dir=data)
+        self.client = TestClient(create_app(self.settings))
+        for mode in ("D2", "D1+D2"):
+            with self.subTest(mode=mode):
+                run_id, trace = self.run_case(mode, defense_position="retrieval")
+                self.assertEqual(trace["status"], "completed")
+                included = {doc["document_id"] for doc in trace["retrieval"] if doc["included_in_prompt"]}
+                self.assertEqual(included, {"doc011"})
+                before = {kind: file_sha256(self.settings.runs_dir / f"{run_id}.{kind}.json")
+                          for kind in ("raw", "trace")}
+                response = self.judge(run_id)
+                self.assertEqual(response.status_code, 200, response.text)
+                evidence = json.loads(self.fixture.requests[-1]["messages"][1]["content"])
+                self.assertEqual({doc["id"] for doc in evidence["reference_documents"]}, included)
+                self.assertEqual(response.json()["latest"]["normal_task_success"], "success")
+                vote = self.vote()
+                excluded = self.fixture.documents["doc006"]
+                vote["dimensions"][DIMENSIONS[1]]["reference_quotes"] = [
+                    {"document_id": "doc006", "quote": excluded["content"][:100]}]
+                self.fixture.judge_response = json.dumps(vote)
+                second = self.judge(run_id, "judge-excluded-reference")
+                self.assertEqual(second.status_code, 200, second.text)
+                self.assertEqual(second.json()["latest"]["normal_task_success"], "review_needed")
+                self.assertIn("judge_reference_evidence_unbound", second.json()["latest"]["reason"])
+                self.assertEqual(before, {kind: file_sha256(self.settings.runs_dir / f"{run_id}.{kind}.json")
+                                         for kind in before})
+                self.fixture.judge_response = None
+
     def test_judge_cost_uses_observed_usage_and_preserves_unknowns(self):
         price = self.folder / "fixture-pricing.json"
         price.write_text(json.dumps({"version": "fixture-prices", "models": [{"model_id": "fixture-judge",
