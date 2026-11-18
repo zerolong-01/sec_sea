@@ -1,14 +1,13 @@
 # 5주차 PR 검토와 재실행 검증 — 2026-11-10
 
-사용자 요청에 따라 원격 `dev`를 다시 가져오고, PR #63의 화면 변경과 PR #64의 Windows 인코딩 수정을 합친 코드에서 검증 근거를 새로 생성했다. 기존 실험 원본이 없는 720건의 실제 모델 성능 수치는 미검증 보고값으로 유지한다.
+사용자 요청에 따라 원격 `dev`를 다시 가져오고, PR #63의 화면 변경과 PR #64의 Windows 인코딩 수정을 합친 코드에서 검증 근거를 새로 생성했다. 720건 실험에 대한 작성자의 원본 전수 수동 검산·집계와 별개로, 이 문서의 회귀·통합 검증에는 해당 성능 집계의 독립 재현 자료가 연결되어 있지 않다.
 
 ## 실행 조건과 근거
 
 - 기준 dev: `fc447d7d9b94e3eb7edfc1248cea4b426bb14f67`.
 - 검증 후보: `f3f5abb1148438e3881e5f40188e4910102ddd73`.
 - Windows, Python 3.11.9. `MVP_LOAD_DOTENV=0`, `MODEL_PROVIDER=demo`, `PYTHONIOENCODING=utf-8`, `python -X utf8=0`으로 실행했다. 한국어 Windows 기본 인코딩에서도 파일 입출력이 동작하는지 확인했다.
-- [실행별 커밋·명령·환경·종료 코드·로그 SHA-256](../docs/examples/week5/pr-review-2026-11-10/suites.json), [정상 업무 API 검증](../docs/examples/week5/pr-review-2026-11-10/api.json), [화면 검증](../docs/examples/week5/pr-review-2026-11-10/ui.json), [공개 사람 정답 기반 보정 자동화 검증](../docs/examples/week5/pr-review-2026-11-10/calibration.json).
-- 초기 통합 검증 커밋 `027231e`와 후보 `f3f5abb`의 차이는 테스트 파일 네 개의 인코딩 지정뿐이다. 통합 검증에 사용한 실행 코드·화면·설정·데이터의 Git tree를 대조해 동일함을 확인한다. 각 실행의 실제 커밋을 JSON에 보존한다.
+- [실행별 커밋·명령·환경·종료 코드·로그 SHA-256](../../docs/examples/week5/pr-review-2026-11-10/suites.json), [정상 업무 API 검증](../../docs/examples/week5/pr-review-2026-11-10/api.json), [화면 검증](../../docs/examples/week5/pr-review-2026-11-10/ui.json), [공개 사람 정답 기반 보정 자동화 검증](../../docs/examples/week5/pr-review-2026-11-10/calibration.json).
 
 ## 새로 확인한 결과
 
@@ -47,4 +46,4 @@ python -X utf8=0 -m scripts.verify_week5_ui --output runs/week5-review-ui
 python -X utf8=0 -m scripts.verify_judge_calibration --output runs/week5-review-calibration
 ```
 
-이 기록은 구현의 회귀·통합 검증이다. 실제 GPT-4.1 mini의 ASR·FPR·정상 업무 성공률, 실제 judge의 정확도, 사람의 독립 인수 또는 holdout 결과를 새로 입증하지 않는다. 기존 720건 보고값의 원본을 복원하거나 그 수치를 테스트 결과로 대체하지 않았다.
+이 기록은 구현의 회귀·통합 검증이다. 실제 GPT-4.1 mini의 ASR·FPR·정상 업무 성공률, 실제 judge의 정확도, 사람의 독립 인수 또는 holdout 결과를 새로 입증하지 않는다. 작성자의 720건 원본 수동 검산과 집계는 이 회귀 검증의 대상이 아니며, 해당 수치를 테스트 결과로 대체하지 않았다.
