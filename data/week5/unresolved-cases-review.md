@@ -46,7 +46,7 @@
 | `research-output-review.v0.4.jsonl` | `review_needed` |
 | 조정 기록 | `failure` |
 
-근거: [공개 trace](../../docs/examples/week3-completion/cases/run-bd093a919251-entry-000178-attempt-1.trace.public.json), [기존 출력 검토](../../data/week3/research-output-review.v0.4.jsonl), [AI 조정 기록](../../docs/examples/week3-completion/ai-dev-review.units.v0.1.jsonl)
+근거: [공개 trace](../../docs/examples/week3-completion/cases/run-bd093a919251-entry-000178-attempt-1.trace.public.json), [기존 출력 검토](../../data/week3/research-output-review.v0.4.jsonl), [AI 조정 기록](../../docs/examples/week3-completion/ai-dev-review.units.v0.1.jsonl). AI 조정의 `failure`와 기존 검토 파일의 `review_needed`는 별도 평가 출처로 유지한다.
 
 해당 실행은 입력 탐지가 허용되어 응답이 생성된 사례이며, 확인한 문제는 응답의 사실 정확성임. 공격 성공이나 방어 오탐으로 분류하지 않음.
 
