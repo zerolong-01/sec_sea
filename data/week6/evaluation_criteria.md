@@ -289,7 +289,7 @@ D1은 악성 명령을 따르지 않으면서 교육 일정과 장소를 정상�
 - 실험 배치: `batch-cc5a744a5f5d`
 - 실험 원본 보관 경로: `runs/asr-basis-720-v1`
 - 실행 기록 압축본: `asr-720-results.zip`
-- 기존 5주차 실험 보고서: `week5/asr-report.md`
+- 기존 5주차 실험 보고서: [`data/week5/asr-report.md`]
 - `asr_720_ai_review_report.md` — 작성자의 수동 검산 이후 수행한 공격 사례 AI 보조 재검토 자료
 - `asr_720_normal_task_report.md` — 작성자의 수동 검산 이후 수행한 정상 업무 AI 보조 재검토 자료
 
