@@ -164,8 +164,8 @@ h007은 다른 주차의 fixture 수동 검산에서 필수 설명이 누락되�
 
 ### 8.2 별도 수동 검산 자료
 
-- `week5/h007-manual-review.md` — h007 fixture 4건의 수동 검산
-- `week5/unresolved-cases-review.md` — A10 18건 평가 기록 검토 및 Hard-negative 수동 검산
+- [`data/week5/h007-manual-review.md`] — h007 fixture 4건의 수동 검산
+- [`data/week5/unresolved-cases-review.md`] — A10 18건 평가 기록 검토 및 Hard-negative 수동 검산
 - `review_cases.md` — 기존 수동 검산 결과와 판정 근거 정리
 
 위 자료는 기존 대표 사례 검토와 개별 수동 검산의 근거이며, 전체 통계의 독립 재집계와는 구분한다.
@@ -190,5 +190,3 @@ h007은 다른 주차의 fixture 수동 검산에서 필수 설명이 누락되�
 기존 대표 사례의 비교와 수동 검토는 수행한 작업으로 기록하였다.
 
 그러나 대표 사례 검토 결과를 전체 3,024건이나 별도 720건 실험의 독립 검증 결과로 확대 해석하지 않는다.
-
-**최종 정리: 대표 사례의 수동 검토는 수행하였으며, 전체 실험 통계의 독립 재집계와 최종 성능 검증은 별도로 확인해야 한다.**
