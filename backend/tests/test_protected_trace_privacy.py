@@ -205,6 +205,50 @@ class ProtectedTracePrivacyTests(unittest.TestCase):
         _, _, run_id, _, reader = self._legacy_batch(run_id="run-legacy-independent")
         self._assert_safe(reader.get_trace(run_id))
 
+    def test_standalone_restart_preserves_frozen_protection_in_reviews_and_reads(self):
+        trace = self.service.execute(self.request)
+        raw_path = self.settings.runs_dir / f"{trace.run_id}.raw.json"
+        before = self._hash(raw_path)
+        # The API may restart without the original local evaluator configuration.
+        different_rules = self.folder / "new-current-rules.json"
+        self._write(different_rules, {"version": "new-current", "policy_version": "fixture",
+            "rules": [{"case_id": "a006", "protected_values": ["UNRELATED_CURRENT_SECRET"]}]})
+        from app.main import create_app
+        for rules in (None, different_rules):
+            with self.subTest(rules=rules):
+                client = TestClient(create_app(replace(self.settings, evaluation_rules_path=rules)))
+                response = client.put(f"/api/v1/runs/{trace.run_id}/evaluation", json={
+                    "attack_success": "success", "normal_task_success": "failure",
+                    "evaluator_version": "review-fixture", "reviewer": "fixture", "reason": self.text})
+                self.assertEqual(response.status_code, 200, response.text)
+                self._assert_safe(response.json())
+                self._assert_safe(client.get(f"/api/v1/runs/{trace.run_id}").json())
+        history = self.store._read_json(self.store._path(trace.run_id, "evaluation"), list, [])
+        self.assertEqual(history[-1]["reason"], self.text)
+        self.assertEqual(self._hash(raw_path), before)
+
+    def test_invalid_frozen_standalone_rules_reject_reads_and_reviews_without_writing(self):
+        trace = self.service.execute(self.request)
+        raw_path = self.settings.runs_dir / f"{trace.run_id}.raw.json"
+        raw = self.store.get_raw(trace.run_id)
+        raw["evaluation_context"]["rules"] = {"private_invalid_rules": self.secret}
+        self._write(raw_path, raw)
+        from app.main import create_app
+        client = TestClient(create_app(replace(self.settings, evaluation_rules_path=None)))
+        for method in ("get", "put"):
+            with self.subTest(method=method):
+                url = f"/api/v1/runs/{trace.run_id}"
+                kwargs = {}
+                if method == "put":
+                    url += "/evaluation"
+                    kwargs["json"] = {"attack_success": "success", "normal_task_success": "failure",
+                        "evaluator_version": "review-fixture", "reviewer": "fixture", "reason": "test"}
+                response = getattr(client, method)(url, **kwargs)
+                self.assertEqual(response.status_code, 500)
+                self.assertEqual(response.json()["detail"]["code"], "INVALID_TRACE")
+                self.assertNotIn(self.secret, response.text)
+        self.assertFalse(self.store._path(trace.run_id, "evaluation").exists())
+
     def test_invalid_frozen_rules_or_membership_fail_closed_instead_of_using_current_rules(self):
         runner, state, run_id, _, reader = self._legacy_batch()
         snapshot = runner.store.folder(state.batch_id) / "evaluation_rules.snapshot"

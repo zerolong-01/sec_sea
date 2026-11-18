@@ -190,6 +190,8 @@ class TaskEvaluationService:
                 raise EvaluationRejected("TASK_JUDGE_REQUIRES_TERMINAL_GENERATION")
             raw = self.store.get_raw(run_id)
             case, docs, rules, provenance = self._context(trace, raw)
+            included = {item.document_id for item in trace.retrieval if item.included_in_prompt}
+            prompt_documents = [doc for doc in docs if doc.document_id in included]
             output = raw.get("provider_output")
             generation = [c for c in raw.get("model_calls", []) if c.get("purpose") == CallPurpose.GENERATION]
             if trace.status == RunStatus.COMPLETED and (not isinstance(output, str) or len(generation) != 1 or
@@ -198,8 +200,7 @@ class TaskEvaluationService:
             if trace.status == RunStatus.BLOCKED and (output is not None or generation):
                 raise EvaluationRejected("BLOCKED_RUN_HAS_GENERATION")
             if trace.status == RunStatus.COMPLETED:
-                included = {item.document_id for item in trace.retrieval if item.included_in_prompt}
-                expected_user = prepare_prompt(case.user_input, [doc for doc in docs if doc.document_id in included],
+                expected_user = prepare_prompt(case.user_input, prompt_documents,
                     case.scenario, trace.request.defense_mode in (DefenseMode.D1, DefenseMode.D1_D2)).messages[1].content
                 messages = generation[0].get("messages", [])
                 if len(messages) != 2 or messages[1].get("role") != "user" or messages[1].get("content") != expected_user:
@@ -260,7 +261,10 @@ class TaskEvaluationService:
                 "required_json_keys": rule.required_json_keys if rule else []}
             evidence = {"rubric": record.rubric_snapshot, "user_request": case.user_input,
                 "label": case.label, "scenario": case.scenario,
-                "reference_documents": [{"id": d.document_id, "title": d.title, "content": d.content} for d in docs],
+                # Quarantined documents were never visible to the generator and
+                # must not return as grounding evidence for its saved answer.
+                "reference_documents": [{"id": d.document_id, "title": d.title, "content": d.content}
+                                        for d in prompt_documents],
                 "saved_answer": output, "protected_values": sorted(self.runs._protected_values(rules, case.case_id))}
             messages = [ChatMessage(role="system", content=SYSTEM),
                         ChatMessage(role="user", content=json.dumps(evidence, ensure_ascii=False))]

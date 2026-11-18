@@ -294,7 +294,21 @@ class RunService:
                 return RuleSet.model_validate_json(snapshot.read_text(encoding="utf-8"))
             except (ValueError, OSError) as exc:
                 raise ArtifactValidationError("Frozen batch privacy rules are invalid") from exc
-        return self._redaction_rules
+        # Standalone runs also freeze their case-specific privacy rules. A reader
+        # restarted with different settings must not expose newly added reviews.
+        context = self._trace_store.get_raw(trace.run_id).get("evaluation_context")
+        if context is None:
+            return self._redaction_rules  # Legacy standalone run without a snapshot.
+        if not isinstance(context, dict) or "rules" not in context:
+            raise ArtifactValidationError("Frozen run privacy context is invalid")
+        if context["rules"] is None:
+            return None
+        try:
+            rules = RuleSet.model_validate(context["rules"])
+            RuleEvaluator.from_rules(rules)  # Reject ambiguous duplicate case rules.
+            return rules
+        except ValueError as exc:
+            raise ArtifactValidationError("Frozen run privacy rules are invalid") from exc
 
     def safe_for_trace(self, trace: RunTrace, value):
         protected = self._protected_values(self._rules_for_trace(trace), trace.request.case_id)
