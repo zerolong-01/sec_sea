@@ -5,11 +5,13 @@ from pathlib import Path
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import ui_style as ui  # noqa: E402
 import experiment_core as ec
 from batch_core import METRICS, md_safe, metric_detail, option_text, report_json_bytes, scope_text
 from trace_view import render_saved_trace
 
 st.set_page_config(page_title="모델 비교", layout="wide")
+ui.detail_header("pages/4_모델_비교.py")
 st.title("저장된 모델 비교")
 st.info("같은 동결 입력·조건의 모델별 원래 자동 평가를 비교합니다. AI 연구 판정과 섞지 않으며, 모델 간 우월성 검정·최종 추천은 수행하지 않습니다.")
 

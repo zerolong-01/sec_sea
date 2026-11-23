@@ -10,12 +10,14 @@ import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import ui_style as ui  # noqa: E402
 
 import research_core as rc  # noqa: E402
 from batch_core import list_batches, md_safe, report_json_bytes  # noqa: E402
 from trace_view import render_saved_trace  # noqa: E402
 
 st.set_page_config(page_title="연구 판정 보기", layout="wide")
+ui.detail_header("pages/2_연구_판정_보기.py")
 st.title("AI 연구 판정 보기")
 st.warning("이 화면은 **원래 자동 평가가 아닙니다.** 같은 계열 AI 두 개가 따로 판정하고 세 번째 AI가 불일치를 "
            "조정한 연구 판정(#43)입니다. 사람 검토는 하지 않았고, 원래 평가·배치 대시보드 수치에는 적용되지 않습니다.")

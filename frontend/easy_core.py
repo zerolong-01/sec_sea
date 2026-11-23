@@ -143,6 +143,87 @@ def headline(label, results):
     return f"{total}가지 중 " + " ".join(sentences)
 
 
+# 성적표 (#72 화면 정리): 방어마다 '공격을 막았나?'와 '원래 질문에 답했나?'를 따로 보여 준다.
+# 판정 값은 trace의 evaluation을 그대로 옮기고, 보여 주는 글자만 정한다.
+ANSWER_MARKS = {"success": ("good", "답함"), "failure": ("bad", "못 함"), "not_applicable": ("na", "해당 없음")}
+ATTACK_MARKS = {"success": ("bad", "뚫림"), "failure": ("good", "막음"), "not_applicable": ("na", "해당 없음")}
+
+
+def scorecard(label, trace, error=None):
+    """한 방어 방식의 성적표 두 칸: ((톤, 글자) 공격 칸, (톤, 글자) 답변 칸).
+    톤은 good·bad·na(해당 없음)·pending(판정 전)·error(실행 오류)."""
+    if error or not trace or trace.get("status") == "failed" or (trace.get("output") or {}).get("outcome") == "error":
+        return ("error", "실행 오류"), ("error", "실행 오류")
+    evaluation = trace.get("evaluation") or {}
+    if label == "attack":
+        attack = ATTACK_MARKS.get(evaluation.get("attack_success"), ("pending", "판정 전"))
+    else:
+        attack = ("na", "해당 없음")
+    answer = ANSWER_MARKS.get(evaluation.get("normal_task_success"), ("pending", "판정 전"))
+    return attack, answer
+
+
+def answer_line(label, cards):
+    """공격 질문일 때 성적표 위 두 번째 줄. cards는 scorecard 결과 목록. 막은 수와 답한 수가 다를 때만 쓴다."""
+    if label != "attack" or not cards:
+        return ""
+    blocked = sum(attack[0] == "good" for attack, _ in cards)
+    answered = sum(answer[0] == "good" for _, answer in cards)
+    if not blocked or blocked == answered:
+        return ""
+    if answered == 0:
+        return "하지만 원래 질문에 제대로 답한 방어는 없어요."
+    return f"하지만 원래 질문에 답한 건 {answered}가지예요."
+
+
+# 쉬운 trace (#72 화면 정리): 첫 페이지 '③ 단계별 trace·판정 근거'를 단계마다 한 줄로 줄인 것
+FLOW_STAGES = ("input", "retrieval", "prompt_assembly", "defense_events", "output", "evaluation")
+STOP_DECISIONS = ("block", "quarantine", "redact")
+
+
+def flow(label, trace):
+    """[(단계 값, 한 줄 설명, 강조)] — 강조는 None, 'bad'(문제가 생긴 단계), 'good'(방어가 막은 단계)."""
+    trace = trace or {}
+    evaluation = trace.get("evaluation") or {}
+    attacked = evaluation.get("attack_success") == "success"
+    docs = len(trace.get("retrieval") or [])
+    parts = len(trace.get("prompt_assembly") or [])
+    decisions = [event.get("decision") for event in trace.get("defense_events") or []]
+    stopped = any(d in STOP_DECISIONS for d in decisions)
+    steps = [("input", "사용자 질문을 받았습니다.", None),
+             ("retrieval", f"참고 문서 {docs}개를 찾아 가져왔습니다." if docs else "가져온 참고 문서가 없습니다.", None),
+             ("prompt_assembly", f"지시·질문·문서를 합쳐 AI에게 전달했습니다. (구성 요소 {parts}개)" if parts
+              else "AI에게 전달하기 전에 멈췄습니다.", None)]
+    if not decisions:
+        steps.append(("defense_events", "방어 없음 — 아무도 검사하지 않았습니다.", None))
+    elif stopped:
+        steps.append(("defense_events", "방어가 수상한 내용을 찾아 막았습니다.", "bad" if label != "attack" else "good"))
+    else:
+        steps.append(("defense_events", "방어가 검사했지만 그대로 통과시켰습니다.", None))
+    if _blocked(trace):
+        steps.append(("output", "답변을 막아 AI 답변이 나오지 않았습니다.", None))
+    elif attacked:
+        steps.append(("output", "숨겨야 할 값을 답변에 말했습니다. (화면에서는 가림)", "bad"))
+    else:
+        steps.append(("output", "AI가 답변을 만들었습니다.", None))
+    steps.append(("evaluation", "정해진 규칙으로 결과를 판정했습니다.", None))
+    return steps
+
+
+# trace 원래 평가의 이유 코드 중 판정 화면(SIMPLE_RULE_REASONS)에 없는 것
+TRACE_REASONS = {
+    "exact_canary_in_raw_provider_output": "숨겨야 할 비밀값이 답변에 그대로 들어 있었습니다.",
+}
+
+
+def reason_sentences(trace, known):
+    """원래 평가의 이유 코드(; 로 구분)를 쉬운 문장으로. known은 화면 쪽 쉬운 문장 사전. 모르는 코드는 뺀다."""
+    reason = ((trace or {}).get("evaluation") or {}).get("reason") or ""
+    table = {**known, **TRACE_REASONS}
+    sentences = [table[code.strip()] for code in reason.split(";") if code.strip() in table]
+    return list(dict.fromkeys(sentences))
+
+
 def takeaway(label, results):
     """이 결과가 말하는 것 한 줄."""
     words = [w for _, _, w, _ in results]
