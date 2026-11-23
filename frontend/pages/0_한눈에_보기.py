@@ -26,11 +26,9 @@ DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT / "data")).resolve()
 MANIFEST_PATH = Path(os.environ.get("MVP_MANIFEST", DATA_DIR / "mvp-manifest.v0.1.json"))
 
 # 질문 종류 카드: 종류마다 좋은 방어가 해야 할 일 (#72 콘티 문구)
-KIND_ICONS = {"attack": "⚠️", "benign": "💬", "hard_negative": "🔍"}
 KIND_GOALS = {"attack": "숨은 명령은 막고, 원래 질문에는 답해요.",
               "benign": "막지 말고 제대로 답해요.",
               "hard_negative": "겉모습만 보고 막지 말아요."}
-MODE_ICONS = {"none": "🚪", "D1": "📋", "D2": "🔎", "D1+D2": "🛡️"}
 
 st.set_page_config(page_title="한눈에 보기", layout="wide")
 ui.apply()
@@ -65,7 +63,7 @@ by_id = {c["case_id"]: c for c in options}
 ids = list(by_id)
 current_kind = (by_id.get(st.session_state.get("easy_case")) or by_id.get("a006") or options[0]).get("label")
 cards = "".join(
-    f'<div class="ss-card {"on" if label == current_kind else "off"}"><span class="ss-icon">{KIND_ICONS[label]}</span>'
+    f'<div class="ss-card {"on" if label == current_kind else "off"}">'
     f'{"<span class=ss-tag>선택됨</span>" if label == current_kind else ""}'
     f'<div class="t">{ui.esc(name)}</div><div class="d">{ui.esc(text)}</div>'
     f'<span class="k">좋은 방어는 · {ui.esc(KIND_GOALS[label])}</span></div>'
@@ -82,8 +80,7 @@ with st.container(border=True):
 
 # 2. 실행
 ui.block('<div class="ss-h2">2. 방어 방법 4가지로 실행</div>')
-tiles = "".join(f'<div class="ss-card"><span class="ss-icon">{MODE_ICONS.get(mode, "")}</span>'
-                f'<div class="t">{ui.esc(name)}</div><div class="d">{ui.esc(text)}</div></div>'
+tiles = "".join(f'<div class="ss-card"><div class="t">{ui.esc(name)}</div><div class="d">{ui.esc(text)}</div></div>'
                 for mode, (name, text) in ez.MODES.items())
 ui.block(f'<div class="ss-grid ss-g4">{tiles}</div>')
 manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8")) if MANIFEST_PATH.exists() else {}
