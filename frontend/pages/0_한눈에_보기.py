@@ -99,7 +99,7 @@ for column, (label, (name, _)) in zip(columns, ez.KINDS.items()):
                 f'<div style="display: flex; gap: 10px; align-items: flex-start; font-size: 15px; line-height: 1.6; color: #334155">'
                 f'<b style="flex: 0 0 auto; color: #0B6E79">좋은 방어는</b>{ui.esc(KIND_GOALS[label])}</div></div>')
         if example and not selected:
-            st.button(f"{name}로 해 보기", key=f"easy_kind_{label}", on_click=pick_case, args=(example["case_id"],),
+            st.button(f"{name} 고르기", key=f"easy_kind_{label}", on_click=pick_case, args=(example["case_id"],),
                       use_container_width=True)
 
 case_id = st.selectbox("같은 종류의 다른 질문 고르기 (종류 · 번호 · 내용)", ids, index=ids.index("a006") if "a006" in ids else 0,
