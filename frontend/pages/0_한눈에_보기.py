@@ -141,8 +141,33 @@ with step_slot:
     ui.steps(STEPS, 3 if shown else 1)
 
 
-def render_result_view(saved, traces, judged, scores):
-    """콘티 ③ 결과: 한 줄 결론 → 방어별 성적표 → 이 결과가 말하는 것 → 다음 할 일."""
+def judge(saved):
+    """저장된 AI 확인 결과까지 반영한 trace와 결론·성적표."""
+    traces = [effective_trace(r["trace"], saved_report(r["trace"])) if r["trace"] else None for r in saved["results"]]
+    judged = [(r["mode"], *ez.verdict(saved["label"], trace, r["error"])) for r, trace in zip(saved["results"], traces)]
+    scores = [ez.scorecard(saved["label"], trace, r["error"]) for r, trace in zip(saved["results"], traces)]
+    return traces, judged, scores
+
+
+def render_result_view(saved):
+    """콘티 ③ 결과: 한 줄 결론 → 방어별 성적표 → 이 결과가 말하는 것 → 다음 할 일.
+    'AI로 확인하기' 버튼 처리가 결론보다 먼저 끝나야 하므로, 결론 자리를 먼저 잡아 두고 버튼 뒤에 채운다."""
+    top = st.container()
+    left, right = st.columns([1.4, 1])
+    left.button("왜 그렇게 됐는지 보기 →  단계별 기록과 판정 근거", type="primary", key="easy_go_reason",
+                on_click=set_view, args=("reason",), use_container_width=True)
+    right.button("다른 질문으로 · 1단계로 돌아가기", key="easy_again", on_click=start_over, use_container_width=True)
+    with st.container(border=True):
+        ui.show('<div style="font-size: 18px; font-weight: 800">답변 4개 모두 AI로 확인하기</div>'
+                '<div style="font-size: 14px; color: #64748B; margin-top: 4px">원래 요청을 해냈는지 AI가 한 번 더 확인해요.</div>')
+        render_group([r["trace"] for r in saved["results"]], key="easy_tasks", simple=True)
+    traces, judged, scores = judge(saved)
+    with top:
+        render_scorecard(saved, judged, scores)
+    render_answers(saved, judged)
+
+
+def render_scorecard(saved, judged, scores):
     label = saved["label"]
     ui.show(f'<div style="font-size: 15px; color: #64748B; margin-top: 24px">{ui.esc(kind)} · '
             f'"{ui.esc(cb.summary(case, 60, redactor=redactor))}"</div>')
@@ -172,15 +197,8 @@ def render_result_view(saved, traces, judged, scores):
         ui.note("한 번 더 확인해 보세요", "여기서 '답함'은 꼭 들어가야 할 단어가 있는지 규칙으로 본 결과예요. "
                 "아래 '답변 4개 모두 AI로 확인하기'를 누르면 내용까지 제대로 설명했는지 AI가 다시 확인해요.")
 
-    left, right = st.columns([1.4, 1])
-    left.button("왜 그렇게 됐는지 보기 →  단계별 기록과 판정 근거", type="primary", key="easy_go_reason",
-                on_click=set_view, args=("reason",), use_container_width=True)
-    right.button("다른 질문으로 · 1단계로 돌아가기", key="easy_again", on_click=start_over, use_container_width=True)
-    with st.container(border=True):
-        ui.show('<div style="font-size: 18px; font-weight: 800">답변 4개 모두 AI로 확인하기</div>'
-                '<div style="font-size: 14px; color: #64748B; margin-top: 4px">원래 요청을 해냈는지 AI가 한 번 더 확인해요.</div>')
-        render_group([r["trace"] for r in saved["results"]], key="easy_tasks", simple=True)
 
+def render_answers(saved, judged):
     ui.section_title("AI 답변 원문 · 확인 기록")
     cols = st.columns(len(judged))
     for col, item, (mode, tone, word, sentence) in zip(cols, saved["results"], judged):
@@ -200,9 +218,10 @@ def render_result_view(saved, traces, judged, scores):
     ui.link("app.py", "자세히 비교하기 →")
 
 
-def render_reason_view(saved, traces, judged):
+def render_reason_view(saved):
     """콘티 ④ 왜 이런 결과가?: 처리 흐름 그림 → 판정 결과 두 칸 → 이유."""
     label = saved["label"]
+    traces, judged, _ = judge(saved)
     st.button("← 결과로 돌아가기", key="easy_back", on_click=set_view, args=("result",))
     ui.heading("왜 이런 결과가 나왔을까요?", "질문이 들어가서 판정이 나오기까지, 한 단계씩 따라가 봐요.", size=32)
     pick = st.radio("방어 방법", list(range(len(saved["results"]))), horizontal=True, key="easy_reason_mode",
@@ -279,13 +298,10 @@ def render_reason_view(saved, traces, judged):
 
 
 if shown:
-    traces = [effective_trace(r["trace"], saved_report(r["trace"])) if r["trace"] else None for r in saved["results"]]
-    judged = [(r["mode"], *ez.verdict(saved["label"], trace, r["error"])) for r, trace in zip(saved["results"], traces)]
-    scores = [ez.scorecard(saved["label"], trace, r["error"]) for r, trace in zip(saved["results"], traces)]
     if st.session_state.get("easy_view") == "reason":
-        render_reason_view(saved, traces, judged)
+        render_reason_view(saved)
     else:
-        render_result_view(saved, traces, judged, scores)
+        render_result_view(saved)
     scopes = {((r["trace"] or {}).get("manifest") or {}).get("execution_scope") for r in saved["results"]}
     if scopes & {"fixture", "demo"}:
         st.caption("지금은 연습용 고정 응답으로 실행했습니다. 실제 AI 모델 결과와 다를 수 있습니다.")
