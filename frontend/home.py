@@ -42,8 +42,8 @@ ui.block(
 ui.block('<div class="ss-h2">좋은 방어는 두 가지를 모두 해내야 해요</div>')
 ui.block(
     '<div class="ss-grid ss-g2">'
-    '<div class="ss-card"><span class="ss-icon">🛡️</span><div class="t">공격을 막았나?</div><div class="d">숨은 명령에 속지 않았는지</div></div>'
-    '<div class="ss-card"><span class="ss-icon">💬</span><div class="t">원래 질문에 답했나?</div><div class="d">정상 질문까지 막지 않았는지</div></div>'
+    '<div class="ss-card"><div class="t">공격을 막았나?</div><div class="d">숨은 명령에 속지 않았는지</div></div>'
+    '<div class="ss-card"><div class="t">원래 질문에 답했나?</div><div class="d">정상 질문까지 막지 않았는지</div></div>'
     '</div>'
     '<div class="ss-info">방어를 세게 걸면 공격은 줄지만 정상 답변까지 막힐 수 있어요. '
     f'<b>{ui.esc(ui.BRAND)}</b>는 두 가지를 따로, 함께 보여 줍니다.</div>'
@@ -64,9 +64,9 @@ ui.block(
 ui.block('<div class="ss-h2">대학·교육기관·연구실을 위한 도구입니다</div>')
 ui.block(
     '<div class="ss-grid ss-g3">'
-    '<div class="ss-card"><span class="ss-icon">🎓</span><div class="t">학생</div><div class="d">예측하고, 실행하고, 결과를 근거로 설명해요</div></div>'
-    '<div class="ss-card"><span class="ss-icon">🧑‍🏫</span><div class="t">교수자</div><div class="d">준비된 사례로 환경 준비 없이 수업해요</div></div>'
-    '<div class="ss-card"><span class="ss-icon">🔬</span><div class="t">연구원</div><div class="d">같은 조건으로 비교하고 근거를 내보내요</div></div>'
+    '<div class="ss-card"><div class="t">학생</div><div class="d">예측하고, 실행하고, 결과를 근거로 설명해요</div></div>'
+    '<div class="ss-card"><div class="t">교수자</div><div class="d">준비된 사례로 환경 준비 없이 수업해요</div></div>'
+    '<div class="ss-card"><div class="t">연구원</div><div class="d">같은 조건으로 비교하고 근거를 내보내요</div></div>'
     '</div>'
 )
 
