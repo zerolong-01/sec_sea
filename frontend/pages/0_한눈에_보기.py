@@ -227,7 +227,7 @@ def render_reason_view(saved):
     pick = st.radio("방어 방법", list(range(len(saved["results"]))), horizontal=True, key="easy_reason_mode",
                     format_func=lambda i: ez.mode_name(saved["results"][i]["mode"]), label_visibility="collapsed")
     item, trace = saved["results"][pick], traces[pick]
-    if not trace:
+    if not trace or judged[pick][2] == "실행 오류":
         ui.note("실행 오류", judged[pick][3])
         return
     cards, tones = [], set()

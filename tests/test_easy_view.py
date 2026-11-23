@@ -157,6 +157,25 @@ class EasyPagePrivacyTest(unittest.TestCase):
 
 
 class EasyPageTest(unittest.TestCase):
+    def test_failed_run_reason_does_not_claim_generation_or_evaluation(self):
+        from streamlit.testing.v1 import AppTest
+        import ui_style
+
+        failed = sample("detector-failed")
+        for trace, error in ((failed, None), (None, {"message": "연결 실패"})):
+            with self.subTest(has_trace=trace is not None), \
+                    patch.object(ui_core, "run_case", return_value=(trace, error)), \
+                    patch.object(ui_style, "show", wraps=ui_style.show) as show:
+                app = AppTest.from_file(str(PAGE), default_timeout=30).run()
+                app.button(key="easy_run").click().run()
+                show.reset_mock()
+                app.button(key="easy_go_reason").click().run()
+                self.assertFalse(app.exception, app.exception)
+                markup = "\n".join(call.args[0] for call in show.call_args_list)
+                self.assertIn("실행 오류", markup)
+                self.assertNotIn("AI가 답변을 만들었습니다", markup)
+                self.assertNotIn("정해진 규칙으로 결과를 판정했습니다", markup)
+
     def test_runs_four_modes_only_after_click_and_explains_results(self):
         from streamlit.testing.v1 import AppTest
         by_mode = {"none": "a006-none", "D1": "a006-D1", "D2": "a006-D2", "D1+D2": "a006-D2"}
