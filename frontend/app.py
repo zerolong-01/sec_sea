@@ -6,6 +6,7 @@ import streamlit as st
 
 import case_browser as cb
 from trace_view import render_result
+import ui_style as ui
 from task_evaluation_core import effective_trace
 from task_evaluation_view import render_group, saved_report
 from ui_core import (
@@ -21,6 +22,7 @@ MANIFEST_PATH = Path(os.environ.get("MVP_MANIFEST", DATA_DIR / "mvp-manifest.v0.
 MANIFEST = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 
 st.set_page_config(page_title="LLM Defense Trade-off Lab", layout="wide")
+ui.detail_header("app.py")
 
 
 def load_cases():
@@ -105,9 +107,8 @@ def refresh_comparison(results):
     return refreshed
 
 
-st.title("LLM Defense Trade-off Lab")
-st.write("방어 모드 실행 · trace 확인")
-st.caption("결과를 쉬운 말로 보고 싶다면 왼쪽 메뉴의 **한눈에 보기**를 이용하세요.")
+st.title("방어 모드 실행 · trace 확인")
+st.caption("케이스는 왼쪽에서 고릅니다. 결과를 쉬운 말로 보고 싶다면 위쪽 메뉴의 **한눈에 보기**를 이용하세요.")
 
 cases = load_cases()
 case_redaction_error = False

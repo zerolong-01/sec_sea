@@ -10,6 +10,7 @@ import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # frontend 폴더의 모듈을 불러오기 위해
+import ui_style as ui  # noqa: E402
 
 from batch_core import (  # noqa: E402
     ANALYSIS_FILTERS, METRICS, NO_VALUE, budget_rows, common_reasons, comparison_rows, condition_rows,
@@ -24,6 +25,7 @@ from research_core import get_sources, original_source_badges  # noqa: E402
 from batch_chart import SELECTION, selected_group, tradeoff_chart  # noqa: E402
 
 st.set_page_config(page_title="배치 대시보드", layout="wide")
+ui.detail_header("pages/1_배치_대시보드.py")
 st.title("배치 대시보드")
 st.caption("저장된 배치 실험 결과를 조회합니다. 조회·필터·내보내기는 모델을 다시 호출하지 않습니다.")
 
@@ -379,7 +381,7 @@ with tab_trace:
                     st.caption(md_safe(f"평가 사유: {evaluation['reason']}"))
                 with st.expander("trace 전체 (JSON)"):
                     st.json(trace, expanded=False)
-                st.caption("단계별 화면은 첫 페이지의 '한 번 실행' 탭에서 같은 실행 번호로 조회하면 볼 수 있습니다.")
+                st.caption("단계별 화면은 자세히 비교하기 › 1 · 질문 하나의 '한 번 실행' 탭에서 같은 실행 번호로 조회하면 볼 수 있습니다.")
 
 # ---------------------------------------------------------------------------
 # 9. 내보내기: 지금 화면과 같은 필터·스냅샷
