@@ -14,7 +14,7 @@ ASSETS = Path(__file__).resolve().parent / "assets"
 
 st.set_page_config(page_title=ui.BRAND, page_icon=str(ASSETS / "icon.svg"), layout="wide")
 # 위쪽 메뉴 왼쪽의 로고 (#72 콘티: 방패 + 보안바다)
-st.logo(str(ASSETS / "logo.svg"), icon_image=str(ASSETS / "icon.svg"), size="large")
+st.logo(str(ASSETS / "logo.svg"), size="large")
 
 home = st.Page("home.py", title="홈", icon=":material/home:", default=True)
 menu = {

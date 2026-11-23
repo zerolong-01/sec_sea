@@ -4,8 +4,10 @@
 - 고정 화면(홈·사용 안내)은 storyboard/*.html 을 그대로 보여 준다.
 - 바뀌는 화면(한눈에 보기 등)은 아래 함수가 콘티와 같은 HTML을 만든다. 글자는 모두 esc()를 거친다.
 """
+import base64
 import hashlib
 import html
+import re
 from pathlib import Path
 
 import streamlit as st
@@ -129,14 +131,35 @@ def apply():
     st.html(CSS)
 
 
+_SVG = re.compile(r"<svg\b([^>]*)>(.*?)</svg>", re.S)
+
+
+def _svg_to_img(match):
+    """st.html은 <svg>를 지우므로 아이콘을 같은 모양의 <img>(data URI)로 바꿔 넣는다."""
+    attrs, inner = match.group(1), match.group(2)
+    if "xmlns=" not in attrs:
+        attrs = ' xmlns="http://www.w3.org/2000/svg"' + attrs
+    width = re.search(r'\bwidth="([^"]+)"', attrs)
+    height = re.search(r'\bheight="([^"]+)"', attrs)
+    style = re.search(r'\bstyle="([^"]+)"', attrs)
+    data = base64.b64encode(f"<svg{attrs}>{inner}</svg>".encode("utf-8")).decode("ascii")
+    size = "".join(f' {k}="{v.group(1)}"' for k, v in (("width", width), ("height", height)) if v)
+    extra = f' style="{style.group(1)}"' if style else ' style="display: block"'
+    return f'<img alt="" src="data:image/svg+xml;base64,{data}"{size}{extra}>'
+
+
+def _html(markup):
+    st.html(_SVG.sub(_svg_to_img, markup))
+
+
 def show(markup):
     """콘티 모양 HTML 조각을 그대로 화면에 넣는다."""
-    st.html(f'<div style="{FONT}">{markup}</div>')
+    _html(f'<div style="{FONT}">{markup}</div>')
 
 
 def storyboard(name):
     """홈·사용 안내처럼 바뀌지 않는 화면은 콘티 HTML 파일을 그대로 보여 준다."""
-    st.html((STORYBOARD / name).read_text(encoding="utf-8"))
+    _html((STORYBOARD / name).read_text(encoding="utf-8"))
 
 
 def svg(name, size=24, stroke=None, width=1.8):
