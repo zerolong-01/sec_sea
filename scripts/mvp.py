@@ -126,7 +126,7 @@ def services(bundle, runs_dir: Path, api_port: int, ui_port: int, demo: bool, *,
         backend = ManagedProcess("backend", [sys.executable, "-m", "uvicorn", "app.main:app", "--app-dir", str(ROOT / "backend"), "--host", "127.0.0.1", "--port", str(api_port)], log_dir, env)
         children.append(backend)
         backend.wait_ready(f"{backend_url}/health")
-        frontend = ManagedProcess("frontend", [sys.executable, "-m", "streamlit", "run", str(ROOT / "frontend/app.py"), "--server.address=127.0.0.1", f"--server.port={ui_port}", "--server.headless=true", "--browser.gatherUsageStats=false"], log_dir, env)
+        frontend = ManagedProcess("frontend", [sys.executable, "-m", "streamlit", "run", str(ROOT / "frontend/main.py"), "--server.address=127.0.0.1", f"--server.port={ui_port}", "--server.headless=true", "--browser.gatherUsageStats=false"], log_dir, env)
         children.append(frontend)
         frontend.wait_ready(f"{frontend_url}/_stcore/health")
         yield backend_url, frontend_url, env, children

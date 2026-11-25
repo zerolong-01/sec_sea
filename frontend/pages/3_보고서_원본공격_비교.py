@@ -5,12 +5,14 @@ from pathlib import Path
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import ui_style as ui  # noqa: E402
 import comparison_core as cc
 from batch_core import md_safe, report_json_bytes
 from research_core import research_detail
 from trace_view import render_saved_trace
 
 st.set_page_config(page_title="보고서 원본 공격 비교", layout="wide")
+ui.detail_header("pages/3_보고서_원본공격_비교.py")
 st.title("보고서 원본 공격 비교")
 st.warning("최종 보고서 4.2절의 AI 연구 판정입니다. 원래 자동 평가와 별도이며, 사람 검토·최종 추천은 완료되지 않았습니다.")
 if st.button("보고서 새로고침", key="comparison_reload"):

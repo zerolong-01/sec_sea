@@ -88,3 +88,34 @@ fixture benchmark에서 미평가 1개를 포함한 7/8 일치는 실제 judge �
 후보 정책은 `dev_candidate`, `human_validated=false`다. 실제 사람의 검토, 미확정 23종 해소,
 최종 방어 추천, holdout 진입/실행, 고객 PoC는 이번 자동 검증으로 완료 처리하지 않았다.
 이슈 #59의 팀 완료 체크나 기존 사람 인수 이슈를 변경하지 않았다.
+
+## 저장 실행의 보호 규칙·판정 문서 범위 보완 — 2026-11-18
+
+dev `fb1af4a`를 기준으로 `fix/backend-result-integrity`에서 다음 결함을 재현하고 수정했다.
+
+- 독립 실행 후 서버를 다른 평가 설정으로 재시작하면, 수동 평가 사유에 새로 포함한 원래 보호값이
+  API 응답과 저장 trace에 노출될 수 있었다. 조회·수정에 실행 당시 raw snapshot의 보호 규칙을 사용한다.
+  손상된 snapshot은 쓰기 전에 `INVALID_TRACE`로 거부한다. snapshot이 없는 과거 실행의 현재 설정 fallback과
+  배치의 동결 규칙 검증을 유지한다.
+- D2가 일부 문서를 격리한 뒤 답변을 생성해도 judge에는 검색된 모든 문서를 전달했다.
+  실제 생성 프롬프트에 포함한 문서만 판정 근거로 전달하고, 격리 문서 인용은 `review_needed`로 처리한다.
+  원래 사용자 요청과 정상 업무 기준은 그대로 평가하며, 검색·격리 기록은 원본에 보존한다.
+
+세 회귀 테스트에서 수정 전 실패를 확인했다. 수정 후에는 설정 제거·변경 뒤의 조회·수동 수정,
+손상된 규칙의 쓰기 차단, D2와 D1+D2의 문서 범위·잘못된 인용·원본 hash 보존을 확인했다.
+
+macOS arm64, Python 3.11.18에서 `MVP_LOAD_DOTENV=0`, `MODEL_PROVIDER=demo`로 검증했다.
+로컬 fixture 서버를 사용할 수 있는 실행 권한으로 수행했으며 유료 외부 모델은 호출하지 않았다.
+
+| 검증 | 결과 |
+| --- | --- |
+| 백엔드 전체 회귀 | 186개 통과 |
+| 전체 파이프라인·화면 회귀 | 317개 통과 |
+| `scripts.mvp check` | 36개 케이스·15개 문서 통과 |
+| `scripts.week4_report_comparison --check-docs` | 기존 보고서 표·백엔드 근거 일치 |
+| `scripts.verify_week5` | API·CSV·원본 불변 통과, 조회 모델 호출 0 |
+| `scripts.verify_week5_ui` | 화면·판정 조회·수동 수정·CSV 통과, 조회 모델 호출 0 |
+
+통합 검증 결과는 `runs/backend-result-integrity-20261118-api/verification-report.json`과
+`runs/backend-result-integrity-20261118-ui/verification-report.json`에 보관했다.
+기존 판정 이력과 원본 실행 결과를 재작성하지 않는다. 실제 judge 정확도와 독립 사람 검산은 별도 후속 과제다.
